@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jackson's Tab scanner project</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="api-cost" id="apiCost">
+        <div class="cost-label">API Cost:</div>
+        <div class="cost-value">$0.0000</div>
+    </div>
+    <div class="container">
+        <header>
+            <h1>Jackson's Tab scanner project</h1>
+            <p>This allows us to organize all pre-entered tabs in an easy-to-enter way</p>
+            <div class="header-note">
+                <p><strong>NOTE:</strong> These images are not stored permanently</p>
+            </div>
+        </header>
+        
+        <main>
+            <div class="upload-section">
+                <div class="drop-area" id="dropArea">
+                    <div class="drop-icon">📷</div>
+                    <p>Drag & drop images here</p>
+                    <p>or</p>
+                    <label for="fileInput" class="upload-btn">Select Files</label>
+                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                </div>
+                
+                <div class="file-list-container">
+                    <h3>Selected Files <span id="fileCount">(0)</span></h3>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="processBtn" class="process-btn" disabled>Process Images</button>
+                <div class="requirements">
+                    <p><strong>Requirements:</strong> 3-100 images of receipts/checks</p>
+                    <p class="small-text"><strong>Extracts:</strong> date, time, customer name, check number, amount, tip, total, and signed status</p>
+                    <p class="small-text"><strong>Supported formats:</strong> JPG, PNG, GIF, BMP</p>
+                </div>
+            </div>
+            
+            <div class="results-section" id="resultsSection">
+                <h2>Results</h2>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="results-container">
+                    <div class="json-side">
+                        <div class="json-header">
+                            <h3>JSON Output</h3>
+                            <button id="copyBtn" class="copy-btn">Copy JSON</button>
+                        </div>
+                        <pre id="jsonOutput" class="json-content"></pre>
+                    </div>
+                    
+                    <div class="table-side">
+                        <div class="table-header">
+                            <h3>Table View</h3>
+                            <div class="table-controls">
+                                <button id="exportCsvBtn" class="export-btn">Export CSV</button>
+                                <div class="sort-controls">
+                                    <select id="sortField" class="sort-select">
+                                        <option value="customer_name">Customer Name</option>
+                                        <option value="time">Closing Time</option>
+                                        <option value="total">Check Total</option>
+                                        <option value="tip">Tip</option>
+                                    </select>
+                                    <select id="sortOrder" class="sort-select">
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                    <button id="sortBtn" class="sort-btn">Sort</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="dataTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th width="30%">Customer Name</th>
+                                        <th width="15%">Closing Time</th>
+                                        <th width="25%">Check Total</th>
+                                        <th width="25%">Tip</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <!-- Table rows will be added dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Powered by Claude API | <span class="version">v1.0.0</span></p>
+            <p>Made with ❤️ in Pittsburgh</p>
+        </footer>
+    </div>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>
