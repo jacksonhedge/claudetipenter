@@ -292,6 +292,30 @@ main {
     transition: width 0.3s ease;
 }
 
+/* Countdown Timer Styles */
+.countdown-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.countdown-label {
+    margin-right: 0.5rem;
+}
+
+.countdown-timer {
+    font-family: monospace;
+    font-weight: bold;
+    color: #2c3e50;
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
 /* Results Container (Split View) */
 .results-container {
     display: flex;

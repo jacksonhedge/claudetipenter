@@ -51,10 +51,6 @@
                 <div class="progress-container" id="progressContainer">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
-                <div class="countdown-container" id="countdownContainer">
-                    <div class="countdown-label">Estimated time remaining:</div>
-                    <div class="countdown-timer" id="countdownTimer">--:--</div>
-                </div>
                 <div class="results-container">
                     <div class="json-side">
                         <div class="json-header">
@@ -75,7 +71,6 @@
                                         <option value="time">Closing Time</option>
                                         <option value="total">Check Total</option>
                                         <option value="tip">Tip</option>
-                                        <option value="actions">Actions</option>
                                     </select>
                                     <select id="sortOrder" class="sort-select">
                                         <option value="asc">Ascending</option>
@@ -89,11 +84,10 @@
                             <table id="dataTable" class="data-table">
                                 <thead>
                                     <tr>
-                                        <th width="25%">Customer Name</th>
+                                        <th width="30%">Customer Name</th>
                                         <th width="15%">Closing Time</th>
-                                        <th width="20%">Check Total</th>
-                                        <th width="20%">Tip</th>
-                                        <th width="15%">Actions</th>
+                                        <th width="25%">Check Total</th>
+                                        <th width="25%">Tip</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableBody">

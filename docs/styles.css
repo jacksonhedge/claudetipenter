@@ -292,30 +292,6 @@ main {
     transition: width 0.3s ease;
 }
 
-/* Countdown Timer Styles */
-.countdown-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-    color: #7f8c8d;
-}
-
-.countdown-label {
-    margin-right: 0.5rem;
-}
-
-.countdown-timer {
-    font-family: monospace;
-    font-weight: bold;
-    color: #2c3e50;
-    background-color: #f8f9fa;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    border: 1px solid #e0e0e0;
-}
-
 /* Results Container (Split View) */
 .results-container {
     display: flex;
@@ -497,55 +473,6 @@ main {
 .version {
     font-size: 0.8rem;
     color: #95a5a6;
-}
-
-/* Verification Styles */
-.verification-icon {
-    color: #27ae60;
-    font-weight: bold;
-    margin-left: 4px;
-}
-
-.warning-icon {
-    color: #e74c3c;
-    font-weight: bold;
-    margin-left: 4px;
-}
-
-/* Adjust Button Styles */
-.adjust-btn {
-    background-color: #f39c12;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.75rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 0.85rem;
-}
-
-.adjust-btn:hover {
-    background-color: #e67e22;
-}
-
-.verification-error {
-    background-color: #ffeceb;
-    position: relative;
-}
-
-.verification-error:hover::after {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    background-color: #2c3e50;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    z-index: 100;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Footer Styles */

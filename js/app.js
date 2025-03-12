@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configuration
     const TEST_MODE = false; // Set to false to disable sample images
-    const USE_REAL_API = false; // Set to false to use simulated responses instead of real API
+    const USE_REAL_API = true; // Set to true to use the real API through the proxy server
     
     if (TEST_MODE) {
         // Add sample images for testing
@@ -264,9 +264,18 @@ document.addEventListener('DOMContentLoaded', () => {
         jsonOutput.textContent = 'Processing...';
         tableBody.innerHTML = ''; // Clear table
         
+        // Start countdown timer
+        const countdownTimer = document.getElementById('countdownTimer');
+        const imageCount = selectedFiles.size;
+        
+        // Estimate processing time based on number of images
+        // Base time: 5 seconds + 2 seconds per image
+        let estimatedSeconds = 5 + (imageCount * 2);
+        startCountdown(estimatedSeconds);
+        
         try {
-            // Convert files to base64
-            const filePromises = Array.from(selectedFiles.values()).map(fileToBase64);
+            // Convert files to base64 with compression
+            const filePromises = Array.from(selectedFiles.values()).map(compressAndConvertToBase64);
             const base64Files = await Promise.all(filePromises);
             
             // Process with Claude API
@@ -282,6 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
             jsonOutput.textContent = JSON.stringify(formattedResult, null, 2);
             progressBar.style.width = '100%';
             
+            // Stop countdown timer
+            clearInterval(countdownInterval);
+            countdownTimer.textContent = "Complete";
+            
             // Populate table view
             populateTableView(formattedResult);
             
@@ -293,7 +306,132 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error processing images:', error);
             jsonOutput.textContent = `Error: ${error.message}`;
             progressBar.style.width = '100%';
+            
+            // Stop countdown timer on error
+            clearInterval(countdownInterval);
+            countdownTimer.textContent = "Error";
         }
+    }
+    
+    // Countdown timer variables
+    let countdownInterval;
+    let remainingSeconds = 0;
+    
+    // Start countdown timer
+    function startCountdown(seconds) {
+        const countdownTimer = document.getElementById('countdownTimer');
+        remainingSeconds = seconds;
+        
+        // Update timer immediately
+        updateCountdownDisplay();
+        
+        // Clear any existing interval
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        // Update timer every second
+        countdownInterval = setInterval(() => {
+            remainingSeconds--;
+            
+            if (remainingSeconds <= 0) {
+                // Don't clear the interval yet, as processing might still be ongoing
+                // Just keep showing 00:00
+                remainingSeconds = 0;
+            }
+            
+            updateCountdownDisplay();
+        }, 1000);
+    }
+    
+    // Update countdown display
+    function updateCountdownDisplay() {
+        const countdownTimer = document.getElementById('countdownTimer');
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        countdownTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // Compress and convert file to base64
+    async function compressAndConvertToBase64(file) {
+        return new Promise((resolve, reject) => {
+            // Create a canvas for image compression
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            // Set up image load handler
+            img.onload = () => {
+                // Calculate new dimensions (max 1200px width/height while maintaining aspect ratio)
+                let width = img.width;
+                let height = img.height;
+                const maxDimension = 1200;
+                
+                if (width > maxDimension || height > maxDimension) {
+                    if (width > height) {
+                        height = Math.round((height * maxDimension) / width);
+                        width = maxDimension;
+                    } else {
+                        width = Math.round((width * maxDimension) / height);
+                        height = maxDimension;
+                    }
+                }
+                
+                // Resize image
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Get compressed image as base64
+                const quality = 0.8; // 80% quality, good balance between size and quality
+                const base64String = canvas.toDataURL(file.type, quality).split(',')[1];
+                
+                resolve({
+                    name: file.name,
+                    type: file.type,
+                    data: base64String
+                });
+            };
+            
+            // Handle errors
+            img.onerror = () => {
+                // Fall back to regular base64 conversion if compression fails
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64String = reader.result.split(',')[1];
+                    resolve({
+                        name: file.name,
+                        type: file.type,
+                        data: base64String
+                    });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            };
+            
+            // Only try to compress image files
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            } else {
+                // For non-image files, use regular base64 conversion
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64String = reader.result.split(',')[1];
+                    resolve({
+                        name: file.name,
+                        type: file.type,
+                        data: base64String
+                    });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            }
+        });
     }
     
     // Convert File to Base64
@@ -321,42 +459,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we should use the real API or simulated responses
         if (USE_REAL_API) {
             try {
-                // Use the real Claude API implementation
-                const apiKey = 'YOUR_API_KEY'; // Replace with your actual API key when using
-                const apiUrl = 'https://api.anthropic.com/v1/messages';
+                // Use the backend proxy server instead of calling Claude API directly
+                const apiUrl = '/api/process-images';
                 
                 progressBar.style.width = '40%';
                 
-                // Prepare the API request
+                // Prepare the API request to our proxy server
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': apiKey,
-                        'anthropic-version': '2023-06-01'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: "claude-3-opus-20240229",
-                        max_tokens: 4000,
-                        messages: [
-                            {
-                                role: "user",
-                                content: [
-                                    {
-                                        type: "text",
-                                        text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. tip: The handwritten tip amount\n7. total: The adjusted total (amount + tip, also handwritten)\n8. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
-                                    },
-                                    ...base64Files.map(file => ({
-                                        type: "image",
-                                        source: {
-                                            type: "base64",
-                                            media_type: file.type,
-                                            data: file.data
-                                        }
-                                    }))
-                                ]
-                            }
-                        ]
+                        images: base64Files
                     })
                 });
                 
@@ -367,49 +482,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
                 }
                 
-                const data = await response.json();
+                // The server already processes the Claude API response and returns a structured JSON
+                const result = await response.json();
                 progressBar.style.width = '90%';
-                
-                // Parse the response from Claude
-                // Claude might return the JSON as a string within its response
-                let result;
-                try {
-                    // Try to extract JSON from Claude's response
-                    const contentText = data.content[0].text;
-                    
-                    // Look for JSON in the response
-                    const jsonMatch = contentText.match(/```json\s*([\s\S]*?)\s*```/) || 
-                                     contentText.match(/\{[\s\S]*\}/);
-                    
-                    if (jsonMatch) {
-                        // Parse the extracted JSON
-                        result = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-                    } else {
-                        // If no JSON format is found, create a structured result from the text
-                        result = {
-                            success: true,
-                            processed_images: base64Files.length,
-                            results: base64Files.map((file, index) => ({
-                                file_name: file.name,
-                                extracted_text: contentText,
-                                confidence: 0.9
-                            }))
-                        };
-                    }
-                } catch (parseError) {
-                    console.error('Error parsing Claude response:', parseError);
-                    
-                    // Fallback: create a structured result with Claude's raw response
-                    result = {
-                        success: true,
-                        processed_images: base64Files.length,
-                        results: base64Files.map((file, index) => ({
-                            file_name: file.name,
-                            extracted_text: data.content[0].text,
-                            confidence: 0.9
-                        }))
-                    };
-                }
                 
                 return result;
             } catch (error) {

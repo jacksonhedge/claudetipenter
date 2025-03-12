@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configuration
     const TEST_MODE = false; // Set to false to disable sample images
-    const USE_REAL_API = true; // Set to true to use the real API through the proxy server
+    const USE_REAL_API = false; // Set to false to use simulated responses instead of real API
     
     if (TEST_MODE) {
         // Add sample images for testing
@@ -264,18 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
         jsonOutput.textContent = 'Processing...';
         tableBody.innerHTML = ''; // Clear table
         
-        // Start countdown timer
-        const countdownTimer = document.getElementById('countdownTimer');
-        const imageCount = selectedFiles.size;
-        
-        // Estimate processing time based on number of images
-        // Base time: 5 seconds + 2 seconds per image
-        let estimatedSeconds = 5 + (imageCount * 2);
-        startCountdown(estimatedSeconds);
-        
         try {
-            // Convert files to base64 with compression
-            const filePromises = Array.from(selectedFiles.values()).map(compressAndConvertToBase64);
+            // Convert files to base64
+            const filePromises = Array.from(selectedFiles.values()).map(fileToBase64);
             const base64Files = await Promise.all(filePromises);
             
             // Process with Claude API
@@ -291,10 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
             jsonOutput.textContent = JSON.stringify(formattedResult, null, 2);
             progressBar.style.width = '100%';
             
-            // Stop countdown timer
-            clearInterval(countdownInterval);
-            countdownTimer.textContent = "Complete";
-            
             // Populate table view
             populateTableView(formattedResult);
             
@@ -306,132 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error processing images:', error);
             jsonOutput.textContent = `Error: ${error.message}`;
             progressBar.style.width = '100%';
-            
-            // Stop countdown timer on error
-            clearInterval(countdownInterval);
-            countdownTimer.textContent = "Error";
         }
-    }
-    
-    // Countdown timer variables
-    let countdownInterval;
-    let remainingSeconds = 0;
-    
-    // Start countdown timer
-    function startCountdown(seconds) {
-        const countdownTimer = document.getElementById('countdownTimer');
-        remainingSeconds = seconds;
-        
-        // Update timer immediately
-        updateCountdownDisplay();
-        
-        // Clear any existing interval
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-        }
-        
-        // Update timer every second
-        countdownInterval = setInterval(() => {
-            remainingSeconds--;
-            
-            if (remainingSeconds <= 0) {
-                // Don't clear the interval yet, as processing might still be ongoing
-                // Just keep showing 00:00
-                remainingSeconds = 0;
-            }
-            
-            updateCountdownDisplay();
-        }, 1000);
-    }
-    
-    // Update countdown display
-    function updateCountdownDisplay() {
-        const countdownTimer = document.getElementById('countdownTimer');
-        const minutes = Math.floor(remainingSeconds / 60);
-        const seconds = remainingSeconds % 60;
-        countdownTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    // Compress and convert file to base64
-    async function compressAndConvertToBase64(file) {
-        return new Promise((resolve, reject) => {
-            // Create a canvas for image compression
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            
-            // Set up image load handler
-            img.onload = () => {
-                // Calculate new dimensions (max 1200px width/height while maintaining aspect ratio)
-                let width = img.width;
-                let height = img.height;
-                const maxDimension = 1200;
-                
-                if (width > maxDimension || height > maxDimension) {
-                    if (width > height) {
-                        height = Math.round((height * maxDimension) / width);
-                        width = maxDimension;
-                    } else {
-                        width = Math.round((width * maxDimension) / height);
-                        height = maxDimension;
-                    }
-                }
-                
-                // Resize image
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Get compressed image as base64
-                const quality = 0.8; // 80% quality, good balance between size and quality
-                const base64String = canvas.toDataURL(file.type, quality).split(',')[1];
-                
-                resolve({
-                    name: file.name,
-                    type: file.type,
-                    data: base64String
-                });
-            };
-            
-            // Handle errors
-            img.onerror = () => {
-                // Fall back to regular base64 conversion if compression fails
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64String = reader.result.split(',')[1];
-                    resolve({
-                        name: file.name,
-                        type: file.type,
-                        data: base64String
-                    });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            };
-            
-            // Only try to compress image files
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    img.src = e.target.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            } else {
-                // For non-image files, use regular base64 conversion
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64String = reader.result.split(',')[1];
-                    resolve({
-                        name: file.name,
-                        type: file.type,
-                        data: base64String
-                    });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            }
-        });
     }
     
     // Convert File to Base64
@@ -459,19 +321,42 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we should use the real API or simulated responses
         if (USE_REAL_API) {
             try {
-                // Use the backend proxy server instead of calling Claude API directly
-                const apiUrl = '/api/process-images';
+                // Use the real Claude API implementation
+                const apiKey = 'YOUR_API_KEY'; // Replace with your actual API key when using
+                const apiUrl = 'https://api.anthropic.com/v1/messages';
                 
                 progressBar.style.width = '40%';
                 
-                // Prepare the API request to our proxy server
+                // Prepare the API request
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01'
                     },
                     body: JSON.stringify({
-                        images: base64Files
+                        model: "claude-3-opus-20240229",
+                        max_tokens: 4000,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. tip: The handwritten tip amount\n7. total: The adjusted total (amount + tip, also handwritten)\n8. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
+                                    },
+                                    ...base64Files.map(file => ({
+                                        type: "image",
+                                        source: {
+                                            type: "base64",
+                                            media_type: file.type,
+                                            data: file.data
+                                        }
+                                    }))
+                                ]
+                            }
+                        ]
                     })
                 });
                 
@@ -482,9 +367,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
                 }
                 
-                // The server already processes the Claude API response and returns a structured JSON
-                const result = await response.json();
+                const data = await response.json();
                 progressBar.style.width = '90%';
+                
+                // Parse the response from Claude
+                // Claude might return the JSON as a string within its response
+                let result;
+                try {
+                    // Try to extract JSON from Claude's response
+                    const contentText = data.content[0].text;
+                    
+                    // Look for JSON in the response
+                    const jsonMatch = contentText.match(/```json\s*([\s\S]*?)\s*```/) || 
+                                     contentText.match(/\{[\s\S]*\}/);
+                    
+                    if (jsonMatch) {
+                        // Parse the extracted JSON
+                        result = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+                    } else {
+                        // If no JSON format is found, create a structured result from the text
+                        result = {
+                            success: true,
+                            processed_images: base64Files.length,
+                            results: base64Files.map((file, index) => ({
+                                file_name: file.name,
+                                extracted_text: contentText,
+                                confidence: 0.9
+                            }))
+                        };
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing Claude response:', parseError);
+                    
+                    // Fallback: create a structured result with Claude's raw response
+                    result = {
+                        success: true,
+                        processed_images: base64Files.length,
+                        results: base64Files.map((file, index) => ({
+                            file_name: file.name,
+                            extracted_text: data.content[0].text,
+                            confidence: 0.9
+                        }))
+                    };
+                }
                 
                 return result;
             } catch (error) {
@@ -641,107 +566,13 @@ For demonstration purposes, we'll show simulated results below:
         }
     }
     
-    // Verify tip calculation
-    function verifyTipCalculation(amount, tip, total) {
-        // Remove $ signs and convert to numbers
-        const amountValue = parseFloat(String(amount).replace(/\$/g, ''));
-        const tipValue = parseFloat(String(tip).replace(/\$/g, ''));
-        const totalValue = parseFloat(String(total).replace(/\$/g, ''));
-        
-        // Calculate expected total
-        const expectedTotal = amountValue + tipValue;
-        
-        // Check if the calculated total matches the provided total (allowing for small rounding differences)
-        const difference = Math.abs(expectedTotal - totalValue);
-        
-        return {
-            expected: expectedTotal.toFixed(2),
-            actual: totalValue.toFixed(2),
-            difference: difference.toFixed(2),
-            isCorrect: difference < 0.01 // Allow for small rounding differences
-        };
-    }
-    
-    // Double-check tip calculation for tabs above $50
-    function doubleCheckHighValueTabs(item) {
-        // Remove $ sign and convert to number
-        const totalValue = parseFloat(String(item.total).replace(/\$/g, ''));
-        
-        // Check if total is above $50
-        if (totalValue >= 50) {
-            // Run verification twice for high-value tabs
-            const firstCheck = verifyTipCalculation(item.amount, item.tip, item.total);
-            const secondCheck = verifyTipCalculation(item.amount, item.tip, item.total);
-            
-            // If both checks agree, return the result
-            if (firstCheck.isCorrect === secondCheck.isCorrect) {
-                return {
-                    verified: true,
-                    doubleChecked: true,
-                    result: firstCheck
-                };
-            } else {
-                // If checks disagree, mark as inconsistent
-                return {
-                    verified: false,
-                    doubleChecked: true,
-                    result: firstCheck,
-                    secondResult: secondCheck
-                };
-            }
-        } else {
-            // For tabs under $50, just run verification once
-            return {
-                verified: true,
-                doubleChecked: false,
-                result: verifyTipCalculation(item.amount, item.tip, item.total)
-            };
-        }
-    }
-    
-    // Handle tip adjustment
-    function adjustTip(item, index) {
-        // Get current tip value without $ sign
-        const currentTip = parseFloat(String(item.tip).replace(/\$/g, ''));
-        
-        // Prompt for new tip value
-        const newTip = prompt(`Adjust tip for ${item.customer_name || 'customer'}:`, currentTip.toFixed(2));
-        
-        // If user cancels or enters invalid value, return
-        if (newTip === null || isNaN(parseFloat(newTip))) {
-            return;
-        }
-        
-        // Update tip value in the data
-        const formattedTip = `$${parseFloat(newTip).toFixed(2)}`;
-        item.tip = formattedTip;
-        
-        // Recalculate total
-        const amountValue = parseFloat(String(item.amount).replace(/\$/g, ''));
-        const newTipValue = parseFloat(newTip);
-        const newTotal = amountValue + newTipValue;
-        item.total = `$${newTotal.toFixed(2)}`;
-        
-        // Update the current data
-        if (currentData && currentData.results && currentData.results[index]) {
-            currentData.results[index].tip = formattedTip;
-            currentData.results[index].total = `$${newTotal.toFixed(2)}`;
-        }
-        
-        // Refresh the table view
-        populateTableView(formatMonetaryValues(JSON.parse(JSON.stringify(currentData))));
-        
-        // Update JSON output
-        jsonOutput.textContent = JSON.stringify(formatMonetaryValues(JSON.parse(JSON.stringify(currentData))), null, 2);
-    }
-    
     // Populate Table View
     function populateTableView(data) {
         // Clear existing table rows
         tableBody.innerHTML = '';
         
         if (data && data.results && Array.isArray(data.results)) {
-            data.results.forEach((item, index) => {
+            data.results.forEach(item => {
                 const row = document.createElement('tr');
                 
                 // Create cells for each column
@@ -754,55 +585,14 @@ For demonstration purposes, we'll show simulated results below:
                 const totalCell = document.createElement('td');
                 totalCell.textContent = item.total || 'N/A';
                 
-                // Add verification indicator for high-value tabs
-                const totalValue = parseFloat(String(item.total).replace(/\$/g, ''));
-                if (totalValue >= 50) {
-                    const verificationIcon = document.createElement('span');
-                    verificationIcon.className = 'verification-icon';
-                    verificationIcon.textContent = ' ✓✓';
-                    verificationIcon.title = 'Double-checked (high value tab)';
-                    totalCell.appendChild(verificationIcon);
-                }
-                
                 const tipCell = document.createElement('td');
                 tipCell.textContent = item.tip || 'N/A';
-                
-                // Verify tip calculation
-                const verification = doubleCheckHighValueTabs(item);
-                
-                // Add verification status
-                if (!verification.result.isCorrect) {
-                    tipCell.classList.add('verification-error');
-                    tipCell.title = `Verification failed: Expected total ${verification.result.expected}, got ${verification.result.actual}`;
-                    
-                    // Add warning icon
-                    const warningIcon = document.createElement('span');
-                    warningIcon.className = 'warning-icon';
-                    warningIcon.textContent = ' ⚠️';
-                    tipCell.appendChild(warningIcon);
-                } else if (verification.doubleChecked) {
-                    // Add double-check indicator for verified high-value tabs
-                    const verificationIcon = document.createElement('span');
-                    verificationIcon.className = 'verification-icon';
-                    verificationIcon.textContent = ' ✓✓';
-                    verificationIcon.title = 'Double-checked (high value tab)';
-                    tipCell.appendChild(verificationIcon);
-                }
-                
-                // Create adjust button cell
-                const adjustCell = document.createElement('td');
-                const adjustBtn = document.createElement('button');
-                adjustBtn.className = 'adjust-btn';
-                adjustBtn.textContent = 'Adjust';
-                adjustBtn.addEventListener('click', () => adjustTip(item, index));
-                adjustCell.appendChild(adjustBtn);
                 
                 // Add cells to row
                 row.appendChild(customerNameCell);
                 row.appendChild(timeCell);
                 row.appendChild(totalCell);
                 row.appendChild(tipCell);
-                row.appendChild(adjustCell);
                 
                 // Add row to table
                 tableBody.appendChild(row);
@@ -872,7 +662,7 @@ For demonstration purposes, we'll show simulated results below:
     function exportTableToCsv() {
         // Get table data
         const rows = [];
-        const headers = ['Customer Name', 'Closing Time', 'Check Total', 'Tip', 'Actions'];
+        const headers = ['Customer Name', 'Closing Time', 'Check Total', 'Tip'];
         
         // Add headers
         rows.push(headers.join(','));
