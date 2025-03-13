@@ -173,7 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
             fileItem.remove();
             updateFileCount();
             validateFileCount();
-        });
+            // Call this after DOM is loaded
+    setTimeout(addLightspeedIntegration, 500);
+});
         
         fileItem.appendChild(fileName);
         fileItem.appendChild(removeBtn);
@@ -194,23 +196,32 @@ document.addEventListener('DOMContentLoaded', () => {
     exportCsvBtn.addEventListener('click', exportTableToCsv);
     sortBtn.addEventListener('click', sortTable);
     
-    // Navigation Tab Event Listeners
+    // Fix for Tab Navigation - ensure the navigation between tabs works correctly
     navItems.forEach(item => {
         item.addEventListener('click', () => {
             const tabId = item.getAttribute('data-tab');
             
-            // Update active tab
+            // Remove active class from all items
             navItems.forEach(navItem => navItem.classList.remove('active'));
+            
+            // Add active class to clicked item
             item.classList.add('active');
             
-            // Show selected tab content
+            // Hide all tabs
             tabContents.forEach(content => {
-                if (content.id === tabId) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
+                content.classList.remove('active');
             });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+                
+                // If switching to organized tab, refresh the display
+                if (tabId === 'organized-tab' && processedImages && processedImages.length > 0) {
+                    displayOrganizedImages(processedImages);
+                }
+            }
         });
     });
     
@@ -337,13 +348,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileName = document.createElement('div');
         fileName.className = 'file-name';
         
-        // Create thumbnail
+        // Create thumbnail with the actual image content
         const thumbnail = document.createElement('img');
         const reader = new FileReader();
         reader.onload = (e) => {
             thumbnail.src = e.target.result;
         };
         reader.readAsDataURL(file);
+        thumbnail.width = 40;
+        thumbnail.height = 40;
         
         // File name text
         const nameText = document.createElement('span');
@@ -356,7 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-file';
         removeBtn.textContent = 'Remove';
-        removeBtn.addEventListener('click', () => {
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the parent click event
             selectedFiles.delete(parseInt(fileItem.dataset.fileId));
             fileItem.remove();
             updateFileCount();
@@ -427,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Display current slide
+    // Enhanced function to display current slide in slideshow view
     function displayCurrentSlide() {
         if (!processedImages || processedImages.length === 0) {
             return;
@@ -443,13 +457,22 @@ document.addEventListener('DOMContentLoaded', () => {
         prevSlideBtn.disabled = currentSlideIndex === 0;
         nextSlideBtn.disabled = currentSlideIndex === processedImages.length - 1;
         
-        // Create slideshow content
+        // Format the tip for display (just the number without $ sign)
+        let formattedTip = 'N/A';
+        if (currentImage.tip) {
+            const tipMatch = String(currentImage.tip).match(/\$?(\d+(?:\.\d+)?)/);
+            if (tipMatch && tipMatch[1]) {
+                formattedTip = tipMatch[1];
+            }
+        }
+        
+        // Create slideshow content with customer name in uppercase
         slideshowImageContainer.innerHTML = `
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=" 
+            <img src="${currentImage.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4='}" 
                  class="slideshow-image" 
                  alt="Receipt ${currentSlideIndex + 1}">
             <div class="slideshow-info">
-                <h3>${currentImage.customer_name || `Receipt ${currentSlideIndex + 1}`}</h3>
+                <h3>${currentImage.customer_name ? currentImage.customer_name.toUpperCase() : `RECEIPT ${currentSlideIndex + 1}`}</h3>
                 <div class="slideshow-info-grid">
                     <div class="info-item">
                         <div class="info-label">Date</div>
@@ -469,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="info-item">
                         <div class="info-label">Tip</div>
-                        <div class="info-value tip">${currentImage.tip || 'N/A'}</div>
+                        <div class="info-value tip">${formattedTip}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Total</div>
@@ -500,12 +523,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Filter Organized Images
+    // Enhanced Filter Organized Images function
     function filterOrganizedImages() {
+        console.log("Filtering images...");
         const field = filterField.value;
         const value = filterValue.value.toLowerCase();
         
         if (!value.trim() || !processedImages.length) {
+            console.log("No filter value or no images to filter");
             displayOrganizedImages(processedImages);
             
             // If in slideshow view, reinitialize with all images
@@ -515,94 +540,158 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        console.log(`Filtering by ${field} with value: ${value}`);
+        
+        // Create a copy of the processed images for filtering
         const filteredImages = processedImages.filter(item => {
-            if (!item[field]) return false;
+            // Skip items that don't have the field
+            if (!item[field]) {
+                console.log(`Item missing field: ${field}`);
+                return false;
+            }
             
+            // Get the field value and convert to lowercase for case-insensitive comparison
             let fieldValue = String(item[field]).toLowerCase();
-            // Remove $ for monetary values
+            
+            // Special handling for monetary values - remove $ sign
             if (field === 'total' || field === 'tip' || field === 'amount') {
                 fieldValue = fieldValue.replace(/\$/g, '');
             }
             
-            return fieldValue.includes(value);
+            // Check if the field value includes the search term
+            const matches = fieldValue.includes(value);
+            return matches;
         });
         
-        // Update the processed images temporarily for the filter
-        const originalImages = [...processedImages];
-        processedImages = filteredImages;
+        console.log(`Found ${filteredImages.length} matching images`);
         
-        // Display filtered images in current view
+        // Display the filtered images
+        displayOrganizedImages(filteredImages);
+        
+        // If in slideshow view, update the slideshow with filtered images
         if (slideshowView.style.display === 'block') {
+            // Save the current filtered images for the slideshow
+            const originalImages = processedImages;
+            processedImages = filteredImages;
+            
+            // Initialize the slideshow with the filtered images
             initializeSlideshow();
-        } else {
-            displayOrganizedImages(filteredImages);
+            
+            // Restore the original images array after initializing slideshow
+            processedImages = originalImages;
         }
-        
-        // Restore original images array
-        processedImages = originalImages;
     }
     
-    // Display Organized Images
-    function displayOrganizedImages(images) {
-        // Clear the grid
-        organizedGrid.innerHTML = '';
+// Modified displayOrganizedImages function that doesn't rely on file names
+function displayOrganizedImages(images) {
+    // Clear the grid
+    organizedGrid.innerHTML = '';
+    
+    if (!images || images.length === 0) {
+        // Show empty state
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.innerHTML = '<p>No images have been processed yet. Use the Scanner tab to process images first.</p>';
+        organizedGrid.appendChild(emptyState);
+        return;
+    }
+    
+    console.log(`Displaying ${images.length} organized images`);
+    
+    // Create image cards
+    images.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'image-card';
         
-        if (!images || images.length === 0) {
-            // Show empty state
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-state';
-            emptyState.innerHTML = '<p>No images match your filter criteria. Try adjusting your filter or clear it.</p>';
-            organizedGrid.appendChild(emptyState);
-            return;
+        // Create image preview
+        const imgPreview = document.createElement('img');
+        imgPreview.className = 'image-preview';
+        
+        // Use the assigned imageUrl that we've already set
+        imgPreview.src = item.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=';
+        imgPreview.alt = `Receipt ${index + 1}`;
+        
+        // Create info section
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'image-info';
+        
+        // Add customer name as title (using uppercase format)
+        const title = document.createElement('h4');
+        title.textContent = item.customer_name ? item.customer_name : `RECEIPT ${index + 1}`;
+        
+        // Add other details
+        const timeP = document.createElement('p');
+        timeP.textContent = `Time: ${item.time || 'N/A'}`;
+        
+        const totalP = document.createElement('p');
+        totalP.textContent = `Total: ${item.total || 'N/A'}`;
+        
+        const tipP = document.createElement('p');
+        tipP.className = 'tip-amount';
+        
+        // Format the tip to match your screenshot (just the number, no $ sign)
+        let tipValue = 'N/A';
+        if (item.tip) {
+            // Remove the dollar sign and get just the number
+            const tipMatch = String(item.tip).match(/\$?(\d+(?:\.\d+)?)/);
+            if (tipMatch && tipMatch[1]) {
+                tipValue = tipMatch[1];
+            }
         }
+        tipP.textContent = `Tip: ${tipValue}`;
         
-        // Create image cards
-        images.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'image-card';
-            
-            // Create image preview (placeholder for now)
-            const imgPreview = document.createElement('img');
-            imgPreview.className = 'image-preview';
-            imgPreview.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=';
-            imgPreview.alt = `Receipt ${index + 1}`;
-            
-            // Create info section
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'image-info';
-            
-            // Add customer name as title
-            const title = document.createElement('h4');
-            title.textContent = item.customer_name || `Receipt ${index + 1}`;
-            
-            // Add other details
-            const timeP = document.createElement('p');
-            timeP.textContent = `Time: ${item.time || 'N/A'}`;
-            
-            const totalP = document.createElement('p');
-            totalP.textContent = `Total: ${item.total || 'N/A'}`;
-            
-            const tipP = document.createElement('p');
-            tipP.className = 'tip-amount';
-            tipP.textContent = `Tip: ${item.tip || 'N/A'}`;
-            
-            // Assemble the card
-            infoDiv.appendChild(title);
-            infoDiv.appendChild(timeP);
-            infoDiv.appendChild(totalP);
-            infoDiv.appendChild(tipP);
-            
-            card.appendChild(imgPreview);
-            card.appendChild(infoDiv);
-            
-            organizedGrid.appendChild(card);
+        // Assemble the card
+        infoDiv.appendChild(title);
+        infoDiv.appendChild(timeP);
+        infoDiv.appendChild(totalP);
+        infoDiv.appendChild(tipP);
+        
+        card.appendChild(imgPreview);
+        card.appendChild(infoDiv);
+        
+        // Add click event handler to show the image in slideshow view
+        card.addEventListener('click', () => {
+            currentSlideIndex = index;
+            setViewMode('slideshow');
+            displayCurrentSlide();
         });
+        
+        organizedGrid.appendChild(card);
+    });
+    
+    console.log("Completed organizing images");
+}
+
+// ===== DEBUGGING FUNCTION =====
+// Add this to your code to help diagnose issues
+function debugFileMatching() {
+    console.log("=== FILE MATCHING DEBUG ===");
+    
+    // Log the original files
+    console.log("ORIGINAL FILES:");
+    const originalFiles = Array.from(selectedFiles.values()).map(file => file.name);
+    console.log(originalFiles);
+    
+    // Log the processed results
+    console.log("PROCESSED IMAGES:");
+    if (processedImages && processedImages.length) {
+        const fileNames = processedImages.map(item => item.file_name || "unnamed");
+        console.log(fileNames);
+        
+        // Log the assigned image URLs
+        console.log("IMAGE URLS ASSIGNED:");
+        const hasUrls = processedImages.map(item => !!item.imageUrl);
+        console.log(hasUrls);
+    } else {
+        console.log("No processed images found");
     }
     
-    // Process Images
+    console.log("=== END DEBUG ===");
+}
+    
+    // Modified process function that properly transfers images to Organized Images tab
     async function processImages() {
-        // Skip validation in test mode
-        if (!TEST_MODE && (selectedFiles.size < 3 || selectedFiles.size > 100)) {
+        if (selectedFiles.size < 3 || selectedFiles.size > 100) {
             alert('Please select between 3 and 100 images.');
             return;
         }
@@ -616,62 +705,79 @@ document.addEventListener('DOMContentLoaded', () => {
         tableBody.innerHTML = ''; // Clear table
         
         // Start countdown timer
-        const countdownTimer = document.getElementById('countdownTimer');
-        const imageCount = selectedFiles.size;
-        
-        // Estimate processing time based on number of images
-        // Base time: 5 seconds + 2 seconds per image
-        let estimatedSeconds = 5 + (imageCount * 2);
-        startCountdown(estimatedSeconds);
+        startCountdown(5 + (selectedFiles.size * 2));
         
         try {
-            // Convert files to base64 with compression
-            const filePromises = Array.from(selectedFiles.values()).map(compressAndConvertToBase64);
+            // Store the original files in an array for easy indexing
+            const originalFiles = Array.from(selectedFiles.values());
+            
+            // Convert files to base64 for processing
+            const filePromises = originalFiles.map(file => {
+                return compressAndConvertToBase64(file);
+            });
             const base64Files = await Promise.all(filePromises);
             
-            // Process with Claude API
+            // Process with API
             const result = await processWithClaudeAPI(base64Files);
             
-            // Store the current data for sorting
+            // Store the current data
             currentData = result;
             
-            // Format monetary values
-            const formattedResult = formatMonetaryValues(JSON.parse(JSON.stringify(result)));
-            
-            // Display result
-            jsonOutput.textContent = JSON.stringify(formattedResult, null, 2);
+            // Display result in JSON viewer
+            jsonOutput.textContent = JSON.stringify(result, null, 2);
             progressBar.style.width = '100%';
             
             // Stop countdown timer
             clearInterval(countdownInterval);
-            countdownTimer.textContent = "Complete";
+            document.getElementById('countdownTimer').textContent = "Complete";
             
             // Store processed images for organized tab
             processedImages = result.results || [];
             
+            // ====== THIS IS THE KEY CHANGE ======
+            // IMPORTANT: Assign images by index rather than trying to match file names
+            if (processedImages.length > 0) {
+                // Make sure we have the same number of processed results as uploaded files
+                // If not, we'll use as many as we can
+                const maxItems = Math.min(originalFiles.length, processedImages.length);
+                
+                // Assign image URLs by index
+                for (let i = 0; i < maxItems; i++) {
+                    // Create URL from the original file
+                    processedImages[i].imageUrl = URL.createObjectURL(originalFiles[i]);
+                    
+                    // Store the actual file name for reference
+                    processedImages[i].actual_filename = originalFiles[i].name;
+                    
+                    // Format customer name for uppercase display
+                    if (processedImages[i].customer_name) {
+                        processedImages[i].customer_name = processedImages[i].customer_name.toUpperCase();
+                    }
+                }
+                
+                console.log("Successfully mapped images to API results");
+            }
+            
             // Populate table view
-            populateTableView(formattedResult);
+            populateTableView(result);
             
             // Update API cost display if available
-            if (formattedResult.api_cost && formattedResult.api_cost.total_cost) {
-                updateApiCostDisplay(formattedResult.api_cost.total_cost);
+            if (result.api_cost && result.api_cost.total_cost) {
+                updateApiCostDisplay(result.api_cost.total_cost);
             }
             
-            // Update organized images tab
+            // IMPORTANT: Update organized images tab with our modified data
             displayOrganizedImages(processedImages);
             
-            // Initialize slideshow (but keep it hidden if not in slideshow view)
-            if (slideshowView) {
-                // Only show if in slideshow mode
-                const isSlideshow = slideshowViewBtn && slideshowViewBtn.classList.contains('active');
-                if (isSlideshow) {
-                    setViewMode('slideshow');
-                } else {
-                    // Initialize but keep hidden
-                    slideshowView.style.display = 'none';
-                    initializeSlideshow();
+            // CRITICAL FIX: Automatically switch to the Organized Images tab
+            setTimeout(() => {
+                // Find the Organized Images tab and click it
+                const organizedTabItem = document.querySelector('.nav-item[data-tab="organized-tab"]');
+                if (organizedTabItem) {
+                    organizedTabItem.click();
                 }
-            }
+            }, 500);
+            
         } catch (error) {
             console.error('Error processing images:', error);
             jsonOutput.textContent = `Error: ${error.message}`;
@@ -679,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Stop countdown timer on error
             clearInterval(countdownInterval);
-            countdownTimer.textContent = "Error";
+            document.getElementById('countdownTimer').textContent = "Error";
         }
     }
     
@@ -728,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Create a canvas for image compression
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            const img = new Image();
+const img = new Image();
             
             // Set up image load handler
             img.onload = () => {
@@ -821,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Process with Claude API
+    // Enhanced function to process images from Claude API
     async function processWithClaudeAPI(base64Files) {
         // Update progress bar to show API call started
         progressBar.style.width = '20%';
@@ -855,6 +961,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 // The server already processes the Claude API response and returns a structured JSON
                 const result = await response.json();
                 progressBar.style.width = '90%';
+                
+                // Make sure the result includes references needed for Lightspeed integration
+                if (result && result.results) {
+                    result.results = result.results.map(item => {
+                        // If reference is missing but check_number exists, use that as the reference
+                        if (!item.reference && item.check_number) {
+                            item.reference = item.check_number;
+                        }
+                        return item;
+                    });
+                }
                 
                 return result;
             } catch (error) {
@@ -893,6 +1010,166 @@ For demonstration purposes, we'll show simulated results below:
                 }, 2000);
             });
         }
+    }
+    
+    // Function to integrate with Lightspeed
+    function uploadTipsToLightspeed(processedData) {
+        // Get the tips data in format needed for Lightspeed API
+        const tipsData = processedData.results.map(item => {
+            // Extract numeric tip value
+            let tipAmount = 0;
+            if (item.tip) {
+                const match = item.tip.match(/\$?(\d+(?:\.\d+)?)/);
+                if (match && match[1]) {
+                    tipAmount = parseFloat(match[1]);
+                }
+            }
+            
+            return {
+                reference: item.reference || item.check_number || "",
+                tip_amount: tipAmount
+            };
+        }).filter(item => item.reference && item.tip_amount > 0);
+        
+        // If no valid tip data, show message
+        if (tipsData.length === 0) {
+            alert("No valid tips found to upload to Lightspeed.");
+            return;
+        }
+        
+        // Confirm upload
+        const confirmUpload = confirm(`Ready to upload ${tipsData.length} tips to Lightspeed. Continue?`);
+        if (!confirmUpload) return;
+        
+        // Here you would call your backend API that connects to Lightspeed
+        // For now, we'll show a simulated progress
+        
+        // Create and show a progress dialog
+        const progressDialog = document.createElement('div');
+        progressDialog.className = 'progress-dialog';
+        progressDialog.innerHTML = `
+            <div class="progress-content">
+                <h3>Uploading Tips to Lightspeed</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="lightspeedProgressBar"></div>
+                </div>
+                <p id="lightspeedStatus">Connecting to Lightspeed...</p>
+            </div>
+        `;
+        
+        // Add styles for the dialog
+        const dialogStyle = document.createElement('style');
+        dialogStyle.textContent = `
+            .progress-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+            .progress-content {
+                background-color: white;
+                padding: 2rem;
+                border-radius: 8px;
+                width: 400px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+            #lightspeedProgressBar {
+                height: 100%;
+                width: 0;
+                background-color: #2ecc71;
+                transition: width 0.3s ease;
+            }
+            #lightspeedStatus {
+                margin-top: 1rem;
+                text-align: center;
+            }
+        `;
+        
+        document.head.appendChild(dialogStyle);
+        document.body.appendChild(progressDialog);
+        
+        const progressBar = document.getElementById('lightspeedProgressBar');
+        const statusText = document.getElementById('lightspeedStatus');
+        
+        // Simulate the upload process
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            progressBar.style.width = `${progress}%`;
+            
+            if (progress === 30) {
+                statusText.textContent = "Authenticating with Lightspeed...";
+            } else if (progress === 60) {
+                statusText.textContent = `Uploading ${tipsData.length} tips...`;
+            } else if (progress >= 100) {
+                clearInterval(progressInterval);
+                statusText.textContent = "Upload complete!";
+                
+                // Remove dialog after a short delay
+                setTimeout(() => {
+                    document.body.removeChild(progressDialog);
+                    alert(`Successfully uploaded ${tipsData.length} tips to Lightspeed!`);
+                    
+                    // Update the UI to show uploaded status
+                    if (processedData.results) {
+                        processedData.results.forEach(item => {
+                            if (item.reference || item.check_number) {
+                                item.uploaded = true;
+                            }
+                        });
+                        
+                        // Update displays if needed
+                        displayOrganizedImages(processedData.results);
+                    }
+                }, 1000);
+            }
+        }, 500);
+    }
+    
+    // Add Lightspeed integration button to UI
+    function addLightspeedIntegration() {
+        // Find a good place to add the button (e.g., next to other controls)
+        const filterControls = document.querySelector('.filter-controls');
+        if (!filterControls) return;
+        
+        // Create Lightspeed button group
+        const lightspeedGroup = document.createElement('div');
+        lightspeedGroup.className = 'lightspeed-controls';
+        lightspeedGroup.style.marginLeft = 'auto';
+        lightspeedGroup.style.display = 'flex';
+        lightspeedGroup.style.alignItems = 'center';
+        lightspeedGroup.style.gap = '10px';
+        
+        // Create upload button
+        const uploadBtn = document.createElement('button');
+        uploadBtn.className = 'upload-btn';
+        uploadBtn.textContent = 'Upload to Lightspeed';
+        uploadBtn.style.backgroundColor = '#2ecc71';
+        uploadBtn.style.color = 'white';
+        uploadBtn.style.border = 'none';
+        uploadBtn.style.borderRadius = '4px';
+        uploadBtn.style.padding = '0.5rem 1rem';
+        uploadBtn.style.cursor = 'pointer';
+        
+        // Add click event
+        uploadBtn.addEventListener('click', () => {
+            if (currentData && currentData.results) {
+                uploadTipsToLightspeed(currentData);
+            } else {
+                alert('No processed data available to upload.');
+            }
+        });
+        
+        lightspeedGroup.appendChild(uploadBtn);
+        
+        // Add to filter controls
+        filterControls.appendChild(lightspeedGroup);
     }
     
     // Generate simulated response
@@ -1141,4 +1418,130 @@ For demonstration purposes, we'll show simulated results below:
         link.click();
         document.body.removeChild(link);
     }
+    
+    // Helper function to cleanup dollar signs and format numbers consistently
+    function formatCurrency(value) {
+        if (!value) return '0.00';
+        
+        // Remove any existing $ sign and trim
+        let numStr = String(value).replace(/\$/g, '').trim();
+        
+        // Try to parse as float and format with 2 decimal places
+        try {
+            return parseFloat(numStr).toFixed(2);
+        } catch (e) {
+            return '0.00';
+        }
+    }
+    
+    // Add this diagnostic function to help pinpoint issues
+    function diagnoseTipenterIssues() {
+        console.log("=== TIPENTER DIAGNOSTIC INFO ===");
+        
+        // Check key elements
+        console.log("1. Key Elements Exist:");
+        console.log("  - Scanner Tab:", !!document.getElementById('scanner-tab'));
+        console.log("  - Organized Tab:", !!document.getElementById('organized-tab'));
+        console.log("  - Organized Grid:", !!document.getElementById('organizedGrid'));
+        console.log("  - File List:", !!document.getElementById('fileList'));
+        
+        // Check data
+        console.log("2. Data Status:");
+        console.log("  - Selected Files:", selectedFiles ? selectedFiles.size : 'undefined');
+        console.log("  - Processed Images:", processedImages ? processedImages.length : 'undefined');
+        console.log("  - Current Data:", currentData ? 'exists' : 'undefined');
+        
+        // Check functions
+        console.log("3. Function Status:");
+        console.log("  - displayOrganizedImages:", typeof displayOrganizedImages === 'function');
+        console.log("  - processImages:", typeof processImages === 'function');
+        console.log("  - processWithClaudeAPI:", typeof processWithClaudeAPI === 'function');
+        
+        // Check active state
+        console.log("4. Current State:");
+        console.log("  - Active Tab:", document.querySelector('.nav-item.active')?.textContent.trim());
+        console.log("  - View Mode:", document.querySelector('.view-btn.active')?.textContent.trim());
+        
+        console.log("=== END DIAGNOSTIC INFO ===");
+    }
+    
+    // Add this function to ensure all event listeners are properly attached
+    function setupAllEventListeners() {
+        // Scanner tab event listeners
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const processBtn = document.getElementById('processBtn');
+        
+        if (dropArea) {
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.add('active');
+            });
+            
+            dropArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.remove('active');
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.remove('active');
+                
+                const files = e.dataTransfer.files;
+                addFiles(files);
+            });
+            
+            dropArea.addEventListener('click', () => {
+                if (fileInput) fileInput.click();
+            });
+        }
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                addFiles(files);
+                fileInput.value = ''; // Reset file input
+            });
+        }
+        
+        if (processBtn) {
+            processBtn.addEventListener('click', processImages);
+        }
+        
+        // Organized tab event listeners
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
+        const clearFilterBtn = document.getElementById('clearFilterBtn');
+        
+        if (applyFilterBtn) {
+            applyFilterBtn.addEventListener('click', filterOrganizedImages);
+        }
+        
+        if (clearFilterBtn) {
+            clearFilterBtn.addEventListener('click', () => {
+                const filterValue = document.getElementById('filterValue');
+                if (filterValue) filterValue.value = '';
+                displayOrganizedImages(processedImages);
+            });
+        }
+        
+        // Slideshow controls
+        const prevSlideBtn = document.getElementById('prevSlideBtn');
+        const nextSlideBtn = document.getElementById('nextSlideBtn');
+        
+        if (prevSlideBtn) {
+            prevSlideBtn.addEventListener('click', () => navigateSlideshow(-1));
+        }
+        
+        if (nextSlideBtn) {
+            nextSlideBtn.addEventListener('click', () => navigateSlideshow(1));
+        }
+        
+        console.log("All event listeners have been set up");
+    }
+    
+    // Call this after page load to ensure all listeners are attached
+    document.addEventListener('DOMContentLoaded', setupAllEventListeners);
 });
