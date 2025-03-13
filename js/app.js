@@ -9,20 +9,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('progressBar');
     const jsonOutput = document.getElementById('jsonOutput');
     const copyBtn = document.getElementById('copyBtn');
-    const clearAllBtn = document.getElementById('clearAllBtn');
     const tableBody = document.getElementById('tableBody');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
     const sortField = document.getElementById('sortField');
     const sortOrder = document.getElementById('sortOrder');
     const sortBtn = document.getElementById('sortBtn');
     
+    // Navigation Elements
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Organized Tab Elements
+    const organizedGrid = document.getElementById('organizedGrid');
+    const filterField = document.getElementById('filterField');
+    const filterValue = document.getElementById('filterValue');
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    
+    // Slideshow Elements
+    const slideshowView = document.getElementById('slideshowView');
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const slideshowViewBtn = document.getElementById('slideshowViewBtn');
+    const prevSlideBtn = document.getElementById('prevSlideBtn');
+    const nextSlideBtn = document.getElementById('nextSlideBtn');
+    const slideCounter = document.getElementById('slideCounter');
+    const slideshowImageContainer = document.getElementById('slideshowImageContainer');
+    
+    // Slideshow state
+    let currentSlideIndex = 0;
+    
+    // Create Clear All Button if it doesn't exist
+    let clearAllBtn = document.getElementById('clearAllBtn');
+    if (!clearAllBtn && fileList) {
+        // Find the file-list-container
+        const fileListContainer = document.querySelector('.file-list-container');
+        if (fileListContainer) {
+            // Check if file-list-header exists, if not create it
+            let fileListHeader = fileListContainer.querySelector('.file-list-header');
+            if (!fileListHeader) {
+                // Create the header
+                fileListHeader = document.createElement('div');
+                fileListHeader.className = 'file-list-header';
+                
+                // Move the existing h3 into the header
+                const existingH3 = fileListContainer.querySelector('h3');
+                if (existingH3) {
+                    fileListHeader.appendChild(existingH3.cloneNode(true));
+                    existingH3.remove();
+                } else {
+                    // Create a new h3 if it doesn't exist
+                    const newH3 = document.createElement('h3');
+                    newH3.innerHTML = 'Selected Files <span id="fileCount">(0)</span>';
+                    fileListHeader.appendChild(newH3);
+                }
+                
+                // Create clear all button
+                clearAllBtn = document.createElement('button');
+                clearAllBtn.id = 'clearAllBtn';
+                clearAllBtn.className = 'clear-all-btn';
+                clearAllBtn.textContent = 'Clear All';
+                fileListHeader.appendChild(clearAllBtn);
+                
+                // Insert the header before the file list
+                fileListContainer.insertBefore(fileListHeader, fileList);
+            } else {
+                // If header exists but button doesn't, add it
+                clearAllBtn = document.createElement('button');
+                clearAllBtn.id = 'clearAllBtn';
+                clearAllBtn.className = 'clear-all-btn';
+                clearAllBtn.textContent = 'Clear All';
+                fileListHeader.appendChild(clearAllBtn);
+            }
+        }
+    }
+    
     // State
     const selectedFiles = new Map(); // Using Map to store files with unique IDs
     let nextFileId = 1;
     let currentData = null; // Store current data for sorting
+    let processedImages = []; // Store processed images for the organized tab
     
     // Configuration
-    const TEST_MODE = false; // Set to false to disable sample images
+    const TEST_MODE = true; // Set to true to enable sample images for testing
     const USE_REAL_API = true; // Set to true to use the real API through the proxy server
     
     if (TEST_MODE) {
@@ -67,6 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateFileCount();
         validateFileCount();
+        
+        // Ensure the process button is enabled when sample images are loaded
+        if (selectedFiles.size >= 3 && selectedFiles.size <= 100) {
+            processBtn.disabled = false;
+        }
     }
     
     // Create file preview with placeholder for test mode
@@ -120,6 +193,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     exportCsvBtn.addEventListener('click', exportTableToCsv);
     sortBtn.addEventListener('click', sortTable);
+    
+    // Navigation Tab Event Listeners
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const tabId = item.getAttribute('data-tab');
+            
+            // Update active tab
+            navItems.forEach(navItem => navItem.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Show selected tab content
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        });
+    });
+    
+    // Organized Tab Event Listeners
+    if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', filterOrganizedImages);
+    }
+    
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', () => {
+            filterValue.value = '';
+            displayOrganizedImages(processedImages);
+        });
+    }
+    
+    // View toggle event listeners
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', () => {
+            setViewMode('grid');
+        });
+    }
+    
+    if (slideshowViewBtn) {
+        slideshowViewBtn.addEventListener('click', () => {
+            setViewMode('slideshow');
+        });
+    }
+    
+    // Slideshow navigation event listeners
+    if (prevSlideBtn) {
+        prevSlideBtn.addEventListener('click', () => {
+            navigateSlideshow(-1);
+        });
+    }
+    
+    if (nextSlideBtn) {
+        nextSlideBtn.addEventListener('click', () => {
+            navigateSlideshow(1);
+        });
+    }
     
     // Add Test Images button
     const addTestImagesBtn = document.getElementById('addTestImagesBtn');
@@ -249,9 +380,229 @@ document.addEventListener('DOMContentLoaded', () => {
         processBtn.disabled = count < 3 || count > 100;
     }
     
+    // Set view mode (grid or slideshow)
+    function setViewMode(mode) {
+        if (mode === 'grid') {
+            // Update button states
+            gridViewBtn.classList.add('active');
+            slideshowViewBtn.classList.remove('active');
+            
+            // Show grid, hide slideshow
+            organizedGrid.style.display = 'grid';
+            slideshowView.style.display = 'none';
+        } else if (mode === 'slideshow') {
+            // Update button states
+            gridViewBtn.classList.remove('active');
+            slideshowViewBtn.classList.add('active');
+            
+            // Hide grid, show slideshow
+            organizedGrid.style.display = 'none';
+            slideshowView.style.display = 'block';
+            
+            // Initialize slideshow with current filtered images
+            initializeSlideshow();
+        }
+    }
+    
+    // Initialize slideshow
+    function initializeSlideshow() {
+        // Reset to first slide
+        currentSlideIndex = 0;
+        
+        // If we have images, display the first one
+        if (processedImages && processedImages.length > 0) {
+            displayCurrentSlide();
+        } else {
+            // Show empty state
+            slideshowImageContainer.innerHTML = `
+                <div class="empty-state">
+                    <p>No images have been processed yet. Use the Scanner tab to process images first.</p>
+                </div>
+            `;
+            
+            // Disable navigation buttons
+            prevSlideBtn.disabled = true;
+            nextSlideBtn.disabled = true;
+            slideCounter.textContent = 'No images';
+        }
+    }
+    
+    // Display current slide
+    function displayCurrentSlide() {
+        if (!processedImages || processedImages.length === 0) {
+            return;
+        }
+        
+        // Get current image data
+        const currentImage = processedImages[currentSlideIndex];
+        
+        // Update slide counter
+        slideCounter.textContent = `Image ${currentSlideIndex + 1} of ${processedImages.length}`;
+        
+        // Update navigation button states
+        prevSlideBtn.disabled = currentSlideIndex === 0;
+        nextSlideBtn.disabled = currentSlideIndex === processedImages.length - 1;
+        
+        // Create slideshow content
+        slideshowImageContainer.innerHTML = `
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=" 
+                 class="slideshow-image" 
+                 alt="Receipt ${currentSlideIndex + 1}">
+            <div class="slideshow-info">
+                <h3>${currentImage.customer_name || `Receipt ${currentSlideIndex + 1}`}</h3>
+                <div class="slideshow-info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Date</div>
+                        <div class="info-value">${currentImage.date || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Time</div>
+                        <div class="info-value">${currentImage.time || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Check Number</div>
+                        <div class="info-value">${currentImage.check_number || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Amount</div>
+                        <div class="info-value">${currentImage.amount || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tip</div>
+                        <div class="info-value tip">${currentImage.tip || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Total</div>
+                        <div class="info-value">${currentImage.total || 'N/A'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Signed</div>
+                        <div class="info-value">${currentImage.signed ? 'Yes' : 'No'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Navigate slideshow (prev/next)
+    function navigateSlideshow(direction) {
+        if (!processedImages || processedImages.length === 0) {
+            return;
+        }
+        
+        // Calculate new index
+        const newIndex = currentSlideIndex + direction;
+        
+        // Check if new index is valid
+        if (newIndex >= 0 && newIndex < processedImages.length) {
+            currentSlideIndex = newIndex;
+            displayCurrentSlide();
+        }
+    }
+    
+    // Filter Organized Images
+    function filterOrganizedImages() {
+        const field = filterField.value;
+        const value = filterValue.value.toLowerCase();
+        
+        if (!value.trim() || !processedImages.length) {
+            displayOrganizedImages(processedImages);
+            
+            // If in slideshow view, reinitialize with all images
+            if (slideshowView.style.display === 'block') {
+                initializeSlideshow();
+            }
+            return;
+        }
+        
+        const filteredImages = processedImages.filter(item => {
+            if (!item[field]) return false;
+            
+            let fieldValue = String(item[field]).toLowerCase();
+            // Remove $ for monetary values
+            if (field === 'total' || field === 'tip' || field === 'amount') {
+                fieldValue = fieldValue.replace(/\$/g, '');
+            }
+            
+            return fieldValue.includes(value);
+        });
+        
+        // Update the processed images temporarily for the filter
+        const originalImages = [...processedImages];
+        processedImages = filteredImages;
+        
+        // Display filtered images in current view
+        if (slideshowView.style.display === 'block') {
+            initializeSlideshow();
+        } else {
+            displayOrganizedImages(filteredImages);
+        }
+        
+        // Restore original images array
+        processedImages = originalImages;
+    }
+    
+    // Display Organized Images
+    function displayOrganizedImages(images) {
+        // Clear the grid
+        organizedGrid.innerHTML = '';
+        
+        if (!images || images.length === 0) {
+            // Show empty state
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = '<p>No images match your filter criteria. Try adjusting your filter or clear it.</p>';
+            organizedGrid.appendChild(emptyState);
+            return;
+        }
+        
+        // Create image cards
+        images.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            
+            // Create image preview (placeholder for now)
+            const imgPreview = document.createElement('img');
+            imgPreview.className = 'image-preview';
+            imgPreview.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=';
+            imgPreview.alt = `Receipt ${index + 1}`;
+            
+            // Create info section
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'image-info';
+            
+            // Add customer name as title
+            const title = document.createElement('h4');
+            title.textContent = item.customer_name || `Receipt ${index + 1}`;
+            
+            // Add other details
+            const timeP = document.createElement('p');
+            timeP.textContent = `Time: ${item.time || 'N/A'}`;
+            
+            const totalP = document.createElement('p');
+            totalP.textContent = `Total: ${item.total || 'N/A'}`;
+            
+            const tipP = document.createElement('p');
+            tipP.className = 'tip-amount';
+            tipP.textContent = `Tip: ${item.tip || 'N/A'}`;
+            
+            // Assemble the card
+            infoDiv.appendChild(title);
+            infoDiv.appendChild(timeP);
+            infoDiv.appendChild(totalP);
+            infoDiv.appendChild(tipP);
+            
+            card.appendChild(imgPreview);
+            card.appendChild(infoDiv);
+            
+            organizedGrid.appendChild(card);
+        });
+    }
+    
     // Process Images
     async function processImages() {
-        if (selectedFiles.size < 3 || selectedFiles.size > 100) {
+        // Skip validation in test mode
+        if (!TEST_MODE && (selectedFiles.size < 3 || selectedFiles.size > 100)) {
             alert('Please select between 3 and 100 images.');
             return;
         }
@@ -295,12 +646,31 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(countdownInterval);
             countdownTimer.textContent = "Complete";
             
+            // Store processed images for organized tab
+            processedImages = result.results || [];
+            
             // Populate table view
             populateTableView(formattedResult);
             
             // Update API cost display if available
             if (formattedResult.api_cost && formattedResult.api_cost.total_cost) {
                 updateApiCostDisplay(formattedResult.api_cost.total_cost);
+            }
+            
+            // Update organized images tab
+            displayOrganizedImages(processedImages);
+            
+            // Initialize slideshow (but keep it hidden if not in slideshow view)
+            if (slideshowView) {
+                // Only show if in slideshow mode
+                const isSlideshow = slideshowViewBtn && slideshowViewBtn.classList.contains('active');
+                if (isSlideshow) {
+                    setViewMode('slideshow');
+                } else {
+                    // Initialize but keep hidden
+                    slideshowView.style.display = 'none';
+                    initializeSlideshow();
+                }
             }
         } catch (error) {
             console.error('Error processing images:', error);
@@ -496,12 +866,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Show a special message about API limitations
                 const apiErrorMessage = `
-API Error: Unable to access the Claude API directly from the browser.
+API Error: Unable to access the Claude API. 
 
 This is likely due to one of the following:
-1. CORS restrictions that prevent browser-based API calls to different domains
+1. The API key in the .env file is not set correctly
 2. Network connectivity issues
-3. Invalid API key or authentication
+3. The Claude API service is temporarily unavailable
 
 For demonstration purposes, we'll show simulated results below:
                 `;

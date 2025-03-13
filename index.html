@@ -20,7 +20,14 @@
             </div>
         </header>
         
-        <main>
+        <nav class="main-nav">
+            <ul class="nav-tabs">
+                <li class="nav-item active" data-tab="scanner-tab">Scanner</li>
+                <li class="nav-item" data-tab="organized-tab">Organized Images</li>
+            </ul>
+        </nav>
+        
+        <main id="scanner-tab" class="tab-content active">
             <div class="upload-section">
                 <div class="drop-area" id="dropArea">
                     <div class="drop-icon">📷</div>
@@ -97,6 +104,51 @@
                                     <!-- Table rows will be added dynamically -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <main id="organized-tab" class="tab-content">
+            <div class="organized-section">
+                <h2>Organized Images</h2>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filterField">Filter by:</label>
+                        <select id="filterField" class="filter-select">
+                            <option value="customer_name">Customer Name</option>
+                            <option value="time">Closing Time</option>
+                            <option value="total">Check Total</option>
+                            <option value="tip">Tip Amount</option>
+                        </select>
+                        <input type="text" id="filterValue" class="filter-input" placeholder="Filter value...">
+                        <button id="applyFilterBtn" class="filter-btn">Apply Filter</button>
+                        <button id="clearFilterBtn" class="clear-btn">Clear</button>
+                    </div>
+                    <div class="view-toggle">
+                        <label>View Mode:</label>
+                        <button id="gridViewBtn" class="view-btn active">Grid</button>
+                        <button id="slideshowViewBtn" class="view-btn">Slideshow</button>
+                    </div>
+                </div>
+                
+                <div class="organized-grid" id="organizedGrid">
+                    <!-- Organized images will be displayed here -->
+                    <div class="empty-state">
+                        <p>No images have been processed yet. Use the Scanner tab to process images first.</p>
+                    </div>
+                </div>
+                
+                <div class="slideshow-view" id="slideshowView">
+                    <div class="slideshow-container">
+                        <div class="slideshow-controls">
+                            <button id="prevSlideBtn" class="slide-nav-btn">&lt; Previous</button>
+                            <span id="slideCounter">Image 0 of 0</span>
+                            <button id="nextSlideBtn" class="slide-nav-btn">Next &gt;</button>
+                        </div>
+                        <div class="slideshow-image-container" id="slideshowImageContainer">
+                            <!-- Slideshow images will be displayed here -->
                         </div>
                     </div>
                 </div>

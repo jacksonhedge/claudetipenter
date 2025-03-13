@@ -8,7 +8,8 @@ const app = express();
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json({ limit: '50mb' })); // Increased limit for image data
-app.use(express.static('public')); // Serve static files from 'public' directory
+app.use(express.static('.')); // Serve static files from root directory
+app.use(express.static('public')); // Also serve static files from 'public' directory
 
 // API proxy endpoint
 app.post('/api/process-images', async (req, res) => {
