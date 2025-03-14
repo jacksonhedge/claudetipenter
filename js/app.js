@@ -1,3 +1,6 @@
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const dropArea = document.getElementById('dropArea');
@@ -34,6 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextSlideBtn = document.getElementById('nextSlideBtn');
     const slideCounter = document.getElementById('slideCounter');
     const slideshowImageContainer = document.getElementById('slideshowImageContainer');
+    const slideshowClose = document.querySelector('.slideshow-close');
+    
+    // Create a container for the editable slide counter
+    let slideCounterInput;
     
     // Slideshow state
     let currentSlideIndex = 0;
@@ -90,8 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let processedImages = []; // Store processed images for the organized tab
     
     // Configuration
-    const TEST_MODE = true; // Set to true to enable sample images for testing
-    const USE_REAL_API = true; // Set to true to use the real API through the proxy server
+    const TEST_MODE = false; // Set to true to enable sample images for testing
     
     if (TEST_MODE) {
         // Add sample images for testing
@@ -137,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         validateFileCount();
         
         // Ensure the process button is enabled when sample images are loaded
-        if (selectedFiles.size >= 3 && selectedFiles.size <= 100) {
+        if (selectedFiles.size >= 1 && selectedFiles.size <= 100) {
             processBtn.disabled = false;
         }
     }
@@ -174,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFileCount();
             validateFileCount();
             // Call this after DOM is loaded
-    setTimeout(addLightspeedIntegration, 500);
-});
+            setTimeout(addLightspeedIntegration, 500);
+        });
         
         fileItem.appendChild(fileName);
         fileItem.appendChild(removeBtn);
@@ -320,23 +326,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Add Files to Selection
-    function addFiles(files) {
+    async function addFiles(files) {
         for (const file of files) {
-            // Check if file is an image
-            if (!file.type.startsWith('image/')) {
-                alert(`${file.name} is not an image file.`);
+            // Check if file is an image or PDF
+            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+                alert(`${file.name} is not an image or PDF file.`);
                 continue;
             }
             
-            const fileId = nextFileId++;
-            selectedFiles.set(fileId, file);
-            
-            // Create file preview
-            createFilePreview(file, fileId);
+            // If it's a PDF, check if it has multiple pages
+            if (file.type === 'application/pdf') {
+                try {
+                    const pdfPages = await splitPdfIntoPages(file);
+                    
+                    // If PDF has multiple pages, add each page as a separate file
+                    if (pdfPages.length > 1) {
+                        console.log(`Splitting PDF "${file.name}" into ${pdfPages.length} pages`);
+                        
+                        // Add each page as a separate file
+                        for (let i = 0; i < pdfPages.length; i++) {
+                            const pageFile = pdfPages[i];
+                            const fileId = nextFileId++;
+                            selectedFiles.set(fileId, pageFile);
+                            
+                            // Create file preview for this page
+                            createFilePreview(pageFile, fileId);
+                        }
+                    } else if (pdfPages.length === 1) {
+                        // Single page PDF, just add it normally
+                        const fileId = nextFileId++;
+                        selectedFiles.set(fileId, pdfPages[0]);
+                        createFilePreview(pdfPages[0], fileId);
+                    }
+                } catch (error) {
+                    console.error('Error splitting PDF:', error);
+                    // If there's an error splitting the PDF, add it as a single file
+                    const fileId = nextFileId++;
+                    selectedFiles.set(fileId, file);
+                    createFilePreview(file, fileId);
+                }
+            } else {
+                // For non-PDF files, add them normally
+                const fileId = nextFileId++;
+                selectedFiles.set(fileId, file);
+                createFilePreview(file, fileId);
+            }
         }
         
         updateFileCount();
         validateFileCount();
+    }
+    
+    // Function to split a PDF into individual pages
+    async function splitPdfIntoPages(pdfFile) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Read the PDF file as ArrayBuffer
+                const arrayBuffer = await pdfFile.arrayBuffer();
+                
+                // Load the PDF document
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const numPages = pdf.numPages;
+                
+                console.log(`PDF has ${numPages} pages`);
+                
+                // If it's a single page PDF, just return the original file
+                if (numPages === 1) {
+                    resolve([pdfFile]);
+                    return;
+                }
+                
+                // Array to store individual page files
+                const pageFiles = [];
+                
+                // Process each page
+                for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                    // Create a new filename for this page
+                    const pageFilename = pdfFile.name.replace('.pdf', `_page${pageNum}.pdf`);
+                    
+                    // Create a File object for this page
+                    // Since we can't actually split the PDF in the browser, we'll create a reference
+                    // to the original file but with metadata indicating which page it is
+                    const pageFile = new File(
+                        [arrayBuffer], // Use the same data
+                        pageFilename,
+                        { 
+                            type: 'application/pdf',
+                            lastModified: pdfFile.lastModified
+                        }
+                    );
+                    
+                    // Add custom properties to identify this as a specific page
+                    pageFile.pdfPageNumber = pageNum;
+                    pageFile.originalPdfName = pdfFile.name;
+                    pageFile.totalPages = numPages;
+                    
+                    pageFiles.push(pageFile);
+                }
+                
+                resolve(pageFiles);
+            } catch (error) {
+                console.error('Error splitting PDF:', error);
+                reject(error);
+            }
+        });
     }
     
     // Create File Preview
@@ -348,15 +441,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileName = document.createElement('div');
         fileName.className = 'file-name';
         
-        // Create thumbnail with the actual image content
+        // Create thumbnail
         const thumbnail = document.createElement('img');
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            thumbnail.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
         thumbnail.width = 40;
         thumbnail.height = 40;
+        
+        // Set appropriate icon based on file type
+        if (file.type === 'application/pdf') {
+            // PDF icon
+            thumbnail.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlNzRjM2MiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTQgMkg2YTIgMiAwIDAgMC0yIDJ2MTZhMiAyIDAgMCAwIDIgMmgxMmEyIDIgMCAwIDAgMi0yVjh6Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iMTQgMiAxNCA4IDIwIDgiPjwvcG9seWxpbmU+PHBhdGggZD0iTTkgMTVoNiI+PC9wYXRoPjxwYXRoIGQ9Ik05IDExaDYiPjwvcGF0aD48L3N2Zz4=';
+            
+            // Add page number badge if this is a page from a multi-page PDF
+            if (file.pdfPageNumber && file.totalPages > 1) {
+                thumbnail.style.position = 'relative';
+                
+                // Create a small badge to show page number
+                const pageBadge = document.createElement('div');
+                pageBadge.style.position = 'absolute';
+                pageBadge.style.top = '-5px';
+                pageBadge.style.right = '-5px';
+                pageBadge.style.backgroundColor = '#e74c3c';
+                pageBadge.style.color = 'white';
+                pageBadge.style.borderRadius = '50%';
+                pageBadge.style.width = '18px';
+                pageBadge.style.height = '18px';
+                pageBadge.style.display = 'flex';
+                pageBadge.style.alignItems = 'center';
+                pageBadge.style.justifyContent = 'center';
+                pageBadge.style.fontSize = '10px';
+                pageBadge.style.fontWeight = 'bold';
+                pageBadge.textContent = file.pdfPageNumber;
+                
+                // Append the badge to the thumbnail container
+                fileName.appendChild(pageBadge);
+            }
+        } else {
+            // Image file - create thumbnail with the actual image content
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                thumbnail.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
         
         // File name text
         const nameText = document.createElement('span');
@@ -391,9 +517,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Validate File Count
     function validateFileCount() {
         const count = selectedFiles.size;
-        processBtn.disabled = count < 3 || count > 100;
+        processBtn.disabled = count < 1 || count > 100;
     }
     
+    // Add event listener for the close button
+    if (slideshowClose) {
+        slideshowClose.addEventListener('click', () => {
+            closeSlideshow();
+        });
+    }
+
+    // Add event listener for clicking outside the modal content to close
+    slideshowView.addEventListener('click', (e) => {
+        if (e.target === slideshowView) {
+            closeSlideshow();
+        }
+    });
+
+    // Add keyboard navigation for slideshow
+    document.addEventListener('keydown', (e) => {
+        // Only handle keyboard events when slideshow is visible
+        if (slideshowView.style.display === 'block') {
+            switch (e.key) {
+                case 'Escape':
+                    closeSlideshow();
+                    break;
+                case 'ArrowLeft':
+                    navigateSlideshow(-1); // Previous slide
+                    break;
+                case 'ArrowRight':
+                    navigateSlideshow(1); // Next slide
+                    break;
+            }
+        }
+    });
+
     // Set view mode (grid or slideshow)
     function setViewMode(mode) {
         if (mode === 'grid') {
@@ -409,13 +567,20 @@ document.addEventListener('DOMContentLoaded', () => {
             gridViewBtn.classList.remove('active');
             slideshowViewBtn.classList.add('active');
             
-            // Hide grid, show slideshow
-            organizedGrid.style.display = 'none';
+            // Hide grid, show slideshow modal
+            organizedGrid.style.display = 'grid'; // Keep grid visible behind modal
             slideshowView.style.display = 'block';
             
             // Initialize slideshow with current filtered images
             initializeSlideshow();
         }
+    }
+
+    // Close slideshow function
+    function closeSlideshow() {
+        slideshowView.style.display = 'none';
+        gridViewBtn.classList.add('active');
+        slideshowViewBtn.classList.remove('active');
     }
     
     // Initialize slideshow
@@ -441,6 +606,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Create an editable slide counter
+    function createEditableSlideCounter() {
+        // Create container for the counter
+        const counterContainer = document.createElement('div');
+        counterContainer.className = 'slide-counter-container';
+        counterContainer.style.display = 'flex';
+        counterContainer.style.alignItems = 'center';
+        
+        // Create input for current slide
+        slideCounterInput = document.createElement('input');
+        slideCounterInput.type = 'number';
+        slideCounterInput.min = '1';
+        slideCounterInput.max = processedImages.length.toString();
+        slideCounterInput.value = (currentSlideIndex + 1).toString();
+        slideCounterInput.style.width = '50px';
+        slideCounterInput.style.textAlign = 'center';
+        slideCounterInput.style.margin = '0 5px';
+        slideCounterInput.style.padding = '3px';
+        slideCounterInput.style.border = '1px solid #ccc';
+        slideCounterInput.style.borderRadius = '4px';
+        
+        // Add event listener for input changes
+        slideCounterInput.addEventListener('change', () => {
+            let newIndex = parseInt(slideCounterInput.value) - 1;
+            
+            // Validate the input
+            if (isNaN(newIndex) || newIndex < 0) {
+                newIndex = 0;
+            } else if (newIndex >= processedImages.length) {
+                newIndex = processedImages.length - 1;
+            }
+            
+            // Update the input value to reflect valid number
+            slideCounterInput.value = (newIndex + 1).toString();
+            
+            // Jump to the specified slide
+            if (newIndex !== currentSlideIndex) {
+                currentSlideIndex = newIndex;
+                displayCurrentSlide();
+            }
+        });
+        
+        // Create text for "of X" part
+        const totalText = document.createElement('span');
+        totalText.textContent = ` of ${processedImages.length}`;
+        
+        // Assemble the counter
+        counterContainer.appendChild(document.createTextNode('Image '));
+        counterContainer.appendChild(slideCounterInput);
+        counterContainer.appendChild(totalText);
+        
+        return counterContainer;
+    }
+    
     // Enhanced function to display current slide in slideshow view
     function displayCurrentSlide() {
         if (!processedImages || processedImages.length === 0) {
@@ -451,7 +670,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentImage = processedImages[currentSlideIndex];
         
         // Update slide counter
-        slideCounter.textContent = `Image ${currentSlideIndex + 1} of ${processedImages.length}`;
+        if (slideCounterInput) {
+            slideCounterInput.value = (currentSlideIndex + 1).toString();
+            slideCounterInput.max = processedImages.length.toString();
+        } else {
+            // Replace the static counter with an editable one
+            const counterContainer = createEditableSlideCounter();
+            slideCounter.innerHTML = '';
+            slideCounter.appendChild(counterContainer);
+        }
         
         // Update navigation button states
         prevSlideBtn.disabled = currentSlideIndex === 0;
@@ -466,11 +693,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // Check if this is a PDF file
+        const isPdf = currentImage.actual_filename && currentImage.actual_filename.toLowerCase().endsWith('.pdf');
+        
         // Create slideshow content with customer name in uppercase
         slideshowImageContainer.innerHTML = `
-            <img src="${currentImage.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4='}" 
-                 class="slideshow-image" 
-                 alt="Receipt ${currentSlideIndex + 1}">
+            ${isPdf ? 
+                `<div class="pdf-placeholder">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U3NGMzYyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNCAxSDZhMiAyIDAgMCAwLTIgMnYxNmEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyLTJWOHoiPjwvcGF0aD48cG9seWxpbmUgcG9pbnRzPSIxNCAxIDE0IDggMjAgOCI+PC9wb2x5bGluZT48cGF0aCBkPSJNOSAxNWg2Ij48L3BhdGg+PHBhdGggZD0iTTkgMTFoNiI+PC9wYXRoPjwvc3ZnPg==" 
+                        class="slideshow-image pdf-icon" 
+                        alt="PDF ${currentSlideIndex + 1}">
+                    <p class="pdf-filename">${currentImage.actual_filename || 'PDF Document'}</p>
+                </div>` 
+                : 
+                `<img src="${currentImage.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4='}" 
+                    class="slideshow-image" 
+                    style="${currentImage.rotation ? `transform: rotate(${currentImage.rotation}deg);` : ''}"
+                    alt="Receipt ${currentSlideIndex + 1}">`
+            }
             <div class="slideshow-info">
                 <h3>${currentImage.customer_name ? currentImage.customer_name.toUpperCase() : `RECEIPT ${currentSlideIndex + 1}`}</h3>
                 <div class="slideshow-info-grid">
@@ -523,6 +763,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Track current displayed images (filtered or all)
+    let currentDisplayedImages = [];
+    
     // Enhanced Filter Organized Images function
     function filterOrganizedImages() {
         console.log("Filtering images...");
@@ -531,7 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!value.trim() || !processedImages.length) {
             console.log("No filter value or no images to filter");
-            displayOrganizedImages(processedImages);
+            currentDisplayedImages = [...processedImages];
+            displayOrganizedImages(currentDisplayedImages);
             
             // If in slideshow view, reinitialize with all images
             if (slideshowView.style.display === 'block') {
@@ -565,134 +809,226 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log(`Found ${filteredImages.length} matching images`);
         
+        // Update current displayed images
+        currentDisplayedImages = [...filteredImages];
+        
         // Display the filtered images
-        displayOrganizedImages(filteredImages);
+        displayOrganizedImages(currentDisplayedImages);
         
         // If in slideshow view, update the slideshow with filtered images
         if (slideshowView.style.display === 'block') {
-            // Save the current filtered images for the slideshow
-            const originalImages = processedImages;
-            processedImages = filteredImages;
-            
             // Initialize the slideshow with the filtered images
             initializeSlideshow();
+        }
+    }
+    
+    // Display organized images in grid view
+    function displayOrganizedImages(images) {
+        // Clear the grid
+        organizedGrid.innerHTML = '';
+        
+        if (!images || images.length === 0) {
+            // Show empty state
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = '<p>No images have been processed yet. Use the Scanner tab to process images first.</p>';
+            organizedGrid.appendChild(emptyState);
+            return;
+        }
+        
+        console.log(`Displaying ${images.length} organized images`);
+        
+        // Store the current displayed images
+        currentDisplayedImages = [...images];
+        
+        // Create image cards
+        images.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'image-card';
             
-            // Restore the original images array after initializing slideshow
-            processedImages = originalImages;
-        }
-    }
-    
-// Modified displayOrganizedImages function that doesn't rely on file names
-function displayOrganizedImages(images) {
-    // Clear the grid
-    organizedGrid.innerHTML = '';
-    
-    if (!images || images.length === 0) {
-        // Show empty state
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-state';
-        emptyState.innerHTML = '<p>No images have been processed yet. Use the Scanner tab to process images first.</p>';
-        organizedGrid.appendChild(emptyState);
-        return;
-    }
-    
-    console.log(`Displaying ${images.length} organized images`);
-    
-    // Create image cards
-    images.forEach((item, index) => {
-        const card = document.createElement('div');
-        card.className = 'image-card';
-        
-        // Create image preview
-        const imgPreview = document.createElement('img');
-        imgPreview.className = 'image-preview';
-        
-        // Use the assigned imageUrl that we've already set
-        imgPreview.src = item.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=';
-        imgPreview.alt = `Receipt ${index + 1}`;
-        
-        // Create info section
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'image-info';
-        
-        // Add customer name as title (using uppercase format)
-        const title = document.createElement('h4');
-        title.textContent = item.customer_name ? item.customer_name : `RECEIPT ${index + 1}`;
-        
-        // Add other details
-        const timeP = document.createElement('p');
-        timeP.textContent = `Time: ${item.time || 'N/A'}`;
-        
-        const totalP = document.createElement('p');
-        totalP.textContent = `Total: ${item.total || 'N/A'}`;
-        
-        const tipP = document.createElement('p');
-        tipP.className = 'tip-amount';
-        
-        // Format the tip to match your screenshot (just the number, no $ sign)
-        let tipValue = 'N/A';
-        if (item.tip) {
-            // Remove the dollar sign and get just the number
-            const tipMatch = String(item.tip).match(/\$?(\d+(?:\.\d+)?)/);
-            if (tipMatch && tipMatch[1]) {
-                tipValue = tipMatch[1];
+            // Check if this is a PDF file
+            const isPdf = item.actual_filename && item.actual_filename.toLowerCase().endsWith('.pdf');
+            
+            // Create image preview container with rotation controls
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'image-preview-container';
+            previewContainer.style.position = 'relative';
+            
+            // Create image preview
+            const imgPreview = document.createElement('img');
+            imgPreview.className = 'image-preview';
+            
+            // Add rotation controls for non-PDF files
+            if (!isPdf) {
+                // Create rotation controls
+                const rotationControls = document.createElement('div');
+                rotationControls.className = 'rotation-controls';
+                rotationControls.style.position = 'absolute';
+                rotationControls.style.bottom = '5px';
+                rotationControls.style.right = '5px';
+                rotationControls.style.display = 'flex';
+                rotationControls.style.gap = '5px';
+                
+                // Rotate left button
+                const rotateLeftBtn = document.createElement('button');
+                rotateLeftBtn.className = 'rotate-btn rotate-left';
+                rotateLeftBtn.innerHTML = '&#8634;'; // Counter-clockwise arrow
+                rotateLeftBtn.style.backgroundColor = '#3498db';
+                rotateLeftBtn.style.color = 'white';
+                rotateLeftBtn.style.border = 'none';
+                rotateLeftBtn.style.borderRadius = '50%';
+                rotateLeftBtn.style.width = '30px';
+                rotateLeftBtn.style.height = '30px';
+                rotateLeftBtn.style.fontSize = '16px';
+                rotateLeftBtn.style.cursor = 'pointer';
+                rotateLeftBtn.style.display = 'flex';
+                rotateLeftBtn.style.alignItems = 'center';
+                rotateLeftBtn.style.justifyContent = 'center';
+                rotateLeftBtn.title = 'Rotate left';
+                
+                // Rotate right button
+                const rotateRightBtn = document.createElement('button');
+                rotateRightBtn.className = 'rotate-btn rotate-right';
+                rotateRightBtn.innerHTML = '&#8635;'; // Clockwise arrow
+                rotateRightBtn.style.backgroundColor = '#3498db';
+                rotateRightBtn.style.color = 'white';
+                rotateRightBtn.style.border = 'none';
+                rotateRightBtn.style.borderRadius = '50%';
+                rotateRightBtn.style.width = '30px';
+                rotateRightBtn.style.height = '30px';
+                rotateRightBtn.style.fontSize = '16px';
+                rotateRightBtn.style.cursor = 'pointer';
+                rotateRightBtn.style.display = 'flex';
+                rotateRightBtn.style.alignItems = 'center';
+                rotateRightBtn.style.justifyContent = 'center';
+                rotateRightBtn.title = 'Rotate right';
+                
+                // Initialize rotation state if not present
+                if (!item.rotation) {
+                    item.rotation = 0;
+                }
+                
+                // Apply current rotation
+                imgPreview.style.transform = `rotate(${item.rotation}deg)`;
+                
+                // Add rotation event handlers
+                rotateLeftBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent card click event
+                    item.rotation = (item.rotation - 90) % 360;
+                    imgPreview.style.transform = `rotate(${item.rotation}deg)`;
+                });
+                
+                rotateRightBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent card click event
+                    item.rotation = (item.rotation + 90) % 360;
+                    imgPreview.style.transform = `rotate(${item.rotation}deg)`;
+                });
+                
+                // Add buttons to rotation controls
+                rotationControls.appendChild(rotateLeftBtn);
+                rotationControls.appendChild(rotateRightBtn);
+                
+                // Add rotation controls to preview container
+                previewContainer.appendChild(rotationControls);
             }
-        }
-        tipP.textContent = `Tip: ${tipValue}`;
-        
-        // Assemble the card
-        infoDiv.appendChild(title);
-        infoDiv.appendChild(timeP);
-        infoDiv.appendChild(totalP);
-        infoDiv.appendChild(tipP);
-        
-        card.appendChild(imgPreview);
-        card.appendChild(infoDiv);
-        
-        // Add click event handler to show the image in slideshow view
-        card.addEventListener('click', () => {
-            currentSlideIndex = index;
-            setViewMode('slideshow');
-            displayCurrentSlide();
+            
+            // Add image to preview container
+            previewContainer.appendChild(imgPreview);
+            
+            if (isPdf) {
+                // Use PDF icon for PDF files
+                imgPreview.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U3NGMzYyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNCAxSDZhMiAyIDAgMCAwLTIgMnYxNmEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyLTJWOHoiPjwvcGF0aD48cG9seWxpbmUgcG9pbnRzPSIxNCAxIDE0IDggMjAgOCI+PC9wb2x5bGluZT48cGF0aCBkPSJNOSAxNWg2Ij48L3BhdGg+PHBhdGggZD0iTTkgMTFoNiI+PC9wYXRoPjwvc3ZnPg==';
+                
+                // Check if this is a page from a multi-page PDF by looking at the filename
+                const pageMatch = item.actual_filename.match(/_page(\d+)\.pdf$/i);
+                if (pageMatch) {
+                    // Create a badge to show page number
+                    const pageBadge = document.createElement('div');
+                    pageBadge.style.position = 'absolute';
+                    pageBadge.style.top = '5px';
+                    pageBadge.style.right = '5px';
+                    pageBadge.style.backgroundColor = '#e74c3c';
+                    pageBadge.style.color = 'white';
+                    pageBadge.style.borderRadius = '50%';
+                    pageBadge.style.width = '30px';
+                    pageBadge.style.height = '30px';
+                    pageBadge.style.display = 'flex';
+                    pageBadge.style.alignItems = 'center';
+                    pageBadge.style.justifyContent = 'center';
+                    pageBadge.style.fontSize = '14px';
+                    pageBadge.style.fontWeight = 'bold';
+                    pageBadge.textContent = pageMatch[1]; // Page number
+                    
+                    // Add the badge to the container
+                    previewContainer.appendChild(pageBadge);
+                }
+            } else {
+                // Use the assigned imageUrl for image files
+                imgPreview.src = item.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cGF0aCBkPSJNMjEgMTVsLTMuOS0zLjktNi4xIDYuMS00LTQiLz48L3N2Zz4=';
+            }
+            imgPreview.alt = `Receipt ${index + 1}`;
+            
+            // Create info section
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'image-info';
+            
+            // Add customer name as title (using uppercase format)
+            const title = document.createElement('h4');
+            title.textContent = item.customer_name ? item.customer_name.toUpperCase() : `RECEIPT ${index + 1}`;
+            
+            // Add other details
+            const timeP = document.createElement('p');
+            timeP.textContent = `Time: ${item.time || 'N/A'}`;
+            
+            const totalP = document.createElement('p');
+            totalP.textContent = `Total: ${item.total || 'N/A'}`;
+            
+            const tipP = document.createElement('p');
+            tipP.className = 'tip-amount';
+            
+            // Format the tip to match your screenshot (just the number, no $ sign)
+            let tipValue = 'N/A';
+            if (item.tip) {
+                // Remove the dollar sign and get just the number
+                const tipMatch = String(item.tip).match(/\$?(\d+(?:\.\d+)?)/);
+                if (tipMatch && tipMatch[1]) {
+                    tipValue = tipMatch[1];
+                }
+            }
+            tipP.textContent = `Tip: ${tipValue}`;
+            
+            // Assemble the card
+            infoDiv.appendChild(title);
+            infoDiv.appendChild(timeP);
+            infoDiv.appendChild(totalP);
+            infoDiv.appendChild(tipP);
+            
+            // Add the info div to the card
+            card.appendChild(previewContainer);
+            card.appendChild(infoDiv);
+            
+            // Add click event handler to show the image in slideshow view
+            card.addEventListener('click', () => {
+                // Set the current slide to this specific image
+                currentSlideIndex = index;
+                
+                // Open slideshow with the current displayed images (filtered or all)
+                setViewMode('slideshow');
+                
+                // Display the clicked image
+                displayCurrentSlide();
+            });
+            
+            organizedGrid.appendChild(card);
         });
         
-        organizedGrid.appendChild(card);
-    });
-    
-    console.log("Completed organizing images");
-}
-
-// ===== DEBUGGING FUNCTION =====
-// Add this to your code to help diagnose issues
-function debugFileMatching() {
-    console.log("=== FILE MATCHING DEBUG ===");
-    
-    // Log the original files
-    console.log("ORIGINAL FILES:");
-    const originalFiles = Array.from(selectedFiles.values()).map(file => file.name);
-    console.log(originalFiles);
-    
-    // Log the processed results
-    console.log("PROCESSED IMAGES:");
-    if (processedImages && processedImages.length) {
-        const fileNames = processedImages.map(item => item.file_name || "unnamed");
-        console.log(fileNames);
-        
-        // Log the assigned image URLs
-        console.log("IMAGE URLS ASSIGNED:");
-        const hasUrls = processedImages.map(item => !!item.imageUrl);
-        console.log(hasUrls);
-    } else {
-        console.log("No processed images found");
+        console.log("Completed organizing images");
     }
     
-    console.log("=== END DEBUG ===");
-}
-    
-    // Modified process function that properly transfers images to Organized Images tab
+    // Process images function
     async function processImages() {
-        if (selectedFiles.size < 3 || selectedFiles.size > 100) {
-            alert('Please select between 3 and 100 images.');
+        if (selectedFiles.size < 1 || selectedFiles.size > 100) {
+            alert('Please select between 1 and 100 images.');
             return;
         }
         
@@ -704,16 +1040,13 @@ function debugFileMatching() {
         jsonOutput.textContent = 'Processing...';
         tableBody.innerHTML = ''; // Clear table
         
-        // Start countdown timer
-        startCountdown(5 + (selectedFiles.size * 2));
-        
         try {
             // Store the original files in an array for easy indexing
             const originalFiles = Array.from(selectedFiles.values());
             
             // Convert files to base64 for processing
             const filePromises = originalFiles.map(file => {
-                return compressAndConvertToBase64(file);
+                return fileToBase64(file);
             });
             const base64Files = await Promise.all(filePromises);
             
@@ -727,14 +1060,9 @@ function debugFileMatching() {
             jsonOutput.textContent = JSON.stringify(result, null, 2);
             progressBar.style.width = '100%';
             
-            // Stop countdown timer
-            clearInterval(countdownInterval);
-            document.getElementById('countdownTimer').textContent = "Complete";
-            
             // Store processed images for organized tab
             processedImages = result.results || [];
             
-            // ====== THIS IS THE KEY CHANGE ======
             // IMPORTANT: Assign images by index rather than trying to match file names
             if (processedImages.length > 0) {
                 // Make sure we have the same number of processed results as uploaded files
@@ -761,11 +1089,6 @@ function debugFileMatching() {
             // Populate table view
             populateTableView(result);
             
-            // Update API cost display if available
-            if (result.api_cost && result.api_cost.total_cost) {
-                updateApiCostDisplay(result.api_cost.total_cost);
-            }
-            
             // IMPORTANT: Update organized images tab with our modified data
             displayOrganizedImages(processedImages);
             
@@ -782,132 +1105,7 @@ function debugFileMatching() {
             console.error('Error processing images:', error);
             jsonOutput.textContent = `Error: ${error.message}`;
             progressBar.style.width = '100%';
-            
-            // Stop countdown timer on error
-            clearInterval(countdownInterval);
-            document.getElementById('countdownTimer').textContent = "Error";
         }
-    }
-    
-    // Countdown timer variables
-    let countdownInterval;
-    let remainingSeconds = 0;
-    
-    // Start countdown timer
-    function startCountdown(seconds) {
-        const countdownTimer = document.getElementById('countdownTimer');
-        remainingSeconds = seconds;
-        
-        // Update timer immediately
-        updateCountdownDisplay();
-        
-        // Clear any existing interval
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-        }
-        
-        // Update timer every second
-        countdownInterval = setInterval(() => {
-            remainingSeconds--;
-            
-            if (remainingSeconds <= 0) {
-                // Don't clear the interval yet, as processing might still be ongoing
-                // Just keep showing 00:00
-                remainingSeconds = 0;
-            }
-            
-            updateCountdownDisplay();
-        }, 1000);
-    }
-    
-    // Update countdown display
-    function updateCountdownDisplay() {
-        const countdownTimer = document.getElementById('countdownTimer');
-        const minutes = Math.floor(remainingSeconds / 60);
-        const seconds = remainingSeconds % 60;
-        countdownTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    // Compress and convert file to base64
-    async function compressAndConvertToBase64(file) {
-        return new Promise((resolve, reject) => {
-            // Create a canvas for image compression
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-const img = new Image();
-            
-            // Set up image load handler
-            img.onload = () => {
-                // Calculate new dimensions (max 1200px width/height while maintaining aspect ratio)
-                let width = img.width;
-                let height = img.height;
-                const maxDimension = 1200;
-                
-                if (width > maxDimension || height > maxDimension) {
-                    if (width > height) {
-                        height = Math.round((height * maxDimension) / width);
-                        width = maxDimension;
-                    } else {
-                        width = Math.round((width * maxDimension) / height);
-                        height = maxDimension;
-                    }
-                }
-                
-                // Resize image
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Get compressed image as base64
-                const quality = 0.8; // 80% quality, good balance between size and quality
-                const base64String = canvas.toDataURL(file.type, quality).split(',')[1];
-                
-                resolve({
-                    name: file.name,
-                    type: file.type,
-                    data: base64String
-                });
-            };
-            
-            // Handle errors
-            img.onerror = () => {
-                // Fall back to regular base64 conversion if compression fails
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64String = reader.result.split(',')[1];
-                    resolve({
-                        name: file.name,
-                        type: file.type,
-                        data: base64String
-                    });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            };
-            
-            // Only try to compress image files
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    img.src = e.target.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            } else {
-                // For non-image files, use regular base64 conversion
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64String = reader.result.split(',')[1];
-                    resolve({
-                        name: file.name,
-                        type: file.type,
-                        data: base64String
-                    });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            }
-        });
     }
     
     // Convert File to Base64
@@ -927,364 +1125,52 @@ const img = new Image();
         });
     }
     
-    // Enhanced function to process images from Claude API
+    // Process with Claude API
     async function processWithClaudeAPI(base64Files) {
         // Update progress bar to show API call started
         progressBar.style.width = '20%';
         
-        // Check if we should use the real API or simulated responses
-        if (USE_REAL_API) {
-            try {
-                // Use the backend proxy server instead of calling Claude API directly
-                const apiUrl = '/api/process-images';
-                
-                progressBar.style.width = '40%';
-                
-                // Prepare the API request to our proxy server
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        images: base64Files
-                    })
-                });
-                
-                progressBar.style.width = '70%';
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-                }
-                
-                // The server already processes the Claude API response and returns a structured JSON
-                const result = await response.json();
-                progressBar.style.width = '90%';
-                
-                // Make sure the result includes references needed for Lightspeed integration
-                if (result && result.results) {
-                    result.results = result.results.map(item => {
-                        // If reference is missing but check_number exists, use that as the reference
-                        if (!item.reference && item.check_number) {
-                            item.reference = item.check_number;
-                        }
-                        return item;
-                    });
-                }
-                
-                return result;
-            } catch (error) {
-                console.error('Error calling Claude API:', error);
-                
-                // Handle any API fetch errors (including CORS errors)
-                console.warn(`API Error: ${error.message}`);
-                console.warn(`Falling back to simulated response due to API error.`);
-                
-                // Show a special message about API limitations
-                const apiErrorMessage = `
-API Error: Unable to access the Claude API. 
-
-This is likely due to one of the following:
-1. The API key in the .env file is not set correctly
-2. Network connectivity issues
-3. The Claude API service is temporarily unavailable
-
-For demonstration purposes, we'll show simulated results below:
-                `;
-                
-                console.warn(apiErrorMessage);
-                
-                // Fall back to simulated response
-                return getSimulatedResponse(base64Files);
-            }
-        } else {
-            // Use simulated API response
+        try {
+            // Use the backend proxy server to call Claude API
+            const apiUrl = '/api/process-images';
+            
             progressBar.style.width = '40%';
             
-            // Simulate API call with timeout
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    progressBar.style.width = '80%';
-                    resolve(getSimulatedResponse(base64Files));
-                }, 2000);
+            // Prepare the API request to our proxy server
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    images: base64Files
+                })
             });
-        }
-    }
-    
-    // Function to integrate with Lightspeed
-    function uploadTipsToLightspeed(processedData) {
-        // Get the tips data in format needed for Lightspeed API
-        const tipsData = processedData.results.map(item => {
-            // Extract numeric tip value
-            let tipAmount = 0;
-            if (item.tip) {
-                const match = item.tip.match(/\$?(\d+(?:\.\d+)?)/);
-                if (match && match[1]) {
-                    tipAmount = parseFloat(match[1]);
+            
+            progressBar.style.width = '70%';
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            }
+            
+            // The server already processes the Claude API response and returns a structured JSON
+            const result = await response.json();
+            progressBar.style.width = '90%';
+            
+            // Update API cost display if available
+            if (result.api_cost && result.api_cost.total_cost) {
+                const costValueElement = document.querySelector('.cost-value');
+                if (costValueElement) {
+                    costValueElement.textContent = `$${parseFloat(result.api_cost.total_cost).toFixed(4)}`;
                 }
             }
             
-            return {
-                reference: item.reference || item.check_number || "",
-                tip_amount: tipAmount
-            };
-        }).filter(item => item.reference && item.tip_amount > 0);
-        
-        // If no valid tip data, show message
-        if (tipsData.length === 0) {
-            alert("No valid tips found to upload to Lightspeed.");
-            return;
-        }
-        
-        // Confirm upload
-        const confirmUpload = confirm(`Ready to upload ${tipsData.length} tips to Lightspeed. Continue?`);
-        if (!confirmUpload) return;
-        
-        // Here you would call your backend API that connects to Lightspeed
-        // For now, we'll show a simulated progress
-        
-        // Create and show a progress dialog
-        const progressDialog = document.createElement('div');
-        progressDialog.className = 'progress-dialog';
-        progressDialog.innerHTML = `
-            <div class="progress-content">
-                <h3>Uploading Tips to Lightspeed</h3>
-                <div class="progress-container">
-                    <div class="progress-bar" id="lightspeedProgressBar"></div>
-                </div>
-                <p id="lightspeedStatus">Connecting to Lightspeed...</p>
-            </div>
-        `;
-        
-        // Add styles for the dialog
-        const dialogStyle = document.createElement('style');
-        dialogStyle.textContent = `
-            .progress-dialog {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
-            .progress-content {
-                background-color: white;
-                padding: 2rem;
-                border-radius: 8px;
-                width: 400px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            }
-            #lightspeedProgressBar {
-                height: 100%;
-                width: 0;
-                background-color: #2ecc71;
-                transition: width 0.3s ease;
-            }
-            #lightspeedStatus {
-                margin-top: 1rem;
-                text-align: center;
-            }
-        `;
-        
-        document.head.appendChild(dialogStyle);
-        document.body.appendChild(progressDialog);
-        
-        const progressBar = document.getElementById('lightspeedProgressBar');
-        const statusText = document.getElementById('lightspeedStatus');
-        
-        // Simulate the upload process
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += 10;
-            progressBar.style.width = `${progress}%`;
-            
-            if (progress === 30) {
-                statusText.textContent = "Authenticating with Lightspeed...";
-            } else if (progress === 60) {
-                statusText.textContent = `Uploading ${tipsData.length} tips...`;
-            } else if (progress >= 100) {
-                clearInterval(progressInterval);
-                statusText.textContent = "Upload complete!";
-                
-                // Remove dialog after a short delay
-                setTimeout(() => {
-                    document.body.removeChild(progressDialog);
-                    alert(`Successfully uploaded ${tipsData.length} tips to Lightspeed!`);
-                    
-                    // Update the UI to show uploaded status
-                    if (processedData.results) {
-                        processedData.results.forEach(item => {
-                            if (item.reference || item.check_number) {
-                                item.uploaded = true;
-                            }
-                        });
-                        
-                        // Update displays if needed
-                        displayOrganizedImages(processedData.results);
-                    }
-                }, 1000);
-            }
-        }, 500);
-    }
-    
-    // Add Lightspeed integration button to UI
-    function addLightspeedIntegration() {
-        // Find a good place to add the button (e.g., next to other controls)
-        const filterControls = document.querySelector('.filter-controls');
-        if (!filterControls) return;
-        
-        // Create Lightspeed button group
-        const lightspeedGroup = document.createElement('div');
-        lightspeedGroup.className = 'lightspeed-controls';
-        lightspeedGroup.style.marginLeft = 'auto';
-        lightspeedGroup.style.display = 'flex';
-        lightspeedGroup.style.alignItems = 'center';
-        lightspeedGroup.style.gap = '10px';
-        
-        // Create upload button
-        const uploadBtn = document.createElement('button');
-        uploadBtn.className = 'upload-btn';
-        uploadBtn.textContent = 'Upload to Lightspeed';
-        uploadBtn.style.backgroundColor = '#2ecc71';
-        uploadBtn.style.color = 'white';
-        uploadBtn.style.border = 'none';
-        uploadBtn.style.borderRadius = '4px';
-        uploadBtn.style.padding = '0.5rem 1rem';
-        uploadBtn.style.cursor = 'pointer';
-        
-        // Add click event
-        uploadBtn.addEventListener('click', () => {
-            if (currentData && currentData.results) {
-                uploadTipsToLightspeed(currentData);
-            } else {
-                alert('No processed data available to upload.');
-            }
-        });
-        
-        lightspeedGroup.appendChild(uploadBtn);
-        
-        // Add to filter controls
-        filterControls.appendChild(lightspeedGroup);
-    }
-    
-    // Generate simulated response
-    function getSimulatedResponse(base64Files) {
-        // Sample data arrays for more variety
-        const firstNames = ["John", "Sarah", "Michael", "Emily", "David", "Jessica", "Robert", "Jennifer", "William", "Lisa", "James", "Mary", "Thomas", "Patricia", "Charles"];
-        const lastNames = ["Smith", "Johnson", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson"];
-        const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-        const days = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28"];
-        const years = ["2024", "2025"];
-        const hours = ["10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"];
-        const minutes = ["00", "15", "30", "45"];
-        
-        return {
-            success: true,
-            processed_images: base64Files.length,
-            note: "This is a simulated response. To use the actual Claude API, you would need a backend proxy server due to CORS limitations.",
-            results: base64Files.map((file, index) => {
-                // Generate random data for each field
-                const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-                const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-                const month = months[Math.floor(Math.random() * months.length)];
-                const day = days[Math.floor(Math.random() * days.length)];
-                const year = years[Math.floor(Math.random() * years.length)];
-                const hour = hours[Math.floor(Math.random() * hours.length)];
-                const minute = minutes[Math.floor(Math.random() * minutes.length)];
-                
-                // Generate random amounts
-                const baseAmount = (Math.floor(Math.random() * 10000) / 100).toFixed(2);
-                const tipPercent = Math.floor(Math.random() * 25) + 10; // 10-35% tip
-                const tipAmount = (baseAmount * tipPercent / 100).toFixed(2);
-                const totalAmount = (parseFloat(baseAmount) + parseFloat(tipAmount)).toFixed(2);
-                
-                // Generate check number
-                const checkNumber = Math.floor(Math.random() * 9000000) + 1000000;
-                
-                // Determine if signed (80% chance of being signed)
-                const signed = Math.random() < 0.8;
-                
-                return {
-                    file_name: file.name,
-                    date: `${month}/${day}/${year}`,
-                    time: `${hour}:${minute}`,
-                    customer_name: `${firstName} ${lastName}`,
-                    check_number: checkNumber.toString(),
-                    amount: `$${baseAmount}`,
-                    tip: `$${tipAmount}`,
-                    total: `$${totalAmount}`,
-                    signed: signed,
-                    confidence: (Math.random() * 0.3 + 0.7).toFixed(2) // Random confidence between 0.7 and 1.0
-                };
-            })
-        };
-    }
-    
-    // Copy JSON to Clipboard
-    function copyJsonToClipboard() {
-        const jsonText = jsonOutput.textContent;
-        navigator.clipboard.writeText(jsonText)
-            .then(() => {
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                }, 2000);
-            })
-            .catch(err => {
-                console.error('Failed to copy: ', err);
-                alert('Failed to copy to clipboard');
-            });
-    }
-    
-    // Format monetary values to always have 2 decimal places
-    function formatMonetaryValues(result) {
-        if (result && result.results) {
-            result.results = result.results.map(item => {
-                // Add confidence if not present
-                if (!item.confidence) {
-                    item.confidence = Math.random() * 0.2 + 0.8; // Random between 0.8 and 1.0
-                }
-                
-                // Format monetary values - always ensure two decimal places
-                if (item.amount) {
-                    // Remove any existing $ sign
-                    let amount = String(item.amount).replace(/\$/g, '');
-                    // Convert to number and format with 2 decimal places
-                    amount = parseFloat(amount).toFixed(2);
-                    item.amount = `$${amount}`;
-                }
-                
-                // Always format tip with 2 decimal places, even if it's 0 or undefined
-                let tip = item.tip ? String(item.tip).replace(/\$/g, '') : '0';
-                // Convert to number and format with 2 decimal places
-                tip = parseFloat(tip).toFixed(2);
-                item.tip = `$${tip}`;
-                
-                if (item.total) {
-                    // Remove any existing $ sign
-                    let total = String(item.total).replace(/\$/g, '');
-                    // Convert to number and format with 2 decimal places
-                    total = parseFloat(total).toFixed(2);
-                    item.total = `$${total}`;
-                }
-                
-                return item;
-            });
-        }
-        return result;
-    }
-    
-    // Update API Cost Display
-    function updateApiCostDisplay(cost) {
-        const costValueElement = document.querySelector('.cost-value');
-        if (costValueElement && cost) {
-            costValueElement.textContent = `$${parseFloat(cost).toFixed(4)}`;
+            return result;
+        } catch (error) {
+            console.error('Error calling Claude API:', error);
+            progressBar.style.width = '100%';
+            throw new Error(`API Error: ${error.message}. Please ensure your API key is correctly set in the .env file and the server is running.`);
         }
     }
     
@@ -1332,9 +1218,6 @@ For demonstration purposes, we'll show simulated results below:
         // Clone the data to avoid modifying the original
         let sortedData = JSON.parse(JSON.stringify(currentData));
         
-        // Ensure all monetary values are properly formatted before sorting
-        sortedData = formatMonetaryValues(sortedData);
-        
         // Sort the results array
         sortedData.results.sort((a, b) => {
             let valueA = a[field] || '';
@@ -1348,16 +1231,6 @@ For demonstration purposes, we'll show simulated results below:
                 // Convert to numbers for comparison
                 valueA = parseFloat(valueA) || 0;
                 valueB = parseFloat(valueB) || 0;
-            } else if (field === 'time') {
-                // Special handling for time values
-                // Convert time strings to comparable values (minutes since midnight)
-                const getMinutes = (timeStr) => {
-                    const [hours, minutes] = timeStr.split(':').map(Number);
-                    return hours * 60 + minutes;
-                };
-                
-                valueA = getMinutes(valueA);
-                valueB = getMinutes(valueB);
             }
             
             // Compare values
@@ -1370,21 +1243,30 @@ For demonstration purposes, we'll show simulated results below:
         
         // Repopulate the table with sorted data
         populateTableView(sortedData);
-        
-        // Visual feedback that sorting was applied
-        sortBtn.classList.add('active');
-        sortBtn.textContent = 'Sorted!';
-        setTimeout(() => {
-            sortBtn.textContent = 'Sort';
-            sortBtn.classList.remove('active');
-        }, 1000);
+    }
+    
+    // Copy JSON to Clipboard
+    function copyJsonToClipboard() {
+        const jsonText = jsonOutput.textContent;
+        navigator.clipboard.writeText(jsonText)
+            .then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy to clipboard');
+            });
     }
     
     // Export Table to CSV
     function exportTableToCsv() {
         // Get table data
         const rows = [];
-        const headers = ['Customer Name', 'Closing Time', 'Check Total', 'Tip'];
+        const headers = ['Customer Name', 'Time', 'Total', 'Tip'];
         
         // Add headers
         rows.push(headers.join(','));
@@ -1419,129 +1301,39 @@ For demonstration purposes, we'll show simulated results below:
         document.body.removeChild(link);
     }
     
-    // Helper function to cleanup dollar signs and format numbers consistently
-    function formatCurrency(value) {
-        if (!value) return '0.00';
+    // Add Lightspeed integration button to UI
+    function addLightspeedIntegration() {
+        // Find a good place to add the button (e.g., next to other controls)
+        const filterControls = document.querySelector('.filter-controls');
+        if (!filterControls) return;
         
-        // Remove any existing $ sign and trim
-        let numStr = String(value).replace(/\$/g, '').trim();
+        // Create Lightspeed button group
+        const lightspeedGroup = document.createElement('div');
+        lightspeedGroup.className = 'lightspeed-controls';
+        lightspeedGroup.style.marginLeft = 'auto';
+        lightspeedGroup.style.display = 'flex';
+        lightspeedGroup.style.alignItems = 'center';
+        lightspeedGroup.style.gap = '10px';
         
-        // Try to parse as float and format with 2 decimal places
-        try {
-            return parseFloat(numStr).toFixed(2);
-        } catch (e) {
-            return '0.00';
-        }
+        // Create upload button
+        const uploadBtn = document.createElement('button');
+        uploadBtn.className = 'upload-btn';
+        uploadBtn.textContent = 'Upload to Lightspeed';
+        uploadBtn.style.backgroundColor = '#2ecc71';
+        uploadBtn.style.color = 'white';
+        uploadBtn.style.border = 'none';
+        uploadBtn.style.borderRadius = '4px';
+        uploadBtn.style.padding = '0.5rem 1rem';
+        uploadBtn.style.cursor = 'pointer';
+        
+        // Add click event
+        uploadBtn.addEventListener('click', () => {
+            alert('Lightspeed integration would happen here in a real implementation.');
+        });
+        
+        lightspeedGroup.appendChild(uploadBtn);
+        
+        // Add to filter controls
+        filterControls.appendChild(lightspeedGroup);
     }
-    
-    // Add this diagnostic function to help pinpoint issues
-    function diagnoseTipenterIssues() {
-        console.log("=== TIPENTER DIAGNOSTIC INFO ===");
-        
-        // Check key elements
-        console.log("1. Key Elements Exist:");
-        console.log("  - Scanner Tab:", !!document.getElementById('scanner-tab'));
-        console.log("  - Organized Tab:", !!document.getElementById('organized-tab'));
-        console.log("  - Organized Grid:", !!document.getElementById('organizedGrid'));
-        console.log("  - File List:", !!document.getElementById('fileList'));
-        
-        // Check data
-        console.log("2. Data Status:");
-        console.log("  - Selected Files:", selectedFiles ? selectedFiles.size : 'undefined');
-        console.log("  - Processed Images:", processedImages ? processedImages.length : 'undefined');
-        console.log("  - Current Data:", currentData ? 'exists' : 'undefined');
-        
-        // Check functions
-        console.log("3. Function Status:");
-        console.log("  - displayOrganizedImages:", typeof displayOrganizedImages === 'function');
-        console.log("  - processImages:", typeof processImages === 'function');
-        console.log("  - processWithClaudeAPI:", typeof processWithClaudeAPI === 'function');
-        
-        // Check active state
-        console.log("4. Current State:");
-        console.log("  - Active Tab:", document.querySelector('.nav-item.active')?.textContent.trim());
-        console.log("  - View Mode:", document.querySelector('.view-btn.active')?.textContent.trim());
-        
-        console.log("=== END DIAGNOSTIC INFO ===");
-    }
-    
-    // Add this function to ensure all event listeners are properly attached
-    function setupAllEventListeners() {
-        // Scanner tab event listeners
-        const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileInput');
-        const processBtn = document.getElementById('processBtn');
-        
-        if (dropArea) {
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.add('active');
-            });
-            
-            dropArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.remove('active');
-            });
-            
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.remove('active');
-                
-                const files = e.dataTransfer.files;
-                addFiles(files);
-            });
-            
-            dropArea.addEventListener('click', () => {
-                if (fileInput) fileInput.click();
-            });
-        }
-        
-        if (fileInput) {
-            fileInput.addEventListener('change', (e) => {
-                const files = e.target.files;
-                addFiles(files);
-                fileInput.value = ''; // Reset file input
-            });
-        }
-        
-        if (processBtn) {
-            processBtn.addEventListener('click', processImages);
-        }
-        
-        // Organized tab event listeners
-        const applyFilterBtn = document.getElementById('applyFilterBtn');
-        const clearFilterBtn = document.getElementById('clearFilterBtn');
-        
-        if (applyFilterBtn) {
-            applyFilterBtn.addEventListener('click', filterOrganizedImages);
-        }
-        
-        if (clearFilterBtn) {
-            clearFilterBtn.addEventListener('click', () => {
-                const filterValue = document.getElementById('filterValue');
-                if (filterValue) filterValue.value = '';
-                displayOrganizedImages(processedImages);
-            });
-        }
-        
-        // Slideshow controls
-        const prevSlideBtn = document.getElementById('prevSlideBtn');
-        const nextSlideBtn = document.getElementById('nextSlideBtn');
-        
-        if (prevSlideBtn) {
-            prevSlideBtn.addEventListener('click', () => navigateSlideshow(-1));
-        }
-        
-        if (nextSlideBtn) {
-            nextSlideBtn.addEventListener('click', () => navigateSlideshow(1));
-        }
-        
-        console.log("All event listeners have been set up");
-    }
-    
-    // Call this after page load to ensure all listeners are attached
-    document.addEventListener('DOMContentLoaded', setupAllEventListeners);
 });

@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jackson's Tab scanner project</title>
+    <title>TipEnter</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- PDF.js library for PDF handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
 <body>
     <div class="api-cost" id="apiCost">
@@ -12,15 +14,8 @@
         <div class="cost-value">$0.0000</div>
     </div>
     <div class="container">
-        <header>
-            <h1>Jackson's Tab scanner project</h1>
-            <p>This allows us to organize all pre-entered tabs in an easy-to-enter way</p>
-            <div class="header-note">
-                <p><strong>NOTE:</strong> These images are not stored permanently</p>
-            </div>
-        </header>
-        
         <nav class="main-nav">
+            <div class="nav-brand">TipEnter</div>
             <ul class="nav-tabs">
                 <li class="nav-item active" data-tab="scanner-tab">Scanner</li>
                 <li class="nav-item" data-tab="organized-tab">Organized Images</li>
@@ -30,11 +25,11 @@
         <main id="scanner-tab" class="tab-content active">
             <div class="upload-section">
                 <div class="drop-area" id="dropArea">
-                    <div class="drop-icon">📷</div>
-                    <p>Drag & drop images here</p>
+                    <div class="drop-icon">📄</div>
+                    <p>Drag & drop images or PDFs here</p>
                     <p>or</p>
                     <label for="fileInput" class="upload-btn">Select Files</label>
-                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                    <input type="file" id="fileInput" multiple accept="image/*,.pdf" hidden>
                 </div>
                 
                 <div class="file-list-container">
@@ -48,7 +43,7 @@
                 <div class="requirements">
                     <p><strong>Requirements:</strong> 3-100 images of receipts/checks</p>
                     <p class="small-text"><strong>Extracts:</strong> date, time, customer name, check number, amount, tip, total, and signed status</p>
-                    <p class="small-text"><strong>Supported formats:</strong> JPG, PNG, GIF, BMP</p>
+                    <p class="small-text"><strong>Supported formats:</strong> JPG, PNG, GIF, BMP, PDF</p>
                 </div>
             </div>
             
@@ -140,15 +135,22 @@
                     </div>
                 </div>
                 
-                <div class="slideshow-view" id="slideshowView">
-                    <div class="slideshow-container">
-                        <div class="slideshow-controls">
-                            <button id="prevSlideBtn" class="slide-nav-btn">&lt; Previous</button>
-                            <span id="slideCounter">Image 0 of 0</span>
-                            <button id="nextSlideBtn" class="slide-nav-btn">Next &gt;</button>
+                <!-- Slideshow Modal -->
+                <div class="slideshow-modal" id="slideshowView">
+                    <div class="slideshow-modal-content">
+                        <div class="slideshow-modal-header">
+                            <span class="slideshow-close">&times;</span>
+                            <h2>Image Slideshow</h2>
                         </div>
-                        <div class="slideshow-image-container" id="slideshowImageContainer">
-                            <!-- Slideshow images will be displayed here -->
+                        <div class="slideshow-container">
+                            <div class="slideshow-controls">
+                                <button id="prevSlideBtn" class="slide-nav-btn">&lt; Previous</button>
+                                <span id="slideCounter">Image 0 of 0</span>
+                                <button id="nextSlideBtn" class="slide-nav-btn">Next &gt;</button>
+                            </div>
+                            <div class="slideshow-image-container" id="slideshowImageContainer">
+                                <!-- Slideshow images will be displayed here -->
+                            </div>
                         </div>
                     </div>
                 </div>
