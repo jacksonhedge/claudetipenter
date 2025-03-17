@@ -48,7 +48,14 @@ export default class FileUploader {
         this.dropArea.addEventListener('dragover', this.handleDragOver.bind(this));
         this.dropArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
         this.dropArea.addEventListener('drop', this.handleDrop.bind(this));
-        this.dropArea.addEventListener('click', () => this.fileInput.click());
+        
+        // Add click handler for the drop area
+        this.dropArea.addEventListener('click', () => {
+            // Trigger the file input click
+            this.fileInput.click();
+        });
+        
+        // Bind the file select handler
         this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
         
         // Initial update
@@ -132,23 +139,23 @@ export default class FileUploader {
      * Handle drop event
      * @param {DragEvent} e - The drop event
      */
-    handleDrop(e) {
+    async handleDrop(e) {
         e.preventDefault();
         e.stopPropagation();
         this.dropArea.classList.remove('active');
         
         const files = e.dataTransfer.files;
-        this.processFiles(files);
+        await this.processFiles(files);
     }
     
     /**
      * Handle file select event
      * @param {Event} e - The change event
      */
-    handleFileSelect(e) {
+    async handleFileSelect(e) {
         const files = e.target.files;
-        this.processFiles(files);
-        this.fileInput.value = ''; // Reset file input
+        await this.processFiles(files);
+        this.fileInput.value = ''; // Reset file input only after processing is complete
     }
     
     /**
@@ -286,5 +293,27 @@ export default class FileUploader {
         if (this.processBtn) {
             this.processBtn.disabled = !isFileCountValid();
         }
+    }
+    
+    /**
+     * Handle click on the drop area
+     * @param {MouseEvent} e - The click event
+     */
+    handleDropAreaClick(e) {
+        // Prevent any existing event listeners from being triggered multiple times
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Temporarily remove the change event listener
+        this.fileInput.removeEventListener('change', this._boundHandleFileSelect);
+        
+        // Reset the file input value to ensure the change event fires even if selecting the same file
+        this.fileInput.value = '';
+        
+        // Re-attach the event listener
+        this.fileInput.addEventListener('change', this._boundHandleFileSelect);
+        
+        // Trigger the file input click
+        this.fileInput.click();
     }
 }

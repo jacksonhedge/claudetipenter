@@ -17,7 +17,18 @@ let nextFileId = 1;
  * @returns {Promise<void>}
  */
 export async function addFiles(files, onFileAdded) {
-    for (const file of files) {
+    // Convert FileList to Array for easier handling
+    const fileArray = Array.from(files);
+    
+    // If no files were selected, return early
+    if (fileArray.length === 0) {
+        return;
+    }
+    
+    console.log(`Processing ${fileArray.length} files...`);
+    
+    // Process each file
+    for (const file of fileArray) {
         // Check if file is an image or PDF
         if (!isFileTypeSupported(file)) {
             showNotification(`${file.name} is not a supported file type.`, 'error');
@@ -78,6 +89,8 @@ export async function addFiles(files, onFileAdded) {
             }
         }
     }
+    
+    console.log(`File processing complete. Total files: ${selectedFiles.size}`);
 }
 
 /**

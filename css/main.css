@@ -127,10 +127,27 @@ main.tab-content.active {
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin-top: 0.5rem;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
 .upload-btn:hover {
     background-color: #2980b9;
+}
+
+input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
 /* File List Styles */
