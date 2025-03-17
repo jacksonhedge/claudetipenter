@@ -433,35 +433,70 @@ export default class Slideshow {
             className: 'receipt-details'
         });
         
-        // Add receipt info
-        const receiptInfo = createElement('div', {
-            className: 'receipt-info'
+        // Create a table for the receipt data (similar to the table view)
+        const dataTable = createElement('table', {
+            className: 'slideshow-data-table'
         });
         
-        // Add date and time
-        const dateTime = createElement('div', {
-            className: 'date-time'
+        // Create table header
+        const tableHeader = createElement('thead');
+        const headerRow = createElement('tr');
+        
+        // Define the columns to match the table view
+        const columns = [
+            { label: 'Date', field: 'date' },
+            { label: 'Time', field: 'time' },
+            { label: 'Customer Name', field: 'customer_name' },
+            { label: 'Check #', field: 'check_number' },
+            { label: 'Amount', field: 'amount' },
+            { label: 'Payment Type', field: 'payment_type' }
+        ];
+        
+        // Add tip and total if they exist
+        if (currentImage.hasOwnProperty('tip')) {
+            columns.push({ label: 'Tip', field: 'tip' });
+        }
+        
+        if (currentImage.hasOwnProperty('total')) {
+            columns.push({ label: 'Total', field: 'total' });
+        }
+        
+        // Add signed status if it exists
+        if (currentImage.hasOwnProperty('signed')) {
+            columns.push({ label: 'Signed', field: 'signed' });
+        }
+        
+        // Create header cells
+        columns.forEach(column => {
+            const th = createElement('th', {}, column.label);
+            headerRow.appendChild(th);
         });
         
-        dateTime.innerHTML = `
-            <div class="date">${currentImage.date || 'N/A'}</div>
-            <div class="time">${currentImage.time || 'N/A'}</div>
-        `;
-        receiptInfo.appendChild(dateTime);
+        tableHeader.appendChild(headerRow);
+        dataTable.appendChild(tableHeader);
         
-        // Add amount info
-        const amountInfo = createElement('div', {
-            className: 'amount-info'
+        // Create table body
+        const tableBody = createElement('tbody');
+        const dataRow = createElement('tr');
+        
+        // Create data cells
+        columns.forEach(column => {
+            let value = currentImage[column.field];
+            
+            // Format boolean values
+            if (column.field === 'signed' && typeof value === 'boolean') {
+                value = value ? 'Yes' : 'No';
+            }
+            
+            const td = createElement('td', {}, value || 'N/A');
+            dataRow.appendChild(td);
         });
         
-        amountInfo.innerHTML = `
-            <div class="amount">Amount: ${currentImage.amount || 'N/A'}</div>
-            <div class="tip">Tip: ${currentImage.tip || 'N/A'}</div>
-            <div class="total">Total: ${currentImage.total || 'N/A'}</div>
-        `;
-        receiptInfo.appendChild(amountInfo);
+        tableBody.appendChild(dataRow);
+        dataTable.appendChild(tableBody);
         
-        receiptDetails.appendChild(receiptInfo);
+        // Add the table to the receipt details
+        receiptDetails.appendChild(dataTable);
         slideshowContent.appendChild(receiptDetails);
         
         // Add the slideshow content to the container

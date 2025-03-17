@@ -25,6 +25,11 @@ const config = {
         imageQuality: 0.8 // 80% quality for compression
     },
     
+    // Tip Analyzer settings
+    tipAnalyzer: {
+        minFiles: 3 // Minimum files required for tip analysis
+    },
+    
     // UI settings
     ui: {
         defaultTab: 'scanner-tab',

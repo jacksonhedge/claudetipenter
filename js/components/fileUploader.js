@@ -2,7 +2,7 @@
  * File Uploader Component
  * Handles file selection, drag & drop, and file list management
  */
-import { addFiles, removeFile, clearAllFiles, getFileCount, isFileCountValid } from '../services/fileService.js';
+import { addFiles, removeFile, clearAllFiles, getFileCount, isFileCountValid, getSelectedFiles } from '../services/fileService.js';
 import { createElement, confirmDialog } from '../utils/uiUtils.js';
 import config from '../config.js';
 
@@ -49,13 +49,7 @@ export default class FileUploader {
         this.dropArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
         this.dropArea.addEventListener('drop', this.handleDrop.bind(this));
         
-        // Add click handler for the drop area
-        this.dropArea.addEventListener('click', () => {
-            // Trigger the file input click
-            this.fileInput.click();
-        });
-        
-        // Bind the file select handler
+        // Bind the file select handler directly
         this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
         
         // Initial update
@@ -291,7 +285,9 @@ export default class FileUploader {
      */
     validateFileCount() {
         if (this.processBtn) {
-            this.processBtn.disabled = !isFileCountValid();
+            // Check if this is the Tip Analyzer uploader
+            const isTipAnalyzer = this.options.dropAreaId === 'dropArea';
+            this.processBtn.disabled = !isFileCountValid(isTipAnalyzer);
         }
     }
     
@@ -315,5 +311,13 @@ export default class FileUploader {
         
         // Trigger the file input click
         this.fileInput.click();
+    }
+    
+    /**
+     * Get all selected files
+     * @returns {Array} - Array of selected files
+     */
+    getFiles() {
+        return getSelectedFiles();
     }
 }

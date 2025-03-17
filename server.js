@@ -23,8 +23,9 @@ app.post('/api/process-images', async (req, res) => {
       });
     }
     
-    // Extract base64 images from request
+    // Extract base64 images and mode from request
     const base64Files = req.body.images;
+    const mode = req.body.mode || 'tip_analyzer'; // Default to tip analyzer if not specified
     
     if (!base64Files || !Array.isArray(base64Files) || base64Files.length < 1) {
       return res.status(400).json({ error: 'No images provided or invalid format' });
@@ -98,6 +99,16 @@ app.post('/api/process-images', async (req, res) => {
       return;
     }
     
+    // Determine which prompt to use based on the mode
+    let promptText;
+    if (mode === 'file_organizer') {
+      // File organizer mode - don't extract tip or adjusted total
+      promptText = "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text.";
+    } else {
+      // Tip analyzer mode - extract all fields including tip and total
+      promptText = "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. tip: The handwritten tip amount\n8. total: The adjusted total (amount + tip, also handwritten)\n9. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text.";
+    }
+    
     // Make the API call to Claude
     const claudeResponse = await axios.post(
       'https://api.anthropic.com/v1/messages',
@@ -110,7 +121,7 @@ app.post('/api/process-images', async (req, res) => {
             content: [
               {
                 type: "text",
-                text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. tip: The handwritten tip amount\n8. total: The adjusted total (amount + tip, also handwritten)\n9. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
+                text: promptText
               },
               ...base64Files.map(file => ({
                 type: "image",
@@ -268,13 +279,23 @@ app.post('/api/process-images', async (req, res) => {
 });
 
 // Process with Claude API - helper function for batch processing
-async function processWithClaudeAPI(base64Files) {
+async function processWithClaudeAPI(base64Files, mode = 'tip_analyzer') {
   try {
     // Get API key from environment variables
     const apiKey = process.env.CLAUDE_API_KEY;
     
     if (!apiKey) {
       throw new Error('API key not found. Make sure CLAUDE_API_KEY is set in your .env file.');
+    }
+    
+    // Determine which prompt to use based on the mode
+    let promptText;
+    if (mode === 'file_organizer') {
+      // File organizer mode - don't extract tip or adjusted total
+      promptText = "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text.";
+    } else {
+      // Tip analyzer mode - extract all fields including tip and total
+      promptText = "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. tip: The handwritten tip amount\n8. total: The adjusted total (amount + tip, also handwritten)\n9. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text.";
     }
     
     // Make the API call to Claude
@@ -289,7 +310,7 @@ async function processWithClaudeAPI(base64Files) {
             content: [
               {
                 type: "text",
-                text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. tip: The handwritten tip amount\n8. total: The adjusted total (amount + tip, also handwritten)\n9. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
+                text: promptText
               },
               ...base64Files.map(file => ({
                 type: "image",

@@ -127,11 +127,13 @@ export function getSelectedFiles() {
 
 /**
  * Check if the file count is valid
+ * @param {boolean} forTipAnalyzer - Whether this is for the Tip Analyzer tab
  * @returns {boolean} - Whether the file count is valid
  */
-export function isFileCountValid() {
+export function isFileCountValid(forTipAnalyzer = false) {
     const count = selectedFiles.size;
-    return count >= config.fileProcessing.minFiles && count <= config.fileProcessing.maxFiles;
+    const minFiles = forTipAnalyzer ? config.tipAnalyzer.minFiles : config.fileProcessing.minFiles;
+    return count >= minFiles && count <= config.fileProcessing.maxFiles;
 }
 
 /**
@@ -184,4 +186,130 @@ export function exportToCSV(csvContent, fileName = 'receipt_data.csv') {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+/**
+ * Open data in Google Sheets
+ * @param {Array} headers - Array of column headers
+ * @param {Array} rows - Array of data rows
+ */
+export function openInGoogleSheets(headers, rows) {
+    // Convert data to CSV format
+    let csvContent = headers.join(',') + '\n';
+    rows.forEach(row => {
+        // Escape commas in values
+        const escapedRow = row.map(value => {
+            // If value contains comma, quote, or newline, wrap in quotes
+            if (/[,"\n]/.test(value)) {
+                return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+        });
+        csvContent += escapedRow.join(',') + '\n';
+    });
+    
+    // Encode CSV content for URL
+    const encodedCsvContent = encodeURIComponent(csvContent);
+    
+    // Create Google Sheets URL with data
+    const googleSheetsUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQmWnYtbV_WA7cZvt8o5qAFYGzOvwWQ0kHzHDIzH1qOsG3_l9Qe4jTbLMMyLjbLGMvFsxKUYWO-Utj9/pub?output=csv&data=${encodedCsvContent}`;
+    
+    // Open Google Sheets in a new tab
+    window.open(`https://docs.google.com/spreadsheets/create?usp=sheets_api&data=${encodedCsvContent}`, '_blank');
+}
+
+/**
+ * Create a full-screen table view popup
+ * @param {Array} headers - Array of column headers
+ * @param {Array} rows - Array of data rows
+ */
+export function createFullScreenTableView(headers, rows) {
+    // Create modal container
+    const modalContainer = document.createElement('div');
+    modalContainer.className = 'fullscreen-table-modal';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'fullscreen-table-content';
+    
+    // Create header with close button
+    const modalHeader = document.createElement('div');
+    modalHeader.className = 'fullscreen-table-header';
+    
+    const modalTitle = document.createElement('h2');
+    modalTitle.textContent = 'Receipt Data Table';
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'fullscreen-table-close';
+    closeButton.innerHTML = '&times;';
+    closeButton.addEventListener('click', () => {
+        document.body.removeChild(modalContainer);
+    });
+    
+    modalHeader.appendChild(modalTitle);
+    modalHeader.appendChild(closeButton);
+    
+    // Create table container
+    const tableContainer = document.createElement('div');
+    tableContainer.className = 'fullscreen-table-container';
+    
+    // Create table
+    const table = document.createElement('table');
+    table.className = 'fullscreen-data-table';
+    
+    // Create table header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Create table body
+    const tbody = document.createElement('tbody');
+    
+    rows.forEach(row => {
+        const tr = document.createElement('tr');
+        
+        row.forEach(cell => {
+            const td = document.createElement('td');
+            td.textContent = cell;
+            tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+    });
+    
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+    
+    // Assemble modal
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(tableContainer);
+    modalContainer.appendChild(modalContent);
+    
+    // Add modal to body
+    document.body.appendChild(modalContainer);
+    
+    // Add event listener to close modal when clicking outside
+    modalContainer.addEventListener('click', (e) => {
+        if (e.target === modalContainer) {
+            document.body.removeChild(modalContainer);
+        }
+    });
+    
+    // Add event listener to close modal with Escape key
+    document.addEventListener('keydown', function escapeHandler(e) {
+        if (e.key === 'Escape') {
+            if (document.body.contains(modalContainer)) {
+                document.body.removeChild(modalContainer);
+            }
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    });
 }

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TipEnter</title>
     <link rel="stylesheet" href="css/main.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- PDF.js library for PDF handling -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <!-- jsPDF library for PDF generation -->
@@ -20,8 +22,14 @@
         <nav class="main-nav">
             <div class="nav-brand">TipEnter</div>
             <ul class="nav-tabs">
-                <li class="nav-item active" data-tab="scanner-tab">Scanner</li>
-                <li class="nav-item" data-tab="organized-tab">Organized Images</li>
+                <div class="tab-group">
+                    <li class="nav-item active" data-tab="scanner-tab">Tip Analyzer</li>
+                    <li class="nav-item related-tab" data-tab="organized-tab">Organized Images</li>
+                </div>
+                <div class="tab-group">
+                    <li class="nav-item" data-tab="file-organizer-tab">File Organizer</li>
+                    <li class="nav-item related-tab" data-tab="organized-without-tip-tab">Organized Images without Tip</li>
+                </div>
             </ul>
         </nav>
         
@@ -31,7 +39,7 @@
                     <div class="drop-icon">📄</div>
                     <p>Drag & drop images or PDFs here</p>
                     <p>or</p>
-                    <button type="button" class="upload-btn">Select Files</button>
+                    <label for="fileInput" class="upload-btn">Select Files</label>
                     <input type="file" id="fileInput" multiple accept="image/*,.pdf" hidden>
                 </div>
                 
@@ -114,6 +122,92 @@
             </div>
         </main>
         
+        <main id="file-organizer-tab" class="tab-content">
+            <div class="upload-section">
+                <div class="drop-area" id="fileOrganizerDropArea">
+                    <div class="drop-icon">📄</div>
+                    <p>Drag & drop images or PDFs here</p>
+                    <p>or</p>
+                    <label for="fileOrganizerInput" class="upload-btn">Select Files</label>
+                    <input type="file" id="fileOrganizerInput" multiple accept="image/*,.pdf" hidden>
+                </div>
+                
+                <div class="file-list-container">
+                    <h3>Selected Files <span id="fileOrganizerCount">(0)</span></h3>
+                    <div id="fileOrganizerList" class="file-list"></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="organizeBtn" class="process-btn" disabled>Organize Files</button>
+                <div class="requirements">
+                    <p><strong>Requirements:</strong> 1-100 images or PDFs</p>
+                    <p class="small-text"><strong>Supported formats:</strong> JPG, PNG, GIF, BMP, PDF</p>
+                </div>
+            </div>
+            
+            <div class="results-section" id="organizerResultsSection">
+                <h2>Results</h2>
+                <div class="progress-container" id="organizerProgressContainer">
+                    <div class="progress-bar" id="organizerProgressBar"></div>
+                </div>
+                <div class="countdown-container" id="organizerCountdownContainer">
+                    <div class="countdown-label">Estimated time remaining:</div>
+                    <div class="countdown-timer" id="organizerCountdownTimer">--:--</div>
+                </div>
+                <div class="results-container">
+                    <div class="json-side">
+                        <div class="json-header">
+                            <h3>JSON Output</h3>
+                            <button id="organizerCopyBtn" class="copy-btn">Copy JSON</button>
+                        </div>
+                        <pre id="organizerJsonOutput" class="json-content"></pre>
+                    </div>
+                    
+                    <div class="table-side">
+                        <div class="table-header">
+                            <h3>Table View</h3>
+                            <div class="table-controls">
+                                <button id="organizerExportCsvBtn" class="export-btn">Export CSV</button>
+                                <div class="sort-controls">
+                                    <select id="organizerSortField" class="sort-select">
+                                        <option value="customer_name">Customer Name</option>
+                                        <option value="check_number">Check #</option>
+                                        <option value="amount" selected>Check Amount</option>
+                                        <option value="payment_type">Payment Type</option>
+                                        <option value="time">Closing Time</option>
+                                    </select>
+                                    <select id="organizerSortOrder" class="sort-select">
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                    <button id="organizerSortBtn" class="sort-btn">Sort</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="organizerDataTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th width="20%">Customer Name</th>
+                                        <th width="10%">Check #</th>
+                                        <th width="15%">Check Amount</th>
+                                        <th width="15%">Payment Type</th>
+                                        <th width="15%">Date</th>
+                                        <th width="15%">Time</th>
+                                        <th width="10%">Signed</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="organizerTableBody">
+                                    <!-- Table rows will be added dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
         <main id="organized-tab" class="tab-content">
             <div class="organized-section">
                 <h2>Organized Images</h2>
@@ -148,7 +242,7 @@
                 <div class="organized-grid" id="organizedGrid">
                     <!-- Organized images will be displayed here -->
                     <div class="empty-state">
-                        <p>No images have been processed yet. Use the Scanner tab to process images first.</p>
+                        <p>No images have been processed yet. Use the Tip Analyzer tab to process images first.</p>
                     </div>
                 </div>
                 
@@ -166,6 +260,65 @@
                                 <button id="nextSlideBtn" class="slide-nav-btn">Next &gt;</button>
                             </div>
                             <div class="slideshow-image-container" id="slideshowImageContainer">
+                                <!-- Slideshow images will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <main id="organized-without-tip-tab" class="tab-content">
+            <div class="organized-section">
+                <h2>Organized Images without Tip</h2>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filterFieldNoTip">Filter by:</label>
+                        <select id="filterFieldNoTip" class="filter-select">
+                            <option value="customer_name">Customer Name</option>
+                            <option value="check_number">Check #</option>
+                            <option value="amount" selected>Check Amount</option>
+                            <option value="payment_type">Payment Type</option>
+                            <option value="time">Closing Time</option>
+                            <option value="date">Date</option>
+                        </select>
+                        <input type="text" id="filterValueNoTip" class="filter-input" placeholder="Filter value...">
+                        <select id="filterSortOrderNoTip" class="filter-select">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                        <button id="applyFilterBtnNoTip" class="filter-btn">Apply Filter</button>
+                        <button id="clearFilterBtnNoTip" class="clear-btn">Clear</button>
+                    </div>
+                    <div class="view-toggle">
+                        <label>View Mode:</label>
+                        <button id="gridViewBtnNoTip" class="view-btn active">Grid</button>
+                        <button id="slideshowViewBtnNoTip" class="view-btn">Slideshow</button>
+                        <button id="exportPdfBtnNoTip" class="export-btn">Export PDF</button>
+                    </div>
+                </div>
+                
+                <div class="organized-grid" id="organizedGridNoTip">
+                    <!-- Organized images will be displayed here -->
+                    <div class="empty-state">
+                        <p>No images have been processed yet. Use the File Organizer tab to process images first.</p>
+                    </div>
+                </div>
+                
+                <!-- Slideshow Modal -->
+                <div class="slideshow-modal" id="slideshowViewNoTip">
+                    <div class="slideshow-modal-content">
+                        <div class="slideshow-modal-header">
+                            <span class="slideshow-close">&times;</span>
+                            <h2>Image Slideshow</h2>
+                        </div>
+                        <div class="slideshow-container">
+                            <div class="slideshow-controls">
+                                <button id="prevSlideBtnNoTip" class="slide-nav-btn">&lt; Previous</button>
+                                <span id="slideCounterNoTip">Image 0 of 0</span>
+                                <button id="nextSlideBtnNoTip" class="slide-nav-btn">Next &gt;</button>
+                            </div>
+                            <div class="slideshow-image-container" id="slideshowImageContainerNoTip">
                                 <!-- Slideshow images will be displayed here -->
                             </div>
                         </div>

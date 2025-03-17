@@ -163,7 +163,35 @@ export function sortReceiptData(data, field, order) {
             // Special handling for time values
             // Convert time strings to comparable values (minutes since midnight)
             const getMinutes = (timeStr) => {
-                const [hours, minutes] = timeStr.split(':').map(Number);
+                if (!timeStr) return 0;
+                
+                // Handle AM/PM format
+                let isPM = false;
+                let timeValue = timeStr;
+                
+                if (timeStr.toLowerCase().includes('pm')) {
+                    isPM = true;
+                    timeValue = timeStr.toLowerCase().replace('pm', '').trim();
+                } else if (timeStr.toLowerCase().includes('am')) {
+                    timeValue = timeStr.toLowerCase().replace('am', '').trim();
+                }
+                
+                // Split hours and minutes
+                const parts = timeValue.split(':');
+                if (parts.length < 2) return 0;
+                
+                let hours = parseInt(parts[0], 10) || 0;
+                let minutes = parseInt(parts[1], 10) || 0;
+                
+                // Convert to 24-hour format if PM
+                if (isPM && hours < 12) {
+                    hours += 12;
+                }
+                // Handle 12 AM as 0 hours
+                if (!isPM && hours === 12) {
+                    hours = 0;
+                }
+                
                 return hours * 60 + minutes;
             };
             
