@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TipEnter</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/main.css">
     <!-- PDF.js library for PDF handling -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <!-- jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="api-cost" id="apiCost">
@@ -73,6 +76,9 @@
                                 <div class="sort-controls">
                                     <select id="sortField" class="sort-select">
                                         <option value="customer_name">Customer Name</option>
+                                        <option value="check_number">Check #</option>
+                                        <option value="amount" selected>Check Amount</option>
+                                        <option value="payment_type">Payment Type</option>
                                         <option value="time">Closing Time</option>
                                         <option value="total">Check Total</option>
                                         <option value="tip">Tip</option>
@@ -89,10 +95,13 @@
                             <table id="dataTable" class="data-table">
                                 <thead>
                                     <tr>
-                                        <th width="30%">Customer Name</th>
+                                        <th width="20%">Customer Name</th>
+                                        <th width="10%">Check #</th>
+                                        <th width="15%">Check Amount</th>
+                                        <th width="15%">Payment Type</th>
                                         <th width="15%">Closing Time</th>
-                                        <th width="25%">Check Total</th>
-                                        <th width="25%">Tip</th>
+                                        <th width="15%">Check Total</th>
+                                        <th width="10%">Tip</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableBody">
@@ -113,11 +122,18 @@
                         <label for="filterField">Filter by:</label>
                         <select id="filterField" class="filter-select">
                             <option value="customer_name">Customer Name</option>
+                            <option value="check_number">Check #</option>
+                            <option value="amount" selected>Check Amount</option>
+                            <option value="payment_type">Payment Type</option>
                             <option value="time">Closing Time</option>
                             <option value="total">Check Total</option>
                             <option value="tip">Tip Amount</option>
                         </select>
                         <input type="text" id="filterValue" class="filter-input" placeholder="Filter value...">
+                        <select id="filterSortOrder" class="filter-select">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
                         <button id="applyFilterBtn" class="filter-btn">Apply Filter</button>
                         <button id="clearFilterBtn" class="clear-btn">Clear</button>
                     </div>
@@ -125,6 +141,7 @@
                         <label>View Mode:</label>
                         <button id="gridViewBtn" class="view-btn active">Grid</button>
                         <button id="slideshowViewBtn" class="view-btn">Slideshow</button>
+                        <button id="exportPdfBtn" class="export-btn">Export PDF</button>
                     </div>
                 </div>
                 
@@ -163,6 +180,6 @@
         </footer>
     </div>
     
-    <script src="js/app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

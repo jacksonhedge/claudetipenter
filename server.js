@@ -38,7 +38,10 @@ app.post('/api/process-images', async (req, res) => {
     
     if (!allFilesSupported) {
       console.warn('Unsupported file format detected. Claude API only supports JPEG, PNG, GIF, and WebP formats.');
-      return generateSimulatedResponse(base64Files);
+      return res.status(400).json({ 
+        error: 'Unsupported file format', 
+        message: 'Claude API only supports JPEG, PNG, GIF, and WebP formats.' 
+      });
     }
     
     // Claude API has limitations on the number of images and their size
@@ -67,9 +70,12 @@ app.post('/api/process-images', async (req, res) => {
           }
         } catch (error) {
           console.error(`Error processing batch ${i + 1}:`, error);
-          // If a batch fails, use simulated data for that batch
-          const simulatedBatch = generateSimulatedResponse(batches[i]);
-          batchResults.push(...simulatedBatch.results);
+          // Add error information to the batch results
+          batchResults.push({
+            error: true,
+            batch: i + 1,
+            message: `Error processing batch ${i + 1}: ${error.message}`
+          });
         }
       }
       
@@ -104,7 +110,7 @@ app.post('/api/process-images', async (req, res) => {
             content: [
               {
                 type: "text",
-                text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. tip: The handwritten tip amount\n7. total: The adjusted total (amount + tip, also handwritten)\n8. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
+                text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. tip: The handwritten tip amount\n8. total: The adjusted total (amount + tip, also handwritten)\n9. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
               },
               ...base64Files.map(file => ({
                 type: "image",
@@ -283,7 +289,7 @@ async function processWithClaudeAPI(base64Files) {
             content: [
               {
                 type: "text",
-                text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. tip: The handwritten tip amount\n7. total: The adjusted total (amount + tip, also handwritten)\n8. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
+                text: "These images are handwritten receipts/checks. Extract the following fields from each image and return them as structured JSON:\n\n1. date: The date on the receipt/check\n2. time: The time on the receipt/check\n3. customer_name: The name of the customer (with first name as the start of the alphabetical order)\n4. check_number: The check or receipt number\n5. amount: The base amount (before tip)\n6. payment_type: The payment method used (e.g., Mastercard, Visa, AMEX, Discover)\n7. tip: The handwritten tip amount\n8. total: The adjusted total (amount + tip, also handwritten)\n9. signed: A boolean (true/false) indicating if the receipt is signed\n\nThe JSON should have an array called 'results' with an object for each image containing 'file_name' and all the extracted fields. Format the response as valid JSON without any additional text."
               },
               ...base64Files.map(file => ({
                 type: "image",
@@ -412,8 +418,8 @@ async function processWithClaudeAPI(base64Files) {
     return result;
   } catch (error) {
     console.error('Error in processWithClaudeAPI:', error);
-    // If there's an error, return simulated data
-    return generateSimulatedResponse(base64Files);
+    // Throw the error to be handled by the caller
+    throw error;
   }
 }
 
@@ -427,6 +433,9 @@ function generateSimulatedResponse(base64Files) {
   const years = ["2024", "2025"];
   const hours = ["10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"];
   const minutes = ["00", "15", "30", "45"];
+  
+  // Payment types
+  const paymentTypes = ["Mastercard", "Visa", "AMEX", "Discover"];
   
   // Create simulated response
   return {
@@ -452,6 +461,9 @@ function generateSimulatedResponse(base64Files) {
       // Generate check number
       const checkNumber = Math.floor(Math.random() * 9000000) + 1000000;
       
+      // Select random payment type
+      const paymentType = paymentTypes[Math.floor(Math.random() * paymentTypes.length)];
+      
       // Determine if signed (80% chance of being signed)
       const signed = Math.random() < 0.8;
       
@@ -462,6 +474,7 @@ function generateSimulatedResponse(base64Files) {
         customer_name: `${firstName} ${lastName}`,
         check_number: checkNumber.toString(),
         amount: `$${baseAmount}`,
+        payment_type: paymentType,
         tip: `$${tipAmount}`,
         total: `$${totalAmount}`,
         signed: signed,
