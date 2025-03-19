@@ -114,16 +114,52 @@ export default class OrganizerResultsTable {
         // Create row
         const row = document.createElement('tr');
         
-        // Add cells
-        row.innerHTML = `
-            <td>${item.customer_name || 'N/A'}</td>
-            <td>${item.check_number || 'N/A'}</td>
-            <td>${item.amount || 'N/A'}</td>
-            <td>${item.payment_type || 'N/A'}</td>
-            <td>${item.date || 'N/A'}</td>
-            <td>${item.time || 'N/A'}</td>
-            <td>${item.signed ? 'Yes' : 'No'}</td>
-        `;
+        // Check if this is an error item
+        if (item.error === true) {
+            // Create an error row that spans all columns
+            row.className = 'error-row';
+            
+            // Format the error message with batch information if available
+            let errorMessage = item.message || 'Unknown error';
+            if (item.batch) {
+                errorMessage = `Batch ${item.batch}: ${errorMessage}`;
+            }
+            
+            // Add confidence information if available
+            if (item.confidence) {
+                errorMessage += `<br><span class="error-details">Confidence: ${(item.confidence * 100).toFixed(2)}%</span>`;
+            }
+            
+            // Add tip information if available
+            if (item.tip) {
+                errorMessage += `<br><span class="error-details">Tip: ${item.tip}</span>`;
+            }
+            
+            row.innerHTML = `
+                <td colspan="17" class="error-message">${errorMessage}</td>
+            `;
+        } else {
+            // Add cells with the new format for normal data
+            row.innerHTML = `
+                <td>${item.check_number || 'N/A'}</td>
+                <td>${item.customer_name || 'N/A'}</td>
+                <td>${item.server || 'N/A'}</td>
+                <td>${item.time || 'N/A'}</td>
+                <td>${item.guests || '1'}</td>
+                <td>${item.comps || '$0.00'}</td>
+                <td>${item.voids || '$0.00'}</td>
+                <td>${item.amount || '$0.00'}</td>
+                <td>${item.auto_grat || '$0.00'}</td>
+                <td>${item.tax || '$0.00'}</td>
+                <td>${item.total || '$0.00'}</td>
+                <td>${item.payment_type || 'N/A'}</td>
+                <td>${item.tip || '$0.00'}</td>
+                <td>${item.cash || '$0.00'}</td>
+                <td>${item.credit || '$0.00'}</td>
+                <td>${item.tenders || '$0.00'}</td>
+                <td>${item.rev_ctr || 'Back Bar'}</td>
+            `;
+        }
         
         // Add row to table
         this.tableBody.appendChild(row);
@@ -218,17 +254,34 @@ export default class OrganizerResultsTable {
             return;
         }
         
-        // Convert data to CSV
-        const headers = ['Customer Name', 'Check #', 'Amount', 'Payment Type', 'Date', 'Time', 'Signed'];
-        const rows = this.data.results.map(item => [
-            item.customer_name || '',
-            item.check_number || '',
-            item.amount || '',
-            item.payment_type || '',
-            item.date || '',
-            item.time || '',
-            item.signed ? 'Yes' : 'No'
-        ]);
+        // Convert data to CSV with the new format
+        const headers = ['#', 'Name', 'Server', 'Time', 'Guests', 'Comps', 'Voids', 'Net Sales', 'Auto Grat', 'Tax', 'Bill Total', 'Payment', 'Tips', 'Cash', 'Credit', 'Tenders', 'Rev Ctr'];
+        const rows = this.data.results.map(item => {
+            // Skip error items or convert them to a special format
+            if (item.error === true) {
+                return ['ERROR', item.message || 'Unknown error', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+            }
+            
+            return [
+                item.check_number || '',
+                item.customer_name || '',
+                item.server || '',
+                item.time || '',
+                item.guests || '1',
+                item.comps || '$0.00',
+                item.voids || '$0.00',
+                item.amount || '$0.00',
+                item.auto_grat || '$0.00',
+                item.tax || '$0.00',
+                item.total || '$0.00',
+                item.payment_type || '',
+                item.tip || '$0.00',
+                item.cash || '$0.00',
+                item.credit || '$0.00',
+                item.tenders || '$0.00',
+                item.rev_ctr || 'Back Bar'
+            ];
+        });
         
         // Create CSV content
         let csvContent = headers.join(',') + '\n';
@@ -256,17 +309,34 @@ export default class OrganizerResultsTable {
             return;
         }
         
-        // Define headers and prepare data rows
-        const headers = ['Customer Name', 'Check #', 'Amount', 'Payment Type', 'Date', 'Time', 'Signed'];
-        const rows = this.data.results.map(item => [
-            item.customer_name || '',
-            item.check_number || '',
-            item.amount || '',
-            item.payment_type || '',
-            item.date || '',
-            item.time || '',
-            item.signed ? 'Yes' : 'No'
-        ]);
+        // Define headers and prepare data rows with the new format
+        const headers = ['#', 'Name', 'Server', 'Time', 'Guests', 'Comps', 'Voids', 'Net Sales', 'Auto Grat', 'Tax', 'Bill Total', 'Payment', 'Tips', 'Cash', 'Credit', 'Tenders', 'Rev Ctr'];
+        const rows = this.data.results.map(item => {
+            // Skip error items or convert them to a special format
+            if (item.error === true) {
+                return ['ERROR', item.message || 'Unknown error', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+            }
+            
+            return [
+                item.check_number || '',
+                item.customer_name || '',
+                item.server || '',
+                item.time || '',
+                item.guests || '1',
+                item.comps || '$0.00',
+                item.voids || '$0.00',
+                item.amount || '$0.00',
+                item.auto_grat || '$0.00',
+                item.tax || '$0.00',
+                item.total || '$0.00',
+                item.payment_type || '',
+                item.tip || '$0.00',
+                item.cash || '$0.00',
+                item.credit || '$0.00',
+                item.tenders || '$0.00',
+                item.rev_ctr || 'Back Bar'
+            ];
+        });
         
         // Open data in Google Sheets
         openInGoogleSheets(headers, rows);
@@ -280,17 +350,34 @@ export default class OrganizerResultsTable {
             return;
         }
         
-        // Define headers and prepare data rows
-        const headers = ['Customer Name', 'Check #', 'Amount', 'Payment Type', 'Date', 'Time', 'Signed'];
-        const rows = this.data.results.map(item => [
-            item.customer_name || '',
-            item.check_number || '',
-            item.amount || '',
-            item.payment_type || '',
-            item.date || '',
-            item.time || '',
-            item.signed ? 'Yes' : 'No'
-        ]);
+        // Define headers and prepare data rows with the new format
+        const headers = ['#', 'Name', 'Server', 'Time', 'Guests', 'Comps', 'Voids', 'Net Sales', 'Auto Grat', 'Tax', 'Bill Total', 'Payment', 'Tips', 'Cash', 'Credit', 'Tenders', 'Rev Ctr'];
+        const rows = this.data.results.map(item => {
+            // Skip error items or convert them to a special format
+            if (item.error === true) {
+                return ['ERROR', item.message || 'Unknown error', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+            }
+            
+            return [
+                item.check_number || '',
+                item.customer_name || '',
+                item.server || '',
+                item.time || '',
+                item.guests || '1',
+                item.comps || '$0.00',
+                item.voids || '$0.00',
+                item.amount || '$0.00',
+                item.auto_grat || '$0.00',
+                item.tax || '$0.00',
+                item.total || '$0.00',
+                item.payment_type || '',
+                item.tip || '$0.00',
+                item.cash || '$0.00',
+                item.credit || '$0.00',
+                item.tenders || '$0.00',
+                item.rev_ctr || 'Back Bar'
+            ];
+        });
         
         // Create full screen table view
         createFullScreenTableView(headers, rows);

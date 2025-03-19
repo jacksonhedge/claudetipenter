@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epson Scanner & Printer Integration</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="css/epson-scanner.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin-top: 30px;
+        }
+        .scan-result-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        #scan-results-container {
+            margin-top: 20px;
+            display: none;
+        }
+        #scan-form {
+            display: none;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        /* Tabs styling */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-top-left-radius: 0.25rem;
+            border-top-right-radius: 0.25rem;
+            margin-bottom: -1px;
+        }
+        .tab.active {
+            color: #495057;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Card styling */
+        .card {
+            margin-bottom: 20px;
+        }
+        
+        /* Printer Connect Component Styling */
+        .bg-blue-500 {
+            background-color: #3b82f6;
+        }
+        .hover\:bg-blue-600:hover {
+            background-color: #2563eb;
+        }
+        .bg-red-500 {
+            background-color: #ef4444;
+        }
+        .hover\:bg-red-600:hover {
+            background-color: #dc2626;
+        }
+        .bg-green-500 {
+            background-color: #10b981;
+        }
+        .hover\:bg-green-600:hover {
+            background-color: #059669;
+        }
+        .text-white {
+            color: white;
+        }
+        .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .rounded-md {
+            border-radius: 0.375rem;
+        }
+        .disabled\:bg-blue-300:disabled {
+            background-color: #93c5fd;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Epson Scanner & Printer Integration</h1>
+        <p class="lead">This page demonstrates how to integrate with Epson Connect API for scanning and the Epson ePOS SDK for direct printer communication.</p>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="scanner">Scanner</div>
+            <div class="tab" data-tab="printer">Printer</div>
+        </div>
+        
+        <!-- Scanner Tab Content -->
+        <div class="tab-content active" id="scanner-tab">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Scanner Controls</h5>
+                </div>
+                <div class="card-body">
+                    <p id="scan-status">Click the button below to get scan destinations.</p>
+                    
+                    <button id="scan-button" class="btn btn-primary">Get Scan Destinations</button>
+                    
+                    <form id="scan-form">
+                        <div class="form-group">
+                            <label for="scan-destinations">Destination:</label>
+                            <select id="scan-destinations" class="form-control" required>
+                                <!-- Destinations will be populated dynamically -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scan-resolution">Resolution:</label>
+                            <select id="scan-resolution" class="form-control">
+                                <option value="100">100 DPI</option>
+                                <option value="200">200 DPI</option>
+                                <option value="300" selected>300 DPI</option>
+                                <option value="600">600 DPI</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scan-color-mode">Color Mode:</label>
+                            <select id="scan-color-mode" class="form-control">
+                                <option value="color" selected>Color</option>
+                                <option value="grayscale">Grayscale</option>
+                                <option value="monochrome">Monochrome</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scan-file-format">File Format:</label>
+                            <select id="scan-file-format" class="form-control">
+                                <option value="pdf" selected>PDF</option>
+                                <option value="jpeg">JPEG</option>
+                                <option value="png">PNG</option>
+                            </select>
+                        </div>
+                        
+                        <input type="hidden" id="scan-job-id">
+                        <button type="submit" class="btn btn-success">Start Scan</button>
+                    </form>
+                    
+                    <div id="scan-results-container">
+                        <h5>Scan Results:</h5>
+                        <div id="scan-results">
+                            <!-- Scan results will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Printer Tab Content -->
+        <div class="tab-content" id="printer-tab">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div id="printer-connect-container">
+                        <!-- Printer connect component will be rendered here -->
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="receipt-template-container">
+                        <!-- Receipt template component will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div id="bulk-print-container">
+                        <!-- Bulk print component will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Implementation Notes</h5>
+            </div>
+            <div class="card-body">
+                <p>This example demonstrates how to:</p>
+                <ol>
+                    <li>Get scan destinations from the Epson Connect API</li>
+                    <li>Start a scan job with specific settings</li>
+                    <li>Poll for scan job status</li>
+                    <li>Display scan results when the job is complete</li>
+                    <li>Connect to local Epson printers using the ePOS SDK</li>
+                    <li>Print receipts to connected printers</li>
+                    <li>Monitor printer status (paper, cover, drawer)</li>
+                </ol>
+                <p>The scanner implementation uses our server-side proxy endpoints to securely communicate with the Epson Connect API without exposing API keys or tokens on the client side. The printer functionality uses the Epson ePOS SDK to communicate directly with local network printers.</p>
+                <p><strong>Note:</strong> This is a demonstration only. In a real implementation, you would need to handle authentication, error handling, and user feedback more robustly.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Epson SDK and Client JS -->
+    <script src="js/mock-epson-sdk.js"></script>
+    <script src="js/epson-client.js"></script>
+    
+    <!-- Epson Printer Connect Component -->
+    <script type="module">
+        import EpsonPrinterConnect from './js/components/epsonPrinterConnect.js';
+        import ReceiptTemplate from './js/components/receiptTemplate.js';
+        import BulkPrintComponent from './js/components/bulkPrintComponent.js';
+        import { generateTestReceipt } from './js/services/epsonPrinterService.js';
+        
+        // Initialize the printer connect component when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tabs
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and tab contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding tab content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Initialize printer connect component
+            const printerConnect = new EpsonPrinterConnect({
+                containerId: 'printer-connect-container'
+            });
+            
+            // Generate a test receipt
+            const testReceipt = generateTestReceipt();
+            
+            // Generate multiple test receipts for bulk printing
+            const testReceipts = Array.from({ length: 5 }, () => generateTestReceipt());
+            
+            // Initialize receipt template component
+            const receiptTemplate = new ReceiptTemplate({
+                containerId: 'receipt-template-container',
+                receiptData: testReceipt,
+                printerConnection: null // Will be updated when printer is connected
+            });
+            
+            // Initialize bulk print component
+            const bulkPrintComponent = new BulkPrintComponent({
+                containerId: 'bulk-print-container',
+                receipts: testReceipts,
+                printerConnection: null // Will be updated when printer is connected
+            });
+            
+            // Listen for printer connection events
+            document.addEventListener('printerConnected', function(e) {
+                receiptTemplate.updatePrinterConnection(e.detail.connection);
+                bulkPrintComponent.updatePrinterConnection(e.detail.connection);
+            });
+            
+            document.addEventListener('printerDisconnected', function() {
+                receiptTemplate.updatePrinterConnection(null);
+                bulkPrintComponent.updatePrinterConnection(null);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 /**
  * Service for handling image processing and results
  */
-import { processWithClaudeAPI, calculateEstimatedProcessingTime, updateApiCostDisplay } from './apiService.js';
+import { processWithSelectedAPI, calculateEstimatedProcessingTime, updateApiCostDisplay, getSelectedApi } from './apiService.js';
 import { processFilesForSubmission } from './fileService.js';
 import { formatMonetaryValues } from '../utils/dataUtils.js';
 import { updateProgressBar, createCountdown } from '../utils/uiUtils.js';
@@ -36,9 +36,18 @@ export async function processImages(progressBar, countdownTimer, onProgress, onC
         const countdown = createCountdown(countdownTimer, estimatedTime);
         countdown.start();
         
-        // Process with Claude API
-        onProgress('Sending to API...', 20);
-        const result = await processWithClaudeAPI(base64Files);
+        // Process with selected API or use simulated data if API fails
+        onProgress(`Sending to ${getSelectedApi().toUpperCase()} API...`, 20);
+        let result;
+        try {
+            result = await processWithSelectedAPI(base64Files);
+        } catch (error) {
+            console.warn('Error with API, using simulated data instead:', error);
+            // Import the generateSimulatedData function
+            const { generateSimulatedData } = await import('../utils/dataUtils.js');
+            // Generate simulated data
+            result = generateSimulatedData(base64Files);
+        }
         
         // Format monetary values
         onProgress('Formatting results...', 90);

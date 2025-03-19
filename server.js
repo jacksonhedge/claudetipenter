@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const epsonPrinterRoutes = require('./routes/epsonPrinterRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -11,7 +12,10 @@ app.use(express.json({ limit: '50mb' })); // Increased limit for image data
 app.use(express.static('.')); // Serve static files from root directory
 app.use(express.static('public')); // Also serve static files from 'public' directory
 
-// API proxy endpoint
+// API routes for Epson printer
+app.use('/api', epsonPrinterRoutes);
+
+// Original API proxy endpoint for Claude
 app.post('/api/process-images', async (req, res) => {
   try {
     // Get API key from environment variables
@@ -444,77 +448,10 @@ async function processWithClaudeAPI(base64Files, mode = 'tip_analyzer') {
   }
 }
 
-// Function to generate simulated response for unsupported file formats
-function generateSimulatedResponse(base64Files) {
-  // Sample data arrays for more variety
-  const firstNames = ["John", "Sarah", "Michael", "Emily", "David", "Jessica", "Robert", "Jennifer", "William", "Lisa", "James", "Mary", "Thomas", "Patricia", "Charles"];
-  const lastNames = ["Smith", "Johnson", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson"];
-  const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-  const days = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28"];
-  const years = ["2024", "2025"];
-  const hours = ["10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"];
-  const minutes = ["00", "15", "30", "45"];
-  
-  // Payment types
-  const paymentTypes = ["Mastercard", "Visa", "AMEX", "Discover"];
-  
-  // Create simulated response
-  return {
-    success: true,
-    processed_images: base64Files.length,
-    note: "This is a simulated response. Claude API only supports JPEG, PNG, GIF, and WebP formats. PDF files are not supported.",
-    results: base64Files.map((file, index) => {
-      // Generate random data for each field
-      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const month = months[Math.floor(Math.random() * months.length)];
-      const day = days[Math.floor(Math.random() * days.length)];
-      const year = years[Math.floor(Math.random() * years.length)];
-      const hour = hours[Math.floor(Math.random() * hours.length)];
-      const minute = minutes[Math.floor(Math.random() * minutes.length)];
-      
-      // Generate random amounts
-      const baseAmount = (Math.floor(Math.random() * 10000) / 100).toFixed(2);
-      const tipPercent = Math.floor(Math.random() * 25) + 10; // 10-35% tip
-      const tipAmount = (baseAmount * tipPercent / 100).toFixed(2);
-      const totalAmount = (parseFloat(baseAmount) + parseFloat(tipAmount)).toFixed(2);
-      
-      // Generate check number
-      const checkNumber = Math.floor(Math.random() * 9000000) + 1000000;
-      
-      // Select random payment type
-      const paymentType = paymentTypes[Math.floor(Math.random() * paymentTypes.length)];
-      
-      // Determine if signed (80% chance of being signed)
-      const signed = Math.random() < 0.8;
-      
-      return {
-        file_name: file.name,
-        date: `${month}/${day}/${year}`,
-        time: `${hour}:${minute}`,
-        customer_name: `${firstName} ${lastName}`,
-        check_number: checkNumber.toString(),
-        amount: `$${baseAmount}`,
-        payment_type: paymentType,
-        tip: `$${tipAmount}`,
-        total: `$${totalAmount}`,
-        signed: signed,
-        confidence: (Math.random() * 0.3 + 0.7).toFixed(2) // Random confidence between 0.7 and 1.0
-      };
-    }),
-    api_cost: {
-      input_tokens: 0,
-      output_tokens: 0,
-      input_cost: "0.0000",
-      output_cost: "0.0000",
-      total_cost: "0.0000"
-    }
-  };
-}
-
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Open http://localhost:${PORT} in your browser to use the application`);
+  console.log(`Epson printer API available at http://localhost:${PORT}/api/printers`);
 });

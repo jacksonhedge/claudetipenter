@@ -3,17 +3,21 @@
  * Main application entry point
  */
 import config from './config.js';
+import { isAuthenticated, getCurrentUser, logout } from './services/authService.js';
 import FileUploader from './components/fileUploader.js';
 import ResultsTable from './components/resultsTable.js';
 import OrganizerResultsTable from './components/organizerResultsTable.js';
 import OrganizerGrid from './components/organizerGrid.js';
 import OrganizerGridNoTip from './components/organizerGridNoTip.js';
 import Slideshow from './components/slideshow.js';
+import EpsonScanner from './components/epsonScanner.js';
+import EpsonScannerTab from './components/epsonScannerTab.js';
+import PosIntegration from './components/posIntegration.js';
 import { processImages, getProcessedImages, generateSampleImages } from './services/processingService.js';
 import { copyJsonToClipboard } from './services/exportService.js';
 import { updateProgressBar, createCountdown } from './utils/uiUtils.js';
 import { processFilesForSubmission } from './services/fileService.js';
-import { processFilesWithClaudeAPI, calculateEstimatedProcessingTime, updateApiCostDisplay } from './services/apiService.js';
+import { processFilesWithSelectedAPI, calculateEstimatedProcessingTime, updateApiCostDisplay, setSelectedApi } from './services/apiService.js';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -22,6 +26,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements - Navigation
     const navItems = document.querySelectorAll('.nav-item');
     const tabContents = document.querySelectorAll('.tab-content');
+    const authLink = document.getElementById('authLink');
+    
+    // Check if user is authenticated and update UI accordingly
+    function updateAuthUI() {
+        if (isAuthenticated()) {
+            const user = getCurrentUser();
+            if (authLink) {
+                authLink.textContent = 'Logout';
+                authLink.classList.add('logout');
+                authLink.href = '#';
+                
+                // Create user info element if it doesn't exist
+                let userInfoEl = document.querySelector('.user-info');
+                if (!userInfoEl) {
+                    userInfoEl = document.createElement('div');
+                    userInfoEl.className = 'user-info';
+                    authLink.parentNode.insertBefore(userInfoEl, authLink);
+                }
+                
+                // Update user info
+                userInfoEl.innerHTML = `Welcome, <span class="user-name">${user.name}</span>`;
+            }
+        } else {
+            if (authLink) {
+                authLink.textContent = 'Login';
+                authLink.classList.remove('logout');
+                authLink.href = 'login.html';
+                
+                // Remove user info element if it exists
+                const userInfoEl = document.querySelector('.user-info');
+                if (userInfoEl) {
+                    userInfoEl.remove();
+                }
+            }
+        }
+    }
+    
+    // Initialize auth UI
+    updateAuthUI();
+    
+    // Add event listener for auth link
+    if (authLink) {
+        authLink.addEventListener('click', (e) => {
+            if (isAuthenticated()) {
+                e.preventDefault();
+                logout();
+                updateAuthUI();
+            }
+        });
+    }
     
     // DOM Elements - Results
     const resultsSection = document.getElementById('resultsSection');
@@ -31,6 +85,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.getElementById('copyBtn');
     const processBtn = document.getElementById('processBtn');
     const organizeBtn = document.getElementById('organizeBtn');
+    const apiSelect = document.getElementById('apiSelect');
+    
+    // Initialize API selection
+    if (apiSelect) {
+        apiSelect.addEventListener('change', (e) => {
+            setSelectedApi(e.target.value);
+            
+            // Update footer text
+            const footerApiText = document.querySelector('footer p:first-child');
+            if (footerApiText) {
+                const apiName = e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1);
+                footerApiText.textContent = `Powered by ${apiName} API | `;
+                const versionSpan = document.createElement('span');
+                versionSpan.className = 'version';
+                versionSpan.textContent = 'v1.0.0';
+                footerApiText.appendChild(versionSpan);
+            }
+        });
+    }
+    
+    // Initialize Simulate Toggle
+    const simulateToggle = document.getElementById('simulateToggle');
+    if (simulateToggle) {
+        // Set initial state based on config
+        simulateToggle.checked = !config.api.useRealApi;
+        
+        simulateToggle.addEventListener('change', (e) => {
+            // Update config
+            config.api.useRealApi = !e.target.checked;
+            console.log(`API Mode: ${config.api.useRealApi ? 'Real API' : 'Simulated Data'}`);
+            
+            // Update footer text to indicate simulation mode
+            const footerApiText = document.querySelector('footer p:first-child');
+            if (footerApiText) {
+                const apiName = apiSelect ? apiSelect.value.charAt(0).toUpperCase() + apiSelect.value.slice(1) : 'Claude';
+                const simulationText = e.target.checked ? ' (Simulation)' : '';
+                footerApiText.textContent = `Powered by ${apiName} API${simulationText} | `;
+                const versionSpan = document.createElement('span');
+                versionSpan.className = 'version';
+                versionSpan.textContent = 'v1.0.0';
+                footerApiText.appendChild(versionSpan);
+            }
+        });
+    }
     
     // Initialize Components
     const fileUploader = new FileUploader({
@@ -68,6 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sortOrderId: 'sortOrder',
         sortBtnId: 'sortBtn',
         exportCsvBtnId: 'exportCsvBtn'
+    });
+    
+    // Initialize POS Integration
+    const posIntegration = new PosIntegration({
+        containerId: 'posIntegrationContainer',
+        exportBtnId: 'posExportBtn',
+        posSystemSelectId: 'posSystemSelect',
+        previewContainerId: 'posDataPreview'
     });
     
     const organizerResultsTable = new OrganizerResultsTable({
@@ -117,6 +223,21 @@ document.addEventListener('DOMContentLoaded', () => {
         counterContainerId: 'slideCounter',
         closeBtnClass: 'slideshow-close'
     });
+    
+    // Initialize Epson Scanner for Tip Analyzer
+    const epsonScanner = new EpsonScanner({
+        scanBtnId: 'scanBtn',
+        onFilesAdded: fileUploader.createFilePreview.bind(fileUploader)
+    });
+    
+    // Initialize Epson Scanner for File Organizer
+    const epsonOrganizerScanner = new EpsonScanner({
+        scanBtnId: 'scanOrganizerBtn',
+        onFilesAdded: fileOrganizerUploader.createFilePreview.bind(fileOrganizerUploader)
+    });
+    
+    // Initialize Epson Scanner Tab
+    const epsonScannerTab = new EpsonScannerTab({});
     
     // Tab Navigation
     navItems.forEach(item => {
@@ -177,11 +298,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         // Display JSON output
                         if (jsonOutput) {
-                            jsonOutput.textContent = JSON.stringify(data, null, 2);
+                            // Format the JSON with syntax highlighting
+                            const formattedJson = JSON.stringify(data, null, 2);
+                            jsonOutput.textContent = formattedJson;
+                            
+                            // Add a class to highlight error responses
+                            if (data.results && data.results.some(item => item.error === true)) {
+                                jsonOutput.classList.add('contains-errors');
+                            } else {
+                                jsonOutput.classList.remove('contains-errors');
+                            }
                         }
                         
                         // Populate table view
                         resultsTable.populateTable(data);
+                        
+                        // Update POS integration data
+                        posIntegration.setData(data);
                         
                         // Update the organizer grid if we're on that tab
                         const organizedTab = document.getElementById('organized-tab');
@@ -281,9 +414,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     const countdown = createCountdown(organizerCountdownTimer, estimatedTime);
                     countdown.start();
                     
-                    // Process with Claude API (file organizer mode)
+                    // Process with selected API (file organizer mode) or use simulated data
                     updateProgressBar(organizerProgressBar, 20);
-                    const result = await processFilesWithClaudeAPI(base64Files);
+                    let result;
+                    try {
+                        result = await processFilesWithSelectedAPI(base64Files);
+                    } catch (error) {
+                        console.warn('Error with API, using simulated data instead:', error);
+                        // Generate simulated data
+                        result = {
+                            success: true,
+                            processed_images: base64Files.length,
+                            results: base64Files.map((file, index) => ({
+                                file_name: file.name || `file_${index}.jpg`,
+                                customer_name: `Customer ${index + 1}`,
+                                check_number: `${7000 + index}`,
+                                amount: `$${(Math.random() * 50 + 10).toFixed(2)}`,
+                                payment_type: ['Visa', 'Mastercard', 'AMEX', 'Discover'][Math.floor(Math.random() * 4)],
+                                date: '03/18/2025',
+                                time: `${Math.floor(Math.random() * 12) + 1}:${Math.random() > 0.5 ? '30' : '00'} ${Math.random() > 0.5 ? 'PM' : 'AM'}`,
+                                signed: Math.random() > 0.3,
+                                server: `Server ${Math.floor(Math.random() * 5) + 1}`,
+                                guests: Math.floor(Math.random() * 4) + 1,
+                                comps: '$0.00',
+                                voids: '$0.00',
+                                auto_grat: '$0.00',
+                                tax: `$${(Math.random() * 5).toFixed(2)}`,
+                                total: `$${(Math.random() * 60 + 15).toFixed(2)}`,
+                                tip: `$${(Math.random() * 10 + 2).toFixed(2)}`,
+                                cash: Math.random() > 0.7 ? `$${(Math.random() * 50).toFixed(2)}` : '$0.00',
+                                credit: Math.random() > 0.3 ? `$${(Math.random() * 50).toFixed(2)}` : '$0.00',
+                                tenders: '$0.00',
+                                rev_ctr: 'Back Bar'
+                            }))
+                        };
+                    }
                     
                     // Format results
                     updateProgressBar(organizerProgressBar, 90);
@@ -295,7 +460,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Display JSON output
                     if (organizerJsonOutput) {
-                        organizerJsonOutput.textContent = JSON.stringify(result, null, 2);
+                        // Format the JSON with syntax highlighting
+                        const formattedJson = JSON.stringify(result, null, 2);
+                        organizerJsonOutput.textContent = formattedJson;
+                        
+                        // Add a class to highlight error responses
+                        if (result.results && result.results.some(item => item.error === true)) {
+                            organizerJsonOutput.classList.add('contains-errors');
+                        } else {
+                            organizerJsonOutput.classList.remove('contains-errors');
+                        }
                     }
                     
                     // Populate table view

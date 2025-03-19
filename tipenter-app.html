@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Receipt Processing with Epson Printer Integration</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+        }
+        
+        .duration-300 {
+            transition-duration: 300ms;
+        }
+        
+        .ease-in-out {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+    
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Create a global lucideReact object with the icons we need
+        window.lucideReact = {
+            Printer: lucide.icons.printer,
+            CheckCircle: lucide.icons.checkCircle,
+            AlertCircle: lucide.icons.alertCircle,
+            RefreshCw: lucide.icons.refreshCw,
+            Settings: lucide.icons.settings,
+            Layers: lucide.icons.layers,
+            ChevronUp: lucide.icons.chevronUp,
+            ChevronDown: lucide.icons.chevronDown,
+            X: lucide.icons.x
+        };
+    </script>
+    
+    <!-- Epson ePOS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/epson-epos-sdk@2.18.0/epos-2.18.0.js"></script>
+    
+    <!-- Mock Epson SDK (for development/testing) -->
+    <script src="js/mock-epson-sdk.js"></script>
+    
+    <!-- Load Epson Printer Service -->
+    <script src="js/services/epsonPrinterService.js"></script>
+    
+    <!-- Load React Components -->
+    <script type="text/babel">
+        // Define Lucide icons
+        const { 
+            Printer, 
+            CheckCircle, 
+            AlertCircle, 
+            RefreshCw, 
+            Settings, 
+            Layers, 
+            ChevronUp, 
+            ChevronDown,
+            X
+        } = lucideReact;
+        
+        // Load React components sequentially
+        fetch('./js/react-components/ReceiptTemplate.jsx')
+            .then(response => response.text())
+            .then(text => {
+                // Evaluate the component
+                eval(Babel.transform(text, { presets: ['react'] }).code);
+                
+                // Load the next component
+                return fetch('./js/react-components/BulkPrintComponent.jsx');
+            })
+            .then(response => response.text())
+            .then(text => {
+                eval(Babel.transform(text, { presets: ['react'] }).code);
+                return fetch('./js/react-components/EpsonPrinterConnect.jsx');
+            })
+            .then(response => response.text())
+            .then(text => {
+                eval(Babel.transform(text, { presets: ['react'] }).code);
+                return fetch('./js/react-components/EpsonIntegration.jsx');
+            })
+            .then(response => response.text())
+            .then(text => {
+                eval(Babel.transform(text, { presets: ['react'] }).code);
+                return fetch('./js/react-components/TipEnterApp.jsx');
+            })
+            .then(response => response.text())
+            .then(text => {
+                eval(Babel.transform(text, { presets: ['react'] }).code);
+                
+                // Render the TipEnterApp component
+                ReactDOM.render(
+                    React.createElement(TipEnterApp),
+                    document.getElementById('root')
+                );
+            })
+            .catch(error => {
+                console.error('Error loading React components:', error);
+                document.getElementById('root').innerHTML = `
+                    <div style="color: red; padding: 20px; text-align: center;">
+                        <h2>Error Loading Application</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            });
+    </script>
+    
+    <!-- Note: In a production environment, you would use a bundler like Webpack or Parcel -->
+    <!-- This example uses Babel standalone and direct script imports for simplicity -->
+</body>
+</html>

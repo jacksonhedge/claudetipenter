@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipEnter - Epson Scanner Integration</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/epson-scanner.css">
+  
+  <style>
+    .container {
+      max-width: 800px;
+      margin-top: 30px;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="container">
+    <h1>TipEnter - Epson Scanner Integration</h1>
+    <p class="lead">Scan receipts directly from your Epson scanner and process them with TipEnter.</p>
+    
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Scanner Controls</h5>
+      </div>
+      <div class="card-body">
+        <p id="scan-status">Click the button below to get scan destinations.</p>
+        
+        <button id="scan-button" class="btn btn-primary">Get Scan Destinations</button>
+        
+        <form id="scan-form" style="display: none;">
+          <div class="form-group mt-3">
+            <label for="scan-destinations">Destination:</label>
+            <select id="scan-destinations" class="form-control" required>
+              <!-- Destinations will be populated dynamically -->
+            </select>
+          </div>
+          
+          <div class="form-group mt-3">
+            <label for="scan-resolution">Resolution:</label>
+            <select id="scan-resolution" class="form-control">
+              <option value="100">100 DPI</option>
+              <option value="200">200 DPI</option>
+              <option value="300" selected>300 DPI</option>
+              <option value="600">600 DPI</option>
+            </select>
+          </div>
+          
+          <div class="form-group mt-3">
+            <label for="scan-color-mode">Color Mode:</label>
+            <select id="scan-color-mode" class="form-control">
+              <option value="color" selected>Color</option>
+              <option value="grayscale">Grayscale</option>
+              <option value="monochrome">Monochrome</option>
+            </select>
+          </div>
+          
+          <div class="form-group mt-3">
+            <label for="scan-file-format">File Format:</label>
+            <select id="scan-file-format" class="form-control">
+              <option value="pdf" selected>PDF</option>
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG</option>
+            </select>
+          </div>
+          
+          <input type="hidden" id="scan-job-id">
+          <button type="submit" class="btn btn-success mt-3">Start Scan</button>
+        </form>
+        
+        <div id="scan-results-container" style="display: none; margin-top: 20px;">
+          <h5>Scan Results:</h5>
+          <div id="scan-results">
+            <!-- Scan results will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Implementation Notes</h5>
+      </div>
+      <div class="card-body">
+        <p>This scanner integration demonstrates how to:</p>
+        <ol>
+          <li>Get scan destinations from the Epson Connect API</li>
+          <li>Start a scan job with specific settings</li>
+          <li>Poll for scan job status</li>
+          <li>Display scan results when the job is complete</li>
+        </ol>
+        <p>The scanner implementation uses our server-side proxy endpoints to securely communicate with the Epson Connect API without exposing API keys or tokens on the client side.</p>
+        <p><strong>Note:</strong> This is a demonstration only. In a real implementation, you would need to handle authentication, error handling, and user feedback more robustly.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- jQuery and Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Mock Epson SDK (for development/testing) -->
+  <script src="js/mock-epson-sdk.js"></script>
+  
+  <!-- Epson Client JS -->
+  <script src="js/epson-client.js"></script>
+  
+  <!-- Initialize Scanner -->
+  <script>
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Example usage of EpsonClient
+      const scanButton = document.getElementById('scan-button');
+      const scanForm = document.getElementById('scan-form');
+      const scanStatus = document.getElementById('scan-status');
+      const scanDestinations = document.getElementById('scan-destinations');
+      const scanResultsContainer = document.getElementById('scan-results-container');
+      const scanResults = document.getElementById('scan-results');
+      
+      // Add click handler for scan button
+      scanButton.addEventListener('click', function() {
+        // Show loading indicator
+        scanStatus.textContent = 'Loading scan destinations...';
+        
+        // Get scan destinations
+        EpsonClient.getScanDestinations()
+          .then(function(response) {
+            // Display scan destinations
+            const destinations = response.destinations || [];
+            
+            if (destinations.length === 0) {
+              scanStatus.textContent = 'No scan destinations found.';
+              return;
+            }
+            
+            // Clear previous destinations
+            scanDestinations.innerHTML = '';
+            
+            // Add destinations to select dropdown
+            destinations.forEach(function(dest) {
+              const option = document.createElement('option');
+              option.value = dest.id;
+              option.textContent = dest.name;
+              scanDestinations.appendChild(option);
+            });
+            
+            // Show scan form
+            scanForm.style.display = 'block';
+            scanStatus.textContent = 'Ready to scan.';
+          })
+          .catch(function(error) {
+            // Show error message
+            scanStatus.textContent = `Error: ${error.message}`;
+            console.error(error);
+          });
+      });
+      
+      // Add submit handler for scan form
+      scanForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get selected destination
+        const destinationId = scanDestinations.value;
+        const resolution = document.getElementById('scan-resolution').value;
+        const colorMode = document.getElementById('scan-color-mode').value;
+        const fileFormat = document.getElementById('scan-file-format').value;
+        
+        // Get scan settings
+        const scanSettings = {
+          destination_id: destinationId,
+          resolution: resolution || '300',
+          color_mode: colorMode || 'color',
+          file_format: fileFormat || 'pdf'
+        };
+        
+        // Show loading indicator
+        scanStatus.textContent = 'Starting scan job...';
+        
+        // Start scan job
+        EpsonClient.startScanJob(scanSettings)
+          .then(function(response) {
+            // Show job ID
+            scanStatus.textContent = `Scan job started. Job ID: ${response.job_id}`;
+            
+            // Store job ID for polling
+            document.getElementById('scan-job-id').value = response.job_id;
+            
+            // Start polling for job status
+            pollJobStatus(response.job_id);
+          })
+          .catch(function(error) {
+            // Show error message
+            scanStatus.textContent = `Error: ${error.message}`;
+            console.error(error);
+          });
+      });
+      
+      // Function to poll job status
+      function pollJobStatus(jobId) {
+        // Show polling status
+        scanStatus.textContent = `Checking scan job status (${jobId})...`;
+        
+        // Get job status
+        EpsonClient.getScanJobStatus(jobId)
+          .then(function(response) {
+            // Update status
+            scanStatus.textContent = `Scan job status: ${response.status}`;
+            
+            // If job is completed, show results
+            if (response.status === 'completed') {
+              // Show success message
+              scanStatus.textContent = 'Scan job completed successfully!';
+              
+              // Show images if available
+              if (response.images && response.images.length > 0) {
+                scanResults.innerHTML = '';
+                
+                response.images.forEach(function(image) {
+                  const resultItem = document.createElement('div');
+                  resultItem.className = 'scan-result-item';
+                  
+                  // Create thumbnail container
+                  const thumbnailContainer = document.createElement('div');
+                  thumbnailContainer.className = 'scan-thumbnail-container';
+                  
+                  // Create a dummy thumbnail (in a real app, this would be the actual image)
+                  const thumbnail = document.createElement('div');
+                  thumbnail.className = 'scan-thumbnail';
+                  thumbnail.style.width = '100px';
+                  thumbnail.style.height = '100px';
+                  thumbnail.style.backgroundColor = '#e0e0e0';
+                  thumbnail.style.display = 'flex';
+                  thumbnail.style.alignItems = 'center';
+                  thumbnail.style.justifyContent = 'center';
+                  thumbnail.style.marginRight = '10px';
+                  thumbnail.style.borderRadius = '4px';
+                  thumbnail.textContent = image.format.toUpperCase();
+                  
+                  // Create file info
+                  const fileInfo = document.createElement('div');
+                  fileInfo.className = 'scan-file-info';
+                  
+                  // Create file name
+                  const fileName = document.createElement('div');
+                  fileName.className = 'scan-file-name';
+                  fileName.textContent = `Scan_${image.id}.${image.format.toLowerCase()}`;
+                  
+                  // Create file size
+                  const fileSize = document.createElement('div');
+                  fileSize.className = 'scan-file-size';
+                  fileSize.textContent = formatFileSize(image.size || 1024 * 1024); // Default to 1MB if size not provided
+                  
+                  // Add elements to file info
+                  fileInfo.appendChild(fileName);
+                  fileInfo.appendChild(fileSize);
+                  
+                  // Add elements to thumbnail container
+                  thumbnailContainer.appendChild(thumbnail);
+                  thumbnailContainer.appendChild(fileInfo);
+                  
+                  // Add thumbnail container to result item
+                  resultItem.appendChild(thumbnailContainer);
+                  
+                  // Add result item to results
+                  scanResults.appendChild(resultItem);
+                });
+                
+                // Add a "Scan Again" button
+                const scanAgainButton = document.createElement('button');
+                scanAgainButton.className = 'btn btn-primary mt-3';
+                scanAgainButton.textContent = 'Scan Again';
+                scanAgainButton.addEventListener('click', function() {
+                  // Hide results and show form
+                  scanResultsContainer.style.display = 'none';
+                  scanForm.style.display = 'block';
+                  scanStatus.textContent = 'Ready to scan.';
+                });
+                
+                scanResults.appendChild(scanAgainButton);
+                
+                // Show results container
+                scanResultsContainer.style.display = 'block';
+              }
+            } else if (response.status === 'pending' || response.status === 'processing') {
+              // Continue polling after a delay
+              setTimeout(function() {
+                pollJobStatus(jobId);
+              }, 2000); // Poll every 2 seconds
+            } else {
+              // Show error for failed jobs
+              scanStatus.textContent = `Scan job failed with status: ${response.status}`;
+            }
+          })
+          .catch(function(error) {
+            // Show error message
+            scanStatus.textContent = `Error checking job status: ${error.message}`;
+            console.error(error);
+          });
+      }
+      
+      // Helper function to format file size
+      function formatFileSize(bytes) {
+        if (bytes < 1024) {
+          return bytes + ' B';
+        } else if (bytes < 1024 * 1024) {
+          return (bytes / 1024).toFixed(2) + ' KB';
+        } else {
+          return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

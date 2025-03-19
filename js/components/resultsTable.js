@@ -78,36 +78,67 @@ export default class ResultsTable {
             data.results.forEach(item => {
                 const row = document.createElement('tr');
                 
-                // Create cells for each column
-                const customerNameCell = document.createElement('td');
-                customerNameCell.textContent = item.customer_name || 'N/A';
+                // Check if this is an error item
+                if (item.error === true) {
+                    // Create an error row that spans all columns
+                    const errorCell = document.createElement('td');
+                    errorCell.colSpan = 7; // Span all 7 columns
+                    errorCell.className = 'error-message';
+                    
+                    // Format the error message with batch information if available
+                    let errorMessage = item.message || 'Unknown error';
+                    if (item.batch) {
+                        errorMessage = `Batch ${item.batch}: ${errorMessage}`;
+                    }
+                    
+                    // Add confidence information if available
+                    if (item.confidence) {
+                        errorMessage += `<br><span class="error-details">Confidence: ${(item.confidence * 100).toFixed(2)}%</span>`;
+                    }
+                    
+                    // Add tip information if available
+                    if (item.tip) {
+                        errorMessage += `<br><span class="error-details">Tip: ${item.tip}</span>`;
+                    }
+                    
+                    errorCell.innerHTML = errorMessage;
+                    
+                    // Add the error cell to the row
+                    row.appendChild(errorCell);
+                    row.className = 'error-row';
+                } else {
+                    // Create cells for each column for normal data
+                    const customerNameCell = document.createElement('td');
+                    customerNameCell.textContent = item.customer_name || 'N/A';
+                    
+                    const checkNumberCell = document.createElement('td');
+                    checkNumberCell.textContent = item.check_number || 'N/A';
+                    
+                    const amountCell = document.createElement('td');
+                    amountCell.textContent = item.amount || 'N/A';
+                    
+                    const paymentTypeCell = document.createElement('td');
+                    paymentTypeCell.textContent = item.payment_type || 'N/A';
+                    
+                    const timeCell = document.createElement('td');
+                    timeCell.textContent = item.time || 'N/A';
+                    
+                    const totalCell = document.createElement('td');
+                    totalCell.textContent = item.total || 'N/A';
+                    
+                    const tipCell = document.createElement('td');
+                    tipCell.textContent = item.tip || 'N/A';
+                    
+                    // Add cells to row
+                    row.appendChild(customerNameCell);
+                    row.appendChild(checkNumberCell);
+                    row.appendChild(amountCell);
+                    row.appendChild(paymentTypeCell);
+                    row.appendChild(timeCell);
+                    row.appendChild(totalCell);
+                    row.appendChild(tipCell);
+                }
                 
-                const checkNumberCell = document.createElement('td');
-                checkNumberCell.textContent = item.check_number || 'N/A';
-                
-                const amountCell = document.createElement('td');
-                amountCell.textContent = item.amount || 'N/A';
-                
-                const paymentTypeCell = document.createElement('td');
-                paymentTypeCell.textContent = item.payment_type || 'N/A';
-                
-                const timeCell = document.createElement('td');
-                timeCell.textContent = item.time || 'N/A';
-                
-                const totalCell = document.createElement('td');
-                totalCell.textContent = item.total || 'N/A';
-                
-                const tipCell = document.createElement('td');
-                tipCell.textContent = item.tip || 'N/A';
-                
-                // Add cells to row
-                row.appendChild(customerNameCell);
-                row.appendChild(checkNumberCell);
-                row.appendChild(amountCell);
-                row.appendChild(paymentTypeCell);
-                row.appendChild(timeCell);
-                row.appendChild(totalCell);
-                row.appendChild(tipCell);
                 
                 // Add row to table
                 this.tableBody.appendChild(row);
@@ -180,23 +211,52 @@ export default class ResultsTable {
     addRow(item) {
         const row = createElement('tr');
         
-        // Create cells for each column
-        const customerNameCell = createElement('td', {}, item.customer_name || 'N/A');
-        const checkNumberCell = createElement('td', {}, item.check_number || 'N/A');
-        const amountCell = createElement('td', {}, item.amount || 'N/A');
-        const paymentTypeCell = createElement('td', {}, item.payment_type || 'N/A');
-        const timeCell = createElement('td', {}, item.time || 'N/A');
-        const totalCell = createElement('td', {}, item.total || 'N/A');
-        const tipCell = createElement('td', {}, item.tip || 'N/A');
-        
-        // Add cells to row
-        row.appendChild(customerNameCell);
-        row.appendChild(checkNumberCell);
-        row.appendChild(amountCell);
-        row.appendChild(paymentTypeCell);
-        row.appendChild(timeCell);
-        row.appendChild(totalCell);
-        row.appendChild(tipCell);
+        // Check if this is an error item
+        if (item.error === true) {
+            // Create an error row that spans all columns
+            let errorMessage = item.message || 'Unknown error';
+            if (item.batch) {
+                errorMessage = `Batch ${item.batch}: ${errorMessage}`;
+            }
+            
+            // Add confidence information if available
+            if (item.confidence) {
+                errorMessage += `<br><span class="error-details">Confidence: ${(item.confidence * 100).toFixed(2)}%</span>`;
+            }
+            
+            // Add tip information if available
+            if (item.tip) {
+                errorMessage += `<br><span class="error-details">Tip: ${item.tip}</span>`;
+            }
+            
+            const errorCell = createElement('td', { 
+                colSpan: 7, 
+                className: 'error-message',
+                innerHTML: errorMessage
+            });
+            
+            // Add the error cell to the row
+            row.appendChild(errorCell);
+            row.className = 'error-row';
+        } else {
+            // Create cells for each column for normal data
+            const customerNameCell = createElement('td', {}, item.customer_name || 'N/A');
+            const checkNumberCell = createElement('td', {}, item.check_number || 'N/A');
+            const amountCell = createElement('td', {}, item.amount || 'N/A');
+            const paymentTypeCell = createElement('td', {}, item.payment_type || 'N/A');
+            const timeCell = createElement('td', {}, item.time || 'N/A');
+            const totalCell = createElement('td', {}, item.total || 'N/A');
+            const tipCell = createElement('td', {}, item.tip || 'N/A');
+            
+            // Add cells to row
+            row.appendChild(customerNameCell);
+            row.appendChild(checkNumberCell);
+            row.appendChild(amountCell);
+            row.appendChild(paymentTypeCell);
+            row.appendChild(timeCell);
+            row.appendChild(totalCell);
+            row.appendChild(tipCell);
+        }
         
         // Add row to table
         this.tableBody.appendChild(row);

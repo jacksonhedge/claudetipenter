@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TipEnter</title>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/epson-scanner.css">
+    <link rel="stylesheet" href="css/table-styles.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- PDF.js library for PDF handling -->
@@ -14,6 +16,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+    <!-- Left side POS logos -->
+    <div class="pos-logos-left">
+        <img src="assets/images/lightspeedLogo.png" alt="Lightspeed POS" class="pos-logo">
+        <img src="assets/images/ToastLogo.png" alt="Toast POS" class="pos-logo">
+    </div>
+    
+    <!-- Right side POS logos -->
+    <div class="pos-logos-right">
+        <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
+        <img src="assets/images/squarelogo.png" alt="Square POS" class="pos-logo">
+    </div>
+    
     <div class="api-cost" id="apiCost">
         <div class="cost-label">API Cost:</div>
         <div class="cost-value">$0.0000</div>
@@ -21,6 +35,9 @@
     <div class="container">
         <nav class="main-nav">
             <div class="nav-brand">TipEnter</div>
+            <div class="nav-actions">
+                <a href="login.html" class="auth-link" id="authLink">Login</a>
+            </div>
             <ul class="nav-tabs">
                 <div class="tab-group">
                     <li class="nav-item active" data-tab="scanner-tab">Tip Analyzer</li>
@@ -29,6 +46,9 @@
                 <div class="tab-group">
                     <li class="nav-item" data-tab="file-organizer-tab">File Organizer</li>
                     <li class="nav-item related-tab" data-tab="organized-without-tip-tab">Organized Images without Tip</li>
+                </div>
+                <div class="tab-group">
+                    <li class="nav-item" data-tab="epson-scanner-tab">Epson Scanner</li>
                 </div>
             </ul>
         </nav>
@@ -39,7 +59,10 @@
                     <div class="drop-icon">📄</div>
                     <p>Drag & drop images or PDFs here</p>
                     <p>or</p>
-                    <label for="fileInput" class="upload-btn">Select Files</label>
+                    <div class="upload-options">
+                        <label for="fileInput" class="upload-btn">Select Files</label>
+                        <button id="scanBtn" class="scan-btn">Scan with Epson</button>
+                    </div>
                     <input type="file" id="fileInput" multiple accept="image/*,.pdf" hidden>
                 </div>
                 
@@ -50,7 +73,21 @@
             </div>
             
             <div class="controls">
-                <button id="processBtn" class="process-btn" disabled>Process Images</button>
+                <div class="process-controls">
+                    <select id="apiSelect" class="api-select">
+                        <option value="claude">Claude API</option>
+                        <option value="openai">OpenAI API (Coming Soon)</option>
+                        <option value="gemini">Gemini API (Coming Soon)</option>
+                    </select>
+                    <div class="toggle-container">
+                        <label for="simulateToggle" class="toggle-label">Use Simulated Data</label>
+                        <label class="switch">
+                            <input type="checkbox" id="simulateToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <button id="processBtn" class="process-btn" disabled>Process Images</button>
+                </div>
                 <div class="requirements">
                     <p><strong>Requirements:</strong> 3-100 images of receipts/checks</p>
                     <p class="small-text"><strong>Extracts:</strong> date, time, customer name, check number, amount, tip, total, and signed status</p>
@@ -81,6 +118,7 @@
                             <h3>Table View</h3>
                             <div class="table-controls">
                                 <button id="exportCsvBtn" class="export-btn">Export CSV</button>
+                                <button id="posExportBtn" class="export-btn pos-export-btn" disabled>Export to POS</button>
                                 <div class="sort-controls">
                                     <select id="sortField" class="sort-select">
                                         <option value="customer_name">Customer Name</option>
@@ -119,6 +157,25 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- POS Integration Section -->
+                <div class="pos-integration-section" id="posIntegrationContainer">
+                    <h3>POS Integration</h3>
+                    <div class="pos-controls">
+                        <div class="pos-select-container">
+                            <label for="posSystemSelect">POS System:</label>
+                            <select id="posSystemSelect" class="pos-select">
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    <div id="posDataPreview" class="pos-data-preview">
+                        <!-- POS data preview will be displayed here -->
+                        <div class="empty-state">
+                            <p>Process images to see POS data preview</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
         
@@ -128,7 +185,10 @@
                     <div class="drop-icon">📄</div>
                     <p>Drag & drop images or PDFs here</p>
                     <p>or</p>
-                    <label for="fileOrganizerInput" class="upload-btn">Select Files</label>
+                    <div class="upload-options">
+                        <label for="fileOrganizerInput" class="upload-btn">Select Files</label>
+                        <button id="scanOrganizerBtn" class="scan-btn">Scan with Epson</button>
+                    </div>
                     <input type="file" id="fileOrganizerInput" multiple accept="image/*,.pdf" hidden>
                 </div>
                 
@@ -171,11 +231,23 @@
                                 <button id="organizerExportCsvBtn" class="export-btn">Export CSV</button>
                                 <div class="sort-controls">
                                     <select id="organizerSortField" class="sort-select">
-                                        <option value="customer_name">Customer Name</option>
-                                        <option value="check_number">Check #</option>
-                                        <option value="amount" selected>Check Amount</option>
-                                        <option value="payment_type">Payment Type</option>
-                                        <option value="time">Closing Time</option>
+                                        <option value="check_number">#</option>
+                                        <option value="customer_name">Name</option>
+                                        <option value="server">Server</option>
+                                        <option value="time">Time</option>
+                                        <option value="guests">Guests</option>
+                                        <option value="comps">Comps</option>
+                                        <option value="voids">Voids</option>
+                                        <option value="amount" selected>Net Sales</option>
+                                        <option value="auto_grat">Auto Grat</option>
+                                        <option value="tax">Tax</option>
+                                        <option value="total">Bill Total</option>
+                                        <option value="payment_type">Payment</option>
+                                        <option value="tip">Tips</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="credit">Credit</option>
+                                        <option value="tenders">Tenders</option>
+                                        <option value="rev_ctr">Rev Ctr</option>
                                     </select>
                                     <select id="organizerSortOrder" class="sort-select">
                                         <option value="asc">Ascending</option>
@@ -189,13 +261,23 @@
                             <table id="organizerDataTable" class="data-table">
                                 <thead>
                                     <tr>
-                                        <th width="20%">Customer Name</th>
-                                        <th width="10%">Check #</th>
-                                        <th width="15%">Check Amount</th>
-                                        <th width="15%">Payment Type</th>
-                                        <th width="15%">Date</th>
-                                        <th width="15%">Time</th>
-                                        <th width="10%">Signed</th>
+                                        <th width="5%">#</th>
+                                        <th width="10%">Name</th>
+                                        <th width="8%">Server</th>
+                                        <th width="8%">Time</th>
+                                        <th width="5%">Guests</th>
+                                        <th width="5%">Comps</th>
+                                        <th width="5%">Voids</th>
+                                        <th width="7%">Net Sales</th>
+                                        <th width="7%">Auto Grat</th>
+                                        <th width="5%">Tax</th>
+                                        <th width="7%">Bill Total</th>
+                                        <th width="7%">Payment</th>
+                                        <th width="5%">Tips</th>
+                                        <th width="5%">Cash</th>
+                                        <th width="5%">Credit</th>
+                                        <th width="5%">Tenders</th>
+                                        <th width="5%">Rev Ctr</th>
                                     </tr>
                                 </thead>
                                 <tbody id="organizerTableBody">
@@ -327,9 +409,101 @@
             </div>
         </main>
         
+        <main id="epson-scanner-tab" class="tab-content">
+            <div class="scanner-section">
+                <h2>Epson Scanner Integration</h2>
+                <p class="lead">Use this interface to scan documents directly from your Epson scanner.</p>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Scanner Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <p id="epson-scan-status">Click the button below to get scan destinations.</p>
+                        
+                        <button id="epson-scan-button" class="btn btn-primary">Get Scan Destinations</button>
+                        
+                        <form id="epson-scan-form" style="display: none; margin-top: 20px;">
+                            <div class="form-group">
+                                <label for="epson-scan-destinations">Destination:</label>
+                                <select id="epson-scan-destinations" class="form-control" required>
+                                    <!-- Destinations will be populated dynamically -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="epson-scan-resolution">Resolution:</label>
+                                <select id="epson-scan-resolution" class="form-control">
+                                    <option value="100">100 DPI</option>
+                                    <option value="200">200 DPI</option>
+                                    <option value="300" selected>300 DPI</option>
+                                    <option value="600">600 DPI</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="epson-scan-color-mode">Color Mode:</label>
+                                <select id="epson-scan-color-mode" class="form-control">
+                                    <option value="color" selected>Color</option>
+                                    <option value="grayscale">Grayscale</option>
+                                    <option value="monochrome">Monochrome</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="epson-scan-file-format">File Format:</label>
+                                <select id="epson-scan-file-format" class="form-control">
+                                    <option value="pdf" selected>PDF</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="png">PNG</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="epson-scan-target">Add scanned files to:</label>
+                                <select id="epson-scan-target" class="form-control">
+                                    <option value="tip-analyzer" selected>Tip Analyzer</option>
+                                    <option value="file-organizer">File Organizer</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success">Start Scan</button>
+                        </form>
+                        
+                        <div id="epson-scan-results-container" style="display: none; margin-top: 20px;">
+                            <h5>Scan Results:</h5>
+                            <div id="epson-scan-results">
+                                <!-- Scan results will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Scanner Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This interface allows you to:</p>
+                        <ol>
+                            <li>Connect to your Epson scanner</li>
+                            <li>Configure scan settings (resolution, color mode, file format)</li>
+                            <li>Scan documents directly into the application</li>
+                            <li>Choose whether to add scanned files to the Tip Analyzer or File Organizer</li>
+                        </ol>
+                        <p><strong>Note:</strong> Your scanner must be connected and powered on for this feature to work properly.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
         <footer>
-            <p>Powered by Claude API | <span class="version">v1.0.0</span></p>
-            <p>Made with ❤️ in Pittsburgh</p>
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>Powered by Claude API | <span class="version">v1.0.0</span></p>
+                    <p>Made with ❤️ in Pittsburgh</p>
+                </div>
+            </div>
         </footer>
     </div>
     

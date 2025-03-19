@@ -1,0 +1,76 @@
+/* Additional styles for the expanded table format */
+.data-table {
+    font-size: 0.85rem; /* Smaller font size to fit more columns */
+}
+
+.data-table th, 
+.data-table td {
+    padding: 0.5rem 0.4rem; /* Reduced padding */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Make the table container horizontally scrollable */
+.table-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Monetary value columns alignment */
+.data-table td:nth-child(6),
+.data-table td:nth-child(7),
+.data-table td:nth-child(8),
+.data-table td:nth-child(9),
+.data-table td:nth-child(10),
+.data-table td:nth-child(11),
+.data-table td:nth-child(13),
+.data-table td:nth-child(14),
+.data-table td:nth-child(15),
+.data-table td:nth-child(16) {
+    text-align: right; /* Right-align monetary values */
+}
+
+/* Highlight alternating rows for better readability */
+.data-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Sticky header for better usability when scrolling */
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+}
+
+/* Adjust the width of the table container for the expanded table */
+#organizerDataTable {
+    min-width: 1200px; /* Ensure the table has enough width for all columns */
+}
+
+/* Error message styling */
+.error-row {
+    background-color: #fff3f3 !important; /* Light red background */
+}
+
+.error-message {
+    color: #e74c3c; /* Red text */
+    padding: 1rem !important;
+    text-align: left;
+    font-weight: 500;
+    border-left: 4px solid #e74c3c;
+    background-color: #fff3f3;
+}
+
+.error-details {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-weight: normal;
+}
+
+/* Override alternating row colors for error rows */
+.data-table tr.error-row:nth-child(even),
+.data-table tr.error-row:nth-child(odd) {
+    background-color: #fff3f3;
+}

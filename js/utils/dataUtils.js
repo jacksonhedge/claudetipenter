@@ -63,7 +63,7 @@ export function generateSimulatedData(base64Files) {
     return {
         success: true,
         processed_images: base64Files.length,
-        note: "This is a simulated response. To use the actual Claude API, you would need a backend proxy server due to CORS limitations.",
+        note: "This is a simulated response. Using simulated data instead of real API.",
         results: base64Files.map((file, index) => {
             // Generate random data for each field
             const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];

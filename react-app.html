@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epson Printer Integration - React App</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+    
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+    
+    <!-- Mock Epson SDK -->
+    <script src="js/mock-epson-sdk.js"></script>
+    
+    <!-- Epson Printer Service -->
+    <script type="text/babel" data-type="module">
+        // Import the Epson Printer Service
+        import * as EpsonPrinterService from './js/services/epsonPrinterService.js';
+        
+        // Make it available globally for the React components
+        window.EpsonPrinterService = EpsonPrinterService;
+    </script>
+    
+    <!-- React Components -->
+    <script type="text/babel" data-type="module">
+        // Import React components
+        import App from './js/react-components/App.jsx';
+        import EpsonIntegration from './js/react-components/EpsonIntegration.jsx';
+        import EpsonPrinterConnect from './js/react-components/EpsonPrinterConnect.jsx';
+        import ReceiptTemplate from './js/react-components/ReceiptTemplate.jsx';
+        import BulkPrintComponent from './js/react-components/BulkPrintComponent.jsx';
+        
+        // Import Lucide icons
+        const { 
+            Printer, 
+            CheckCircle, 
+            AlertCircle, 
+            RefreshCw, 
+            Settings, 
+            Layers, 
+            ChevronUp, 
+            ChevronDown 
+        } = lucideReact;
+        
+        // Render the App component
+        ReactDOM.render(
+            <App />,
+            document.getElementById('root')
+        );
+    </script>
+    
+    <!-- Note: In a production environment, you would use a bundler like Webpack or Parcel -->
+    <!-- This example uses Babel standalone and direct script imports for simplicity -->
+</body>
+</html>

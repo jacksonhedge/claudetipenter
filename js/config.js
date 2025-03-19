@@ -11,7 +11,7 @@ const config = {
     
     // API settings
     api: {
-        useRealApi: true, // Set to true to use the actual Claude API
+        useRealApi: true, // Set to true to use the actual API instead of simulated data
         endpoint: '/api/process-images',
         maxImagesPerRequest: 5
     },
@@ -40,8 +40,8 @@ const config = {
     
     // Test mode settings
     testing: {
-        enabled: false, // Keep this false to prevent generating sample images
-        sampleCount: 50 // Number of sample images to generate in test mode
+        enabled: false, // Disable test mode to allow uploading real files
+        sampleCount: 10 // Number of sample images to generate in test mode
     }
 };
 
