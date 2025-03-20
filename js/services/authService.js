@@ -227,7 +227,7 @@ export function authenticateWithProvider(provider, isSignup = false) {
             localStorage.setItem('current_user', JSON.stringify(user));
             
             // Redirect to main application
-            window.location.href = 'index.html';
+            window.location.href = 'home.html';
         }, 2000);
     } catch (error) {
         console.error(`Error authenticating with ${provider}:`, error);

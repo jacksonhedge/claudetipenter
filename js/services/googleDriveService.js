@@ -269,12 +269,12 @@ export function initGoogleDriveService() {
         handleGoogleDriveCallback(code, state)
             .then(() => {
                 // Redirect to the main page or handle as needed
-                window.location.href = 'index.html';
+                window.location.href = 'home.html';
             })
             .catch(error => {
                 console.error('Error handling OAuth callback:', error);
                 alert('Error authenticating with Google Drive. Please try again.');
-                window.location.href = 'index.html';
+                window.location.href = 'home.html';
             });
     }
 }

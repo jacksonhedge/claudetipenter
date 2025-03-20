@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Login form submitted:', { email, password });
             
             // For demo purposes, redirect to the main application
-            window.location.href = 'index.html';
+            window.location.href = 'home.html';
         });
     }
     
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Signup form submitted:', { name, email, password });
             
             // For demo purposes, redirect to the main application
-            window.location.href = 'index.html';
+            window.location.href = 'home.html';
         });
     }
     
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Simulate authentication delay
             setTimeout(() => {
                 // For demo purposes, redirect to the main application
-                window.location.href = 'index.html';
+                window.location.href = 'home.html';
             }, 2000);
         }
     }
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // For demo purposes, redirect to the main application after a delay
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'home.html';
         }, 2000);
     }
 });
