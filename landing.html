@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Automatic Tip Entering Solution</title>
+    <link rel="stylesheet" href="css/landing.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TipEnter</div>
+                <nav class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#testimonials">Testimonials</a>
+                    <a href="index.html" class="cta-button">Try it Now!</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content animate">
+                <h1>Automatic Tip Entering</h1>
+                <p>Save hours of manual data entry with our intelligent tip recognition system. Automatically extract tip information from receipts and seamlessly integrate with your POS system.</p>
+                <a href="index.html" class="hero-cta">Try it Now!</a>
+                
+                <div class="pos-logos">
+                    <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
+                    <img src="assets/images/ToastLogo.png" alt="Toast POS" class="pos-logo">
+                    <img src="assets/images/lightspeedLogo.png" alt="Lightspeed POS" class="pos-logo">
+                    <img src="assets/images/squarelogo.png" alt="Square POS" class="pos-logo">
+                </div>
+                
+                <div class="hero-graphic">
+                    <div class="receipt-container">
+                        <div class="receipt">
+                            <div class="receipt-header">RESTAURANT RECEIPT</div>
+                            <div class="receipt-line"></div>
+                            <div class="receipt-item">Food Total: $45.75</div>
+                            <div class="receipt-item">Tax: $3.66</div>
+                            <div class="receipt-line"></div>
+                            <div class="receipt-total">Total: $49.41</div>
+                            <div class="receipt-tip-line">Tip: ___________</div>
+                            <div class="receipt-tip-highlight">$9.88</div>
+                            <div class="receipt-line"></div>
+                            <div class="receipt-grand-total">Grand Total: $59.29</div>
+                        </div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow">→</div>
+                    </div>
+                    <div class="pos-screen">
+                        <div class="pos-header">POS SYSTEM</div>
+                        <div class="pos-content">
+                            <div class="pos-row">
+                                <span>Check #:</span>
+                                <span>1234</span>
+                            </div>
+                            <div class="pos-row">
+                                <span>Server:</span>
+                                <span>John</span>
+                            </div>
+                            <div class="pos-row">
+                                <span>Subtotal:</span>
+                                <span>$49.41</span>
+                            </div>
+                            <div class="pos-row highlight">
+                                <span>Tip:</span>
+                                <span>$9.88</span>
+                            </div>
+                            <div class="pos-row">
+                                <span>Total:</span>
+                                <span>$59.29</span>
+                            </div>
+                        </div>
+                        <div class="pos-success">✓ Tip Entered Successfully</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Key Features</h2>
+                <p>Discover how TipEnter can transform your tip management process</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Fast Processing</h3>
+                    <p>Process hundreds of receipts in minutes, not hours. Our AI-powered system quickly extracts all relevant information.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Accurate Recognition</h3>
+                    <p>Advanced image recognition technology ensures precise tip amount extraction, reducing errors and saving time.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>POS Integration</h3>
+                    <p>Seamlessly integrate with popular POS systems including Clover, Toast, Lightspeed, and Square.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>Batch Processing</h3>
+                    <p>Upload multiple receipts at once and process them in a single batch for maximum efficiency.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <h3>Organized Results</h3>
+                    <p>View extracted data in a clean, sortable table format or export to CSV for further analysis.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Processing</h3>
+                    <p>All data is processed securely with enterprise-grade encryption to protect sensitive information.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2>How It Works</h2>
+                <p>TipEnter simplifies the entire tip management process in just a few easy steps</p>
+            </div>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Upload Receipts</h3>
+                        <p>Simply drag and drop your receipt images or PDFs into the application, or scan them directly using our Epson scanner integration.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Automatic Processing</h3>
+                        <p>Our AI-powered system automatically extracts key information including customer name, check number, amount, tip, and total.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Review Results</h3>
+                        <p>View the extracted data in a clean, organized table format. Sort, filter, and verify the information as needed.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Export to POS</h3>
+                        <p>With a single click, export the processed tip data directly to your POS system, saving hours of manual data entry.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>What Our Users Say</h2>
+                <p>Hear from restaurant managers who have transformed their tip processing workflow</p>
+            </div>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"TipEnter has saved our staff hours of manual data entry every week. The accuracy is impressive, and the POS integration works flawlessly with our Toast system."</p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <h4>Sarah Johnson</h4>
+                            <p>Restaurant Manager, The Rustic Table</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"We used to spend 3-4 hours every night manually entering tips. With TipEnter, we've cut that down to just 15 minutes. It's been a game-changer for our operation."</p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <h4>Michael Rodriguez</h4>
+                            <p>Owner, Coastal Bites Seafood</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"The accuracy of the tip recognition is what impressed me most. Even with messy handwriting, TipEnter gets it right almost every time. Highly recommended!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <h4>Jennifer Lee</h4>
+                            <p>Operations Director, Urban Plate Group</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Streamline Your Tip Processing?</h2>
+                <p>Join hundreds of restaurants saving time and reducing errors with TipEnter's automatic tip recognition system.</p>
+                <div class="cta-buttons">
+                    <a href="index.html" class="cta-primary">Try it Now!</a>
+                    <a href="#features" class="cta-secondary">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>TipEnter</h3>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
+                        <li><a href="index.html">Try it Now!</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Support Center</a></li>
+                        <li><a href="#">FAQs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>© 2025 TipEnter. All rights reserved. Made with ❤️ in Pittsburgh</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple animation for elements when they come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            const animateElements = document.querySelectorAll('.animate');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+            
+            animateElements.forEach(element => {
+                element.style.opacity = 0;
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                observer.observe(element);
+            });
+        });
+    </script>
+</body>
+</html>

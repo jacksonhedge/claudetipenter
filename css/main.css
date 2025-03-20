@@ -6,6 +6,9 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Import Component Styles */
+@import url('components/google-drive.css');
+
 body {
     background-color: #f5f7fa;
     color: #333;

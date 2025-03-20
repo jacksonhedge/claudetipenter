@@ -13,6 +13,8 @@ import Slideshow from './components/slideshow.js';
 import EpsonScanner from './components/epsonScanner.js';
 import EpsonScannerTab from './components/epsonScannerTab.js';
 import PosIntegration from './components/posIntegration.js';
+import { GoogleDriveIntegration } from './components/googleDriveIntegration.js';
+import { initGoogleDriveService } from './services/googleDriveService.js';
 import { processImages, getProcessedImages, generateSampleImages } from './services/processingService.js';
 import { copyJsonToClipboard } from './services/exportService.js';
 import { updateProgressBar, createCountdown } from './utils/uiUtils.js';
@@ -238,6 +240,33 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize Epson Scanner Tab
     const epsonScannerTab = new EpsonScannerTab({});
+    
+    // Initialize Google Drive Service
+    initGoogleDriveService();
+    
+    // Initialize Google Drive Integration for Tip Analyzer
+    const googleDriveContainer = document.createElement('div');
+    googleDriveContainer.className = 'google-drive-integration';
+    const dropArea = document.getElementById('dropArea');
+    if (dropArea && dropArea.parentNode) {
+        dropArea.parentNode.insertBefore(googleDriveContainer, dropArea.nextSibling);
+        const googleDriveIntegration = new GoogleDriveIntegration(
+            googleDriveContainer, 
+            fileUploader.createFilePreview.bind(fileUploader)
+        );
+    }
+    
+    // Initialize Google Drive Integration for File Organizer
+    const googleDriveOrganizerContainer = document.createElement('div');
+    googleDriveOrganizerContainer.className = 'google-drive-integration';
+    const fileOrganizerDropArea = document.getElementById('fileOrganizerDropArea');
+    if (fileOrganizerDropArea && fileOrganizerDropArea.parentNode) {
+        fileOrganizerDropArea.parentNode.insertBefore(googleDriveOrganizerContainer, fileOrganizerDropArea.nextSibling);
+        const googleDriveOrganizerIntegration = new GoogleDriveIntegration(
+            googleDriveOrganizerContainer, 
+            fileOrganizerUploader.createFilePreview.bind(fileOrganizerUploader)
+        );
+    }
     
     // Tab Navigation
     navItems.forEach(item => {

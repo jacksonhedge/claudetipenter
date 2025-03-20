@@ -4,6 +4,9 @@ const axios = require('axios');
 const epsonPrinterRoutes = require('./routes/epsonPrinterRoutes');
 require('dotenv').config();
 
+// Import Google Drive processor
+const { processNewScannedImages } = require('./js/services/googleDriveProcessor');
+
 const app = express();
 
 // Middleware
@@ -14,6 +17,23 @@ app.use(express.static('public')); // Also serve static files from 'public' dire
 
 // API routes for Epson printer
 app.use('/api', epsonPrinterRoutes);
+
+// Google Drive status API endpoint
+app.get('/api/google-drive/status', (req, res) => {
+  try {
+    // In a real implementation, this would check the actual status
+    // For now, we'll return mock data
+    res.json({
+      connected: true,
+      lastScanTime: new Date().toISOString(),
+      newFileCount: Math.floor(Math.random() * 5), // Random number of new files (0-4)
+      folderName: process.env.GOOGLE_DRIVE_FOLDER_ID ? 'TipEnter Receipts' : 'Not configured'
+    });
+  } catch (error) {
+    console.error('Error checking Google Drive status:', error);
+    res.status(500).json({ error: 'Failed to check Google Drive status' });
+  }
+});
 
 // Original API proxy endpoint for Claude
 app.post('/api/process-images', async (req, res) => {

@@ -1,0 +1,233 @@
+/**
+ * Google Drive Integration Component Styles
+ */
+
+.google-drive-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.drive-header {
+    background-color: #4285F4;
+    color: white;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+}
+
+.drive-header h3 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.drive-header i {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.drive-content {
+    padding: 15px;
+}
+
+/* Unauthenticated View */
+.drive-unauthenticated {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.client-id-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.client-id-container label {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.client-id-container input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.help-text {
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
+    line-height: 1.4;
+}
+
+.help-text a {
+    color: #4285F4;
+    text-decoration: none;
+}
+
+.help-text a:hover {
+    text-decoration: underline;
+}
+
+.help-text code {
+    background-color: #f1f3f4;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.drive-connect-btn {
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: flex-start;
+    transition: background-color 0.2s;
+}
+
+.drive-connect-btn:hover {
+    background-color: #3367d6;
+}
+
+.drive-connect-btn i {
+    font-size: 16px;
+}
+
+/* Authenticated View */
+.drive-authenticated {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.drive-file-list-container {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: white;
+}
+
+.drive-file-list {
+    padding: 10px;
+}
+
+.drive-file-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.drive-file-item:last-child {
+    border-bottom: none;
+}
+
+.drive-file-item:hover {
+    background-color: #f1f3f4;
+}
+
+.drive-file-item input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.drive-file-name {
+    font-size: 14px;
+}
+
+.drive-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.drive-loading i {
+    margin-right: 8px;
+    color: #4285F4;
+}
+
+.drive-empty {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.drive-error {
+    padding: 15px;
+    color: #d32f2f;
+    background-color: #ffebee;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.drive-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.drive-refresh-btn, .drive-import-btn {
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.drive-refresh-btn {
+    background-color: #f1f3f4;
+    color: #202124;
+    border: 1px solid #dadce0;
+}
+
+.drive-refresh-btn:hover {
+    background-color: #e8eaed;
+}
+
+.drive-import-btn {
+    background-color: #4285F4;
+    color: white;
+    border: none;
+}
+
+.drive-import-btn:hover {
+    background-color: #3367d6;
+}
+
+.drive-import-btn:disabled {
+    background-color: #c5cae9;
+    cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .drive-buttons {
+        flex-direction: column;
+    }
+    
+    .drive-refresh-btn, .drive-import-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
