@@ -8,11 +8,44 @@ const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 
+// Helper function to safely get and format the private key
+function getFormattedPrivateKey() {
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY;
+  
+  if (!privateKey) {
+    console.error('GOOGLE_PRIVATE_KEY environment variable is not set');
+    return null;
+  }
+  
+  // If the key already contains newlines, it's likely already formatted correctly
+  if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    return privateKey.replace(/\\n/g, '\n');
+  }
+  
+  // Check if it's a simple API key or token format (no spaces, no special characters except maybe hyphens)
+  if (/^[a-zA-Z0-9\-]+$/.test(privateKey.replace(/"/g, ''))) {
+    console.warn('GOOGLE_PRIVATE_KEY appears to be an API key or token, not a PEM-formatted private key.');
+    console.warn('Using it as-is, but authentication may fail if a proper service account private key is required.');
+    return privateKey.replace(/"/g, ''); // Remove any quotes
+  }
+  
+  console.error('GOOGLE_PRIVATE_KEY is not in the correct format. It should be a PEM formatted private key.');
+  return null;
+}
+
 // Configure authentication
+const privateKey = getFormattedPrivateKey();
+const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+
+if (!privateKey || !clientEmail) {
+  console.error('Google Drive integration is not properly configured. Check your environment variables.');
+  process.exit(1);
+}
+
 const auth = new google.auth.JWT(
-  process.env.GOOGLE_CLIENT_EMAIL,
+  clientEmail,
   null,
-  process.env.GOOGLE_PRIVATE_KEY,
+  privateKey,
   ['https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/drive.metadata.readonly']
 );
 
