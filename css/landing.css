@@ -50,6 +50,7 @@ body {
 .nav-links {
   display: flex;
   gap: 2rem;
+  align-items: center;
 }
 
 .nav-links a {
@@ -63,8 +64,47 @@ body {
   color: var(--primary-yellow);
 }
 
-.cta-button {
+/* Auth Buttons Styles */
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-light);
+  border: 1px solid var(--text-light);
+}
+
+.header-login-btn:hover {
   background-color: var(--text-light);
+  color: var(--primary-orange);
+  transform: translateY(-2px);
+}
+
+.header-login-btn i {
+  font-size: 1rem;
+}
+
+.bartender-login {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.manager-login {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.cta-button {
+  background-color: var(--primary-yellow);
   color: var(--primary-orange);
   padding: 0.5rem 1.5rem;
   border-radius: 50px;
@@ -106,9 +146,14 @@ body {
   color: #666;
 }
 
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
 .hero-cta {
-  background: var(--gradient-bg);
-  color: var(--text-light);
   padding: 1rem 2.5rem;
   border-radius: 50px;
   font-size: 1.2rem;
@@ -116,12 +161,44 @@ body {
   text-decoration: none;
   transition: all 0.3s ease;
   display: inline-block;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .hero-cta:hover {
   transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.try-it-btn {
+  background-color: var(--text-light);
+  color: var(--primary-orange);
+  border: 2px solid var(--primary-orange);
+}
+
+.try-it-btn:hover {
+  background-color: var(--primary-yellow);
+  color: var(--primary-orange);
+}
+
+.demo-btn {
+  background: var(--gradient-bg);
+  color: var(--text-light);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.demo-btn:hover {
   box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.receipt-btn {
+  background-color: var(--primary-yellow);
+  color: var(--primary-orange);
+  border: 2px solid var(--primary-orange);
+}
+
+.receipt-btn:hover {
+  background-color: var(--primary-orange);
+  color: var(--text-light);
 }
 
 /* Hero Graphic Styles */
@@ -129,7 +206,7 @@ body {
   margin-top: 3rem;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 2rem;
   flex-wrap: wrap;
   padding: 2rem;
@@ -138,11 +215,26 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* Receipt Styles */
-.receipt-container {
-  perspective: 1000px;
+.graphic-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--primary-orange);
+  font-size: 1.3rem;
 }
 
+/* Messy Receipts Container */
+.messy-receipts-container {
+  perspective: 1000px;
+  width: 300px;
+}
+
+.receipt-stack {
+  position: relative;
+  height: 350px;
+  width: 100%;
+}
+
+/* Receipt Styles */
 .receipt {
   width: 250px;
   background-color: white;
@@ -150,8 +242,30 @@ body {
   border-radius: 5px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   font-family: 'Courier New', monospace;
+  position: absolute;
+}
+
+.receipt-1 {
+  transform: rotate(-5deg);
+  z-index: 3;
+  top: 0;
+  left: 10px;
+  background-color: #f9f5e7; /* Slightly off-white for bar tab paper */
+  border-top: 8px solid var(--primary-orange); /* Bar tab header strip */
+}
+
+.receipt-2 {
+  transform: rotate(3deg);
+  z-index: 2;
+  top: 30px;
+  left: 30px;
+}
+
+.receipt-3 {
   transform: rotate(-2deg);
-  position: relative;
+  z-index: 1;
+  top: 60px;
+  left: 0;
 }
 
 .receipt-header {
@@ -159,6 +273,15 @@ body {
   font-weight: bold;
   margin-bottom: 1rem;
   font-size: 1.2rem;
+}
+
+/* Special styling for the bar tab header */
+.receipt-1 .receipt-header {
+  color: var(--primary-orange);
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: -0.5rem;
 }
 
 .receipt-line {
@@ -171,9 +294,24 @@ body {
   margin: 0.5rem 0;
 }
 
+/* Special styling for bar tab items */
+.receipt-1 .receipt-item {
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+}
+
 .receipt-total {
   font-weight: bold;
   margin: 0.5rem 0;
+}
+
+/* Special styling for bar tab total */
+.receipt-1 .receipt-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 1.05rem;
 }
 
 .receipt-tip-line {
@@ -194,6 +332,16 @@ body {
   animation: pulse 2s infinite;
 }
 
+/* Special styling for bar tab tip highlight */
+.receipt-1 .receipt-tip-highlight {
+  font-size: 1.4rem;
+  color: var(--primary-orange);
+  background-color: rgba(255, 209, 102, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 @keyframes pulse {
   0% { transform: rotate(-5deg) scale(1); }
   50% { transform: rotate(-5deg) scale(1.1); }
@@ -203,6 +351,18 @@ body {
 .receipt-grand-total {
   font-weight: bold;
   font-size: 1.1rem;
+}
+
+/* Special styling for bar tab grand total */
+.receipt-1 .receipt-grand-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--primary-orange);
+  background-color: rgba(255, 209, 102, 0.1);
+  padding: 5px;
+  border-radius: 4px;
 }
 
 /* Arrow Styles */
@@ -224,57 +384,62 @@ body {
   100% { transform: translateX(0); }
 }
 
-/* POS Screen Styles */
-.pos-screen {
+/* Organized Data Container */
+.organized-data-container {
   width: 300px;
+}
+
+.data-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.table-header {
+  display: flex;
   background: linear-gradient(135deg, #2c3e50, #34495e);
   color: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.pos-header {
-  background-color: #1a2530;
-  padding: 1rem;
-  text-align: center;
   font-weight: bold;
-  font-size: 1.2rem;
 }
 
-.pos-content {
-  padding: 1.5rem;
-}
-
-.pos-row {
+.table-row {
   display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #eee;
 }
 
-.pos-row.highlight {
-  background-color: rgba(255, 209, 102, 0.2);
-  padding: 0.8rem;
-  margin: 0.5rem -0.8rem;
-  border-radius: 5px;
+.table-row:last-child {
   border-bottom: none;
-  color: var(--primary-yellow);
-  font-weight: bold;
 }
 
-.pos-success {
+.table-cell {
+  flex: 1;
+  padding: 12px 15px;
+  text-align: center;
+}
+
+.highlight-cell {
+  color: var(--primary-red);
+  font-weight: bold;
+  background-color: rgba(255, 209, 102, 0.2);
+}
+
+.data-success {
   background-color: #27ae60;
+  color: white;
   padding: 1rem;
   text-align: center;
   font-weight: bold;
   margin-top: 1rem;
+  border-radius: 0 0 8px 8px;
 }
 
 @media (max-width: 768px) {
   .hero-graphic {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 3rem;
+    align-items: center;
   }
   
   .arrow {
@@ -285,6 +450,17 @@ body {
     0% { transform: rotate(90deg) translateX(0); }
     50% { transform: rotate(90deg) translateX(10px); }
     100% { transform: rotate(90deg) translateX(0); }
+  }
+  
+  .receipt-stack {
+    height: 400px;
+  }
+  
+  .receipt-1, .receipt-2, .receipt-3 {
+    position: relative;
+    margin-bottom: 1rem;
+    top: auto;
+    left: auto;
   }
 }
 
@@ -519,6 +695,48 @@ body {
   transform: translateY(-3px);
 }
 
+/* Login Buttons */
+.login-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-light);
+  border: 1px solid var(--text-light);
+}
+
+.login-btn:hover {
+  background-color: var(--text-light);
+  color: var(--primary-orange);
+  transform: translateY(-3px);
+}
+
+.login-btn i {
+  font-size: 1.2rem;
+}
+
+.bartender-btn {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.manager-btn {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
 /* Footer */
 .footer {
   background-color: var(--text-dark);
@@ -588,6 +806,23 @@ body {
   .cta-buttons {
     flex-direction: column;
     align-items: center;
+  }
+  
+  .login-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .auth-buttons {
+    flex-direction: column;
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
   }
 }
 
