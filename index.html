@@ -18,7 +18,16 @@
                     <a href="#features">Features</a>
                     <a href="#how-it-works">How It Works</a>
                     <a href="#testimonials">Testimonials</a>
-                    <a href="home.html" class="cta-button">Try it Now!</a>
+                    <div class="auth-buttons">
+                        <a href="login.html" class="header-login-btn bartender-login">
+                            <i class="fas fa-glass-martini-alt"></i>
+                            <span>Sign-in as a Bartender</span>
+                        </a>
+                        <a href="login.html" class="header-login-btn manager-login">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Sign-in as a Manager</span>
+                        </a>
+                    </div>
                 </nav>
             </div>
         </div>
@@ -30,7 +39,10 @@
             <div class="hero-content animate">
                 <h1>Automatic Tip Entering</h1>
                 <p>Save hours of manual data entry with our intelligent tip recognition system. Automatically extract tip information from receipts and seamlessly integrate with your POS system.</p>
-                <a href="home.html" class="hero-cta">Try it Now!</a>
+                <div class="hero-buttons">
+                    <a href="try-it-out.html" class="hero-cta try-it-btn">Try it out</a>
+                    <a href="javascript:void(0);" class="hero-cta demo-btn">Book a Demo</a>
+                </div>
                 
                 <div class="pos-logos">
                     <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
@@ -40,48 +52,81 @@
                 </div>
                 
                 <div class="hero-graphic">
-                    <div class="receipt-container">
-                        <div class="receipt">
-                            <div class="receipt-header">RESTAURANT RECEIPT</div>
-                            <div class="receipt-line"></div>
-                            <div class="receipt-item">Food Total: $45.75</div>
-                            <div class="receipt-item">Tax: $3.66</div>
-                            <div class="receipt-line"></div>
-                            <div class="receipt-total">Total: $49.41</div>
-                            <div class="receipt-tip-line">Tip: ___________</div>
-                            <div class="receipt-tip-highlight">$9.88</div>
-                            <div class="receipt-line"></div>
-                            <div class="receipt-grand-total">Grand Total: $59.29</div>
+                    <div class="messy-receipts-container">
+                        <h3 class="graphic-title">Messy Receipts</h3>
+                        <div class="receipt-stack">
+                            <div class="receipt receipt-1">
+                                <div class="receipt-header">BAR TAB</div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-item"><span>Craft Beer</span> <span>$8.00</span></div>
+                                <div class="receipt-item"><span>Cocktail</span> <span>$12.00</span></div>
+                                <div class="receipt-item"><span>Wine Glass</span> <span>$10.00</span></div>
+                                <div class="receipt-item"><span>Appetizer</span> <span>$14.00</span></div>
+                                <div class="receipt-item"><span>Tax</span> <span>$4.40</span></div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-total"><span>Total</span> <span>$48.40</span></div>
+                                <div class="receipt-tip-line"><span>Tip</span> <span>___________</span></div>
+                                <div class="receipt-tip-highlight">$9.68</div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-grand-total"><span>Grand Total</span> <span>$58.08</span></div>
+                            </div>
+                            <div class="receipt receipt-2">
+                                <div class="receipt-header">CAFE RECEIPT</div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-item">Coffee: $4.50</div>
+                                <div class="receipt-item">Pastry: $3.25</div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-total">Total: $7.75</div>
+                                <div class="receipt-tip-line">Tip: ___________</div>
+                                <div class="receipt-tip-highlight">$1.50</div>
+                            </div>
+                            <div class="receipt receipt-3">
+                                <div class="receipt-header">BAR TAB</div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-item">Guinness: $8.50</div>
+                                <div class="receipt-item">Guinness: $8.50</div>
+                                <div class="receipt-item">Guinness: $8.50</div>
+                                <div class="receipt-line"></div>
+                                <div class="receipt-total">Total: $25.50</div>
+                                <div class="receipt-tip-line">Tip: ___________</div>
+                                <div class="receipt-tip-highlight">$5.00</div>
+                            </div>
                         </div>
                     </div>
+                    
                     <div class="arrow-container">
                         <div class="arrow">→</div>
                     </div>
-                    <div class="pos-screen">
-                        <div class="pos-header">POS SYSTEM</div>
-                        <div class="pos-content">
-                            <div class="pos-row">
-                                <span>Check #:</span>
-                                <span>1234</span>
+                    
+                    <div class="organized-data-container">
+                        <h3 class="graphic-title">Organized Data</h3>
+                        <div class="data-table">
+                            <div class="table-header">
+                                <div class="table-cell">Check #</div>
+                                <div class="table-cell">Amount</div>
+                                <div class="table-cell">Tip</div>
+                                <div class="table-cell">Total</div>
                             </div>
-                            <div class="pos-row">
-                                <span>Server:</span>
-                                <span>John</span>
+                            <div class="table-row">
+                                <div class="table-cell">1234</div>
+                                <div class="table-cell">$48.40</div>
+                                <div class="table-cell highlight-cell">$9.68</div>
+                                <div class="table-cell">$58.08</div>
                             </div>
-                            <div class="pos-row">
-                                <span>Subtotal:</span>
-                                <span>$49.41</span>
+                            <div class="table-row">
+                                <div class="table-cell">5678</div>
+                                <div class="table-cell">$7.75</div>
+                                <div class="table-cell highlight-cell">$1.50</div>
+                                <div class="table-cell">$9.25</div>
                             </div>
-                            <div class="pos-row highlight">
-                                <span>Tip:</span>
-                                <span>$9.88</span>
-                            </div>
-                            <div class="pos-row">
-                                <span>Total:</span>
-                                <span>$59.29</span>
+                            <div class="table-row">
+                                <div class="table-cell">9012</div>
+                                <div class="table-cell">$50.50</div>
+                                <div class="table-cell highlight-cell">$10.00</div>
+                                <div class="table-cell">$60.50</div>
                             </div>
                         </div>
-                        <div class="pos-success">✓ Tip Entered Successfully</div>
+                        <div class="data-success">✓ All Tips Processed Successfully</div>
                     </div>
                 </div>
             </div>
@@ -241,8 +286,18 @@
                 <h2>Ready to Streamline Your Tip Processing?</h2>
                 <p>Join hundreds of restaurants saving time and reducing errors with TipEnter's automatic tip recognition system.</p>
                 <div class="cta-buttons">
-                    <a href="home.html" class="cta-primary">Try it Now!</a>
+                    <a href="javascript:void(0);" class="cta-primary">Book a Demo</a>
                     <a href="#features" class="cta-secondary">Learn More</a>
+                    <div class="login-buttons">
+                        <a href="login.html" class="login-btn bartender-btn">
+                            <i class="fas fa-glass-martini-alt"></i>
+                            <span>Sign-in as a Bartender</span>
+                        </a>
+                        <a href="login.html" class="login-btn manager-btn">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Sign-in as a Manager</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -258,7 +313,7 @@
                         <li><a href="#features">Features</a></li>
                         <li><a href="#how-it-works">How It Works</a></li>
                         <li><a href="#testimonials">Testimonials</a></li>
-                        <li><a href="home.html">Try it Now!</a></li>
+                        <li><a href="javascript:void(0);">Book a Demo</a></li>
                     </ul>
                 </div>
                 
