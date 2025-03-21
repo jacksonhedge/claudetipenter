@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TipEnter - Try with one receipt</title>
+    <title>TipEnter - Try with your receipts</title>
     <link rel="stylesheet" href="css/landing.css">
     <link rel="stylesheet" href="css/try-it-out.css">
     <!-- Font Awesome for icons -->
@@ -135,6 +135,37 @@
             box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
         }
         
+        .render-button-container {
+            margin-bottom: 2rem;
+        }
+        
+        .render-btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: var(--gradient-bg);
+            color: var(--text-light);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            margin: 0 auto;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .render-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+        }
+        
+        .render-btn i {
+            font-size: 1.2rem;
+        }
+        
         .back-link {
             display: inline-block;
             margin-top: 2rem;
@@ -158,29 +189,163 @@
             width: 100%;
             height: 100%;
             z-index: 3;
+            padding: 0;
+        }
+        
+        .preview-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
         
         .preview-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85; /* Add some transparency to show the perforated background */
         }
         
         .remove-preview {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 5px;
+            right: 5px;
             background-color: rgba(255, 255, 255, 0.8);
             color: var(--primary-red);
             border: none;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             z-index: 4;
+            font-size: 0.8rem;
+        }
+        
+        .images-count {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: var(--primary-orange);
+            color: white;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 4;
+        }
+        
+        .trial-limit-warning {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(239, 68, 68, 0.9);
+            color: white;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 4;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Results styles */
+        .results-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .results-container.error {
+            border-left: 4px solid var(--primary-red);
+        }
+        
+        .results-container h3 {
+            color: var(--primary-orange);
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .result-value {
+            color: var(--primary-orange);
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .reset-btn, .full-features-btn {
+            padding: 10px 20px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #555;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .reset-btn:hover, .full-features-btn:hover {
+            background-color: #eee;
+            transform: translateY(-2px);
+        }
+        
+        .full-features-btn {
+            background: var(--gradient-bg);
+            color: white;
+            border: none;
+        }
+        
+        .full-features-btn:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .trial-note {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .trial-note a {
+            color: var(--primary-orange);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .trial-note a:hover {
+            text-decoration: underline;
         }
         
         /* Responsive styles */
@@ -212,6 +377,9 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">TipEnter</div>
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
                 <nav class="nav-links">
                     <a href="landing.html#features">Features</a>
                     <a href="landing.html#how-it-works">How It Works</a>
@@ -235,33 +403,40 @@
     <section class="try-it-section">
         <div class="container">
             <div class="try-it-container">
-                <h2 class="try-it-header">Try with one receipt</h2>
+                <h2 class="try-it-header">Try with your receipts</h2>
+                <p class="suggestion-text" style="color: #666; margin-bottom: 1.5rem; font-style: italic;">Suggestion: Take photos with the receipts in clear light and with a solid background</p>
                 
                 <div class="receipt-upload-area" id="uploadArea">
                     <div class="upload-placeholder">
                         <i class="fas fa-receipt receipt-icon"></i>
-                        <p class="receipt-text">Upload or take a photo of your receipt</p>
+                        <p class="receipt-text">Upload or take photos of your receipts</p>
                     </div>
                     <div class="preview-container" id="previewContainer">
-                        <img src="" alt="Receipt preview" class="preview-image" id="previewImage">
-                        <button class="remove-preview" id="removePreview">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <!-- Preview items will be added here dynamically -->
+                        <div class="trial-limit-warning" id="trialLimitWarning">Only attach 3 in trial mode</div>
+                        <div class="images-count" id="imagesCount">0 images</div>
                     </div>
                 </div>
                 
-                <div class="upload-buttons">
+                <div class="upload-buttons" id="uploadButtons">
                     <label for="fileInput" class="upload-btn attach-btn">
                         <i class="fas fa-paperclip"></i>
-                        <span>Attach an image</span>
+                        <span>Attach images</span>
                     </label>
-                    <input type="file" id="fileInput" accept="image/*">
+                    <input type="file" id="fileInput" accept="image/*" multiple>
                     
                     <label for="cameraInput" class="upload-btn camera-btn">
                         <i class="fas fa-camera"></i>
-                        <span>Take an image</span>
+                        <span>Take images</span>
                     </label>
-                    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple>
+                </div>
+                
+                <div class="render-button-container" id="renderButtonContainer" style="display: none;">
+                    <button class="render-btn" id="renderButton">
+                        <i class="fas fa-magic"></i>
+                        <span>Render Data</span>
+                    </button>
                 </div>
                 
                 <a href="landing.html" class="back-link">
@@ -314,41 +489,299 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            const headerContent = document.querySelector('.header-content');
+            
+            mobileMenuToggle.addEventListener('click', function() {
+                headerContent.classList.toggle('mobile-menu-active');
+            });
+            
+            // Close mobile menu when clicking on a link
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    headerContent.classList.remove('mobile-menu-active');
+                });
+            });
+            
             const fileInput = document.getElementById('fileInput');
             const cameraInput = document.getElementById('cameraInput');
             const previewContainer = document.getElementById('previewContainer');
-            const previewImage = document.getElementById('previewImage');
             const uploadPlaceholder = document.querySelector('.upload-placeholder');
-            const removePreview = document.getElementById('removePreview');
+            const imagesCount = document.getElementById('imagesCount');
+            
+            // Store selected files
+            let selectedFiles = [];
+            
+            // Trial mode image limit
+            const MAX_IMAGES_TRIAL = 3;
+            const trialLimitWarning = document.getElementById('trialLimitWarning');
             
             // Handle file selection
             function handleFileSelect(event) {
-                const file = event.target.files[0];
-                if (file && file.type.match('image.*')) {
-                    const reader = new FileReader();
+                const files = event.target.files;
+                if (files.length > 0) {
+                    // Add new files to the selectedFiles array (up to the limit)
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].type.match('image.*')) {
+                            // Check if adding this file would exceed the limit
+                            if (selectedFiles.length < MAX_IMAGES_TRIAL) {
+                                selectedFiles.push(files[i]);
+                            }
+                        }
+                    }
                     
-                    reader.onload = function(e) {
-                        previewImage.src = e.target.result;
-                        uploadPlaceholder.style.display = 'none';
-                        previewContainer.style.display = 'block';
-                    };
+                    // Update the UI
+                    updatePreview();
                     
-                    reader.readAsDataURL(file);
+                    // Show warning if limit reached or exceeded
+                    checkTrialLimit();
                 }
             }
             
-            // Handle removing preview
-            function handleRemovePreview() {
-                previewImage.src = '';
-                uploadPlaceholder.style.display = 'flex';
-                previewContainer.style.display = 'none';
+            // Check if we've reached the trial limit
+            function checkTrialLimit() {
+                if (selectedFiles.length >= MAX_IMAGES_TRIAL) {
+                    trialLimitWarning.style.display = 'block';
+                } else {
+                    trialLimitWarning.style.display = 'none';
+                }
+            }
+            
+            // Get references to button containers
+            const uploadButtons = document.getElementById('uploadButtons');
+            const renderButtonContainer = document.getElementById('renderButtonContainer');
+            const renderButton = document.getElementById('renderButton');
+            
+            // Update preview container with selected images
+            function updatePreview() {
+                // Clear existing preview items (except the counter)
+                const existingPreviews = previewContainer.querySelectorAll('.preview-item');
+                existingPreviews.forEach(item => item.remove());
+                
+                // Show preview container if we have files
+                if (selectedFiles.length > 0) {
+                    uploadPlaceholder.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    
+                    // Update counter
+                    imagesCount.textContent = `${selectedFiles.length} image${selectedFiles.length !== 1 ? 's' : ''}`;
+                    
+                    // Show only the most recent image (last in the array)
+                    const mostRecentFile = selectedFiles[selectedFiles.length - 1];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'preview-item';
+                        
+                        const img = document.createElement('img');
+                        img.className = 'preview-image';
+                        img.src = e.target.result;
+                        img.alt = `Receipt preview`;
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-preview';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        removeBtn.addEventListener('click', function() {
+                            // Remove the most recent file
+                            selectedFiles.pop();
+                            updatePreview();
+                            checkTrialLimit();
+                        });
+                        
+                        previewItem.appendChild(img);
+                        previewItem.appendChild(removeBtn);
+                        previewContainer.appendChild(previewItem);
+                    };
+                    
+                    reader.readAsDataURL(mostRecentFile);
+                    
+                    // Show render button, hide upload buttons
+                    uploadButtons.style.display = 'none';
+                    renderButtonContainer.style.display = 'block';
+                } else {
+                    // No files, show placeholder and upload buttons
+                    uploadPlaceholder.style.display = 'flex';
+                    previewContainer.style.display = 'none';
+                    uploadButtons.style.display = 'flex';
+                    renderButtonContainer.style.display = 'none';
+                }
+            }
+            
+            // Remove an image from the selection (not used with the new UI, but kept for reference)
+            function removeImage(index) {
+                selectedFiles.splice(index, 1);
+                updatePreview();
+                checkTrialLimit(); // Update warning display after removing an image
+            }
+            
+            // Clear all selected files
+            function clearAllFiles() {
+                selectedFiles = [];
                 fileInput.value = '';
                 cameraInput.value = '';
+                updatePreview();
             }
+            
+            // Handle render button click
+            renderButton.addEventListener('click', async function() {
+                // Show loading state
+                renderButton.disabled = true;
+                renderButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Processing...</span>';
+                
+                try {
+                    // Convert selected files to base64
+                    const base64Files = await Promise.all(selectedFiles.map(async (file) => {
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                // Extract the base64 data from the result
+                                // Format: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD...
+                                const base64String = e.target.result;
+                                const base64Data = base64String.split(',')[1];
+                                resolve({
+                                    name: file.name,
+                                    type: file.type,
+                                    data: base64Data
+                                });
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                    }));
+                    
+                    // Send the images to the API
+                    const response = await fetch('/api/process-images', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            images: base64Files,
+                            mode: 'tip_analyzer' // Use tip analyzer mode
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Check if we have results
+                    if (data && data.results && data.results.length > 0) {
+                        // Get the first result (since we're only showing one in the demo)
+                        const result = data.results[0];
+                        
+                        // Create the results HTML with actual data
+                        const resultsHTML = `
+                            <div class="results-container">
+                                <h3>Receipt Analysis Results</h3>
+                                <p class="confidence-score" style="color: #666; margin-bottom: 1rem; font-style: italic; text-align: center;">
+                                    Confidence Score: ${(result.confidence * 100).toFixed(1)}%
+                                </p>
+                                ${result.confidence < 0.8 ? `
+                                <div class="alert-message" style="background-color: #ffebee; color: #d32f2f; padding: 10px; border-radius: 5px; margin-bottom: 1rem; text-align: center; font-weight: bold;">
+                                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                                    Upload receipt with better lighting, less blurry, or clearer text
+                                </div>
+                                ` : ''}
+                                <div class="result-item" style="background-color: var(--secondary-yellow); font-weight: bold;">
+                                    <div class="result-label">Bar Name:</div>
+                                    <div class="result-value">${result.establishment || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Amount:</div>
+                                    <div class="result-value">${result.amount || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Tip:</div>
+                                    <div class="result-value">${result.tip || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Total:</div>
+                                    <div class="result-value">${result.total || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Check Number:</div>
+                                    <div class="result-value">${result.check_number || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Date:</div>
+                                    <div class="result-value">${result.date || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Customer:</div>
+                                    <div class="result-value">${result.customer_name || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Payment Type:</div>
+                                    <div class="result-value">${result.payment_type || 'Not detected'}</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-label">Signed:</div>
+                                    <div class="result-value">${result.signed ? 'Yes' : 'No'}</div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="reset-btn" id="resetButton">
+                                        <i class="fas fa-redo"></i>
+                                        <span>Try Another Receipt</span>
+                                    </button>
+                                    <a href="admin.html" class="full-features-btn">
+                                        <i class="fas fa-cogs"></i>
+                                        <span>Use Full Features</span>
+                                    </a>
+                                </div>
+                                <div class="trial-note">
+                                    <p>This is a simplified demo. For batch processing of multiple receipts, POS integration, and advanced features, use the <a href="admin.html">Tip Analyzer</a> in the admin panel.</p>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Replace the render button with results
+                        renderButtonContainer.innerHTML = resultsHTML;
+                    } else {
+                        throw new Error('No results returned from API');
+                    }
+                } catch (error) {
+                    console.error('Error processing images:', error);
+                    
+                    // Show error message
+                    renderButtonContainer.innerHTML = `
+                        <div class="results-container error">
+                            <h3>Error Processing Receipt</h3>
+                            <p>There was an error processing your receipt: ${error.message}</p>
+                            <div class="action-buttons">
+                                <button class="reset-btn" id="resetButton">
+                                    <i class="fas fa-redo"></i>
+                                    <span>Try Again</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Add reset button functionality
+                document.getElementById('resetButton').addEventListener('click', function() {
+                    clearAllFiles();
+                    renderButtonContainer.innerHTML = `
+                        <button class="render-btn" id="renderButton">
+                            <i class="fas fa-magic"></i>
+                            <span>Render Data</span>
+                        </button>
+                    `;
+                    // Re-add event listener to the new render button
+                    document.getElementById('renderButton').addEventListener('click', renderButtonClickHandler);
+                });
+            });
+            
+            // Store the click handler function for reuse
+            const renderButtonClickHandler = renderButton.onclick;
             
             fileInput.addEventListener('change', handleFileSelect);
             cameraInput.addEventListener('change', handleFileSelect);
-            removePreview.addEventListener('click', handleRemovePreview);
             
             // Allow drag and drop
             const uploadArea = document.getElementById('uploadArea');
@@ -382,18 +815,21 @@
             
             function handleDrop(e) {
                 const dt = e.dataTransfer;
-                const file = dt.files[0];
+                const files = dt.files;
                 
-                if (file && file.type.match('image.*')) {
-                    const reader = new FileReader();
+                if (files.length > 0) {
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].type.match('image.*')) {
+                            // Check if adding this file would exceed the limit
+                            if (selectedFiles.length < MAX_IMAGES_TRIAL) {
+                                selectedFiles.push(files[i]);
+                            }
+                        }
+                    }
+                    updatePreview();
                     
-                    reader.onload = function(e) {
-                        previewImage.src = e.target.result;
-                        uploadPlaceholder.style.display = 'none';
-                        previewContainer.style.display = 'block';
-                    };
-                    
-                    reader.readAsDataURL(file);
+                    // Show warning if limit reached or exceeded
+                    checkTrialLimit();
                 }
             }
         });
