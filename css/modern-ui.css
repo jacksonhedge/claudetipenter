@@ -321,6 +321,13 @@ main.container {
     pointer-events: auto !important;
 }
 
+/* Special handling for Add Test Images button */
+#addTestImagesBtn {
+    position: relative !important;
+    z-index: 999 !important; /* Extremely high z-index */
+    pointer-events: auto !important;
+}
+
 .btn-primary:hover:not(:disabled) {
     background-color: #e76006 !important;
     box-shadow: 0 4px 10px rgba(247, 110, 17, 0.4) !important;
@@ -408,6 +415,9 @@ main.container {
 
 .button-container {
     margin-top: 15px !important;
+    position: relative !important;
+    z-index: 50 !important; /* Higher z-index to ensure it's above sidebar */
+    pointer-events: auto !important; /* Ensure buttons can be clicked */
 }
 
 /* Option Buttons */
