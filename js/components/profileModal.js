@@ -36,14 +36,31 @@ class ProfileModal {
      * Initialize the profile modal
      */
     init() {
+        console.log('📝 Initializing profile modal...');
+        
+        if (!this.profileBtn) {
+            console.warn('❌ Profile button not found');
+        }
+        
+        if (!this.profileModal) {
+            console.warn('❌ Profile modal element not found');
+        }
+        
         if (!this.profileBtn || !this.profileModal) {
-            console.warn('Profile modal elements not found');
+            console.warn('❌ Profile modal initialization skipped due to missing elements');
             return;
         }
         
+        console.log('✅ Profile modal elements found, adding event listeners');
+        
         // Add event listeners
         this.profileBtn.addEventListener('click', this.openModal.bind(this));
-        this.profileClose.addEventListener('click', this.closeModal.bind(this));
+        
+        if (this.profileClose) {
+            this.profileClose.addEventListener('click', this.closeModal.bind(this));
+        } else {
+            console.warn('⚠️ Profile close button not found, close functionality may be limited');
+        }
         
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
@@ -58,24 +75,44 @@ class ProfileModal {
                 this.closeModal();
             }
         });
+        
+        console.log('✅ Profile modal initialized successfully');
     }
     
     /**
      * Open the profile modal and load user data
      */
     async openModal() {
+        console.log('🔍 Opening profile modal...');
+        
+        // Check if modal element exists
+        if (!this.profileModal) {
+            console.error('❌ Cannot open profile modal: modal element not found');
+            return;
+        }
+        
         // Show the modal
         this.profileModal.style.display = 'block';
+        console.log('✅ Profile modal displayed');
         
         // Create tabs if they don't exist
+        console.log('🔍 Creating profile tabs...');
         this.createTabs();
         
-        // Load user data
-        await this.loadUserData();
-        
-        // Initialize image viewer if on the images tab
-        if (this.activeTab === 'images' && this.imageViewerContainer) {
-            this.initImageViewer();
+        try {
+            // Load user data
+            console.log('🔍 Loading user data for profile...');
+            await this.loadUserData();
+            
+            // Initialize image viewer if on the images tab
+            if (this.activeTab === 'images' && this.imageViewerContainer) {
+                console.log('🔍 Initializing image viewer for images tab...');
+                this.initImageViewer();
+            }
+            
+            console.log('✅ Profile modal fully loaded');
+        } catch (error) {
+            console.error('❌ Error in profile modal opening:', error);
         }
     }
     
@@ -224,13 +261,24 @@ class ProfileModal {
      * Load user data from auth service
      */
     async loadUserData() {
+        console.log('👤 Loading user profile data...');
+        
+        // Check if profile fields exist
+        if (!this.profileName || !this.profileEmail || !this.profileRole || 
+            !this.profileWorkplace || !this.profilePosition || !this.profileSubscription) {
+            console.error('❌ Profile fields not found in DOM');
+            return;
+        }
+        
         try {
             // For demo purposes, use mock data if Firebase fails
             let user;
             try {
+                console.log('🔍 Fetching current user data from Firebase...');
                 user = await getCurrentUser();
+                console.log('✅ User data retrieved successfully:', user ? 'User found' : 'No user found');
             } catch (error) {
-                console.warn('Error getting user data from Firebase, using mock data:', error);
+                console.warn('⚠️ Error getting user data from Firebase, using mock data:', error);
                 // Create mock user data
                 user = {
                     name: 'Demo User',
@@ -240,9 +288,11 @@ class ProfileModal {
                     position: 'Bartender',
                     subscription_tier: 'free'
                 };
+                console.log('🔄 Using mock user data:', user);
             }
             
             if (user) {
+                console.log('📝 Updating profile fields with user data');
                 // Update profile fields
                 this.profileName.textContent = user.name || 'Not provided';
                 this.profileEmail.textContent = user.email || 'Not provided';
@@ -250,12 +300,15 @@ class ProfileModal {
                 this.profileWorkplace.textContent = user.workplaceName || 'Not provided';
                 this.profilePosition.textContent = this.formatPosition(user.position) || 'Not provided';
                 this.profileSubscription.textContent = this.formatSubscription(user.subscription_tier) || 'Free';
+                
+                console.log('✅ Profile data updated successfully');
             } else {
+                console.warn('⚠️ No user data available, using default values');
                 // Set default values if user not found
                 this.setDefaultValues();
             }
         } catch (error) {
-            console.error('Error loading user data:', error);
+            console.error('❌ Error loading user data:', error);
             this.setDefaultValues();
         }
     }
