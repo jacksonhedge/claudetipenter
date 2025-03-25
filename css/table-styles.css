@@ -1,11 +1,14 @@
 /* Additional styles for the expanded table format */
 .data-table {
-    font-size: 0.85rem; /* Smaller font size to fit more columns */
+    font-size: 0.9rem; /* Slightly larger font size */
+    border-collapse: separate;
+    border-spacing: 0 8px; /* Add space between rows */
+    width: 100%;
 }
 
 .data-table th, 
 .data-table td {
-    padding: 0.5rem 0.4rem; /* Reduced padding */
+    padding: 0.75rem 0.6rem; /* Increased padding */
     white-space: nowrap; /* Prevent text wrapping */
 }
 
@@ -13,6 +16,9 @@
 .table-container {
     overflow-x: auto;
     max-width: 100%;
+    background-color: #f5f7fa; /* Light background like organized tips */
+    border-radius: 8px;
+    padding: 0.5rem;
 }
 
 /* Monetary value columns alignment */
@@ -29,9 +35,28 @@
     text-align: right; /* Right-align monetary values */
 }
 
-/* Highlight alternating rows for better readability */
-.data-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+/* Style for table rows - similar to organized tips */
+.data-table tbody tr {
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.data-table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+}
+
+.data-table tbody td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.data-table tbody td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 /* Sticky header for better usability when scrolling */
@@ -39,7 +64,25 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #f8f9fa;
+}
+
+.data-table thead tr {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.data-table th {
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+/* Style for tip column */
+.data-table td:nth-child(7) {
+    font-weight: 600;
+    color: var(--primary-orange);
 }
 
 /* Adjust the width of the table container for the expanded table */
@@ -50,6 +93,7 @@
 /* Error message styling */
 .error-row {
     background-color: #fff3f3 !important; /* Light red background */
+    box-shadow: 0 2px 5px rgba(231, 76, 60, 0.2) !important;
 }
 
 .error-message {
@@ -59,6 +103,7 @@
     font-weight: 500;
     border-left: 4px solid #e74c3c;
     background-color: #fff3f3;
+    border-radius: 8px;
 }
 
 .error-details {
@@ -69,8 +114,8 @@
     font-weight: normal;
 }
 
-/* Override alternating row colors for error rows */
-.data-table tr.error-row:nth-child(even),
-.data-table tr.error-row:nth-child(odd) {
+/* Override hover effect for error rows */
+.data-table tr.error-row:hover {
+    transform: none;
     background-color: #fff3f3;
 }

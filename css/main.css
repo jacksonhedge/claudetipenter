@@ -154,6 +154,18 @@ main.tab-content.active {
     background-color: #ecf0f1;
     transition: all 0.3s ease;
     cursor: pointer;
+    min-height: 300px; /* Set a minimum height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px; /* Add margin to separate from Google Drive component */
+}
+
+.google-drive-container-wrapper {
+    margin: 30px 0;
+    padding: 0;
+    width: 100%;
 }
 
 .drop-area:hover, .drop-area.active {

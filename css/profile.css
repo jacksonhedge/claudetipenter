@@ -1,0 +1,230 @@
+/* Profile Modal Styles */
+.profile-btn {
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+}
+
+.profile-btn i {
+    font-size: 1.2rem;
+    color: var(--primary-yellow);
+}
+
+.profile-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.profile-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 0;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.3s;
+    overflow: hidden;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.profile-modal-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #FF8C42, #F76E11);
+    color: white;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-modal-header h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.profile-close {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-close:hover {
+    transform: rotate(90deg);
+}
+
+.profile-modal-body {
+    padding: 2rem;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #f5f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar i {
+    font-size: 4rem;
+    color: #3498db;
+}
+
+.profile-details {
+    width: 100%;
+}
+
+.profile-field {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-field:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.profile-field label {
+    font-weight: 600;
+    color: #555;
+}
+
+.profile-field span {
+    color: #333;
+}
+
+/* Profile Tabs Styles */
+.profile-tabs {
+    display: flex;
+    background-color: #f5f7fa;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.profile-tab {
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #666;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.profile-tab i {
+    font-size: 1.1rem;
+}
+
+.profile-tab:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.profile-tab.active {
+    border-bottom-color: #FF8C42;
+    color: #FF8C42;
+    background-color: #fff;
+}
+
+.profile-content {
+    position: relative;
+    min-height: 300px;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.loading-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .profile-modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+    
+    .profile-info {
+        gap: 1rem;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .profile-avatar i {
+        font-size: 3rem;
+    }
+    
+    .profile-field {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .profile-tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .profile-tab span {
+        display: none;
+    }
+    
+    .profile-tab i {
+        font-size: 1.2rem;
+    }
+}

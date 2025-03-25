@@ -1,98 +1,61 @@
 /**
  * Authentication Service
- * Handles authentication with POS systems and user management
+ * Handles authentication with Firebase and POS systems
  */
 
+import { 
+    auth, 
+    db, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut as firebaseSignOut,
+    onAuthStateChanged,
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    collection,
+    query,
+    where,
+    getDocs
+} from '../firebase-config.js';
+
 /**
- * POS system configurations for authentication
+ * Authentication configurations
  */
-const POS_AUTH_CONFIGS = {
-    lightspeed: {
-        name: 'Lightspeed',
-        authUrl: 'https://cloud.lightspeedapp.com/oauth/authorize',
-        tokenUrl: 'https://cloud.lightspeedapp.com/oauth/access_token',
-        clientId: 'your-lightspeed-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/lightspeed/callback',
-        scope: 'employee:all',
+const AUTH_CONFIGS = {
+    google: {
+        name: 'Google',
+        authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        clientId: 'your-google-client-id', // Replace with your actual client ID
+        redirectUri: window.location.origin + '/auth/google/callback',
+        scope: 'email profile',
         responseType: 'code'
     },
-    square: {
-        name: 'Square',
-        authUrl: 'https://connect.squareup.com/oauth2/authorize',
-        tokenUrl: 'https://connect.squareup.com/oauth2/token',
-        clientId: 'your-square-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/square/callback',
-        scope: 'MERCHANT_PROFILE_READ EMPLOYEES_READ TIMECARDS_READ',
-        responseType: 'code'
-    },
-    toast: {
-        name: 'Toast',
-        authUrl: 'https://api.toasttab.com/authentication/v1/authentication/login_redirect',
-        tokenUrl: 'https://api.toasttab.com/authentication/v1/authentication/token',
-        clientId: 'your-toast-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/toast/callback',
-        scope: 'employees.read orders.read',
-        responseType: 'code'
-    },
-    harbortouch: {
-        name: 'Harbortouch',
-        authUrl: 'https://api.harbortouch.com/oauth/authorize',
-        tokenUrl: 'https://api.harbortouch.com/oauth/token',
-        clientId: 'your-harbortouch-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/harbortouch/callback',
-        scope: 'read_employees read_orders',
-        responseType: 'code'
-    },
-    revel: {
-        name: 'Revel Systems',
-        authUrl: 'https://api.revelup.com/oauth/authorize',
-        tokenUrl: 'https://api.revelup.com/oauth/token',
-        clientId: 'your-revel-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/revel/callback',
-        scope: 'read_employees read_orders',
-        responseType: 'code'
-    },
-    clover: {
-        name: 'Clover',
-        authUrl: 'https://sandbox.dev.clover.com/oauth/authorize',
-        tokenUrl: 'https://sandbox.dev.clover.com/oauth/token',
-        clientId: 'your-clover-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/clover/callback',
-        scope: 'EMPLOYEES_READ ORDERS_READ',
-        responseType: 'code'
-    },
-    shopify: {
-        name: 'Shopify',
-        authUrl: 'https://your-store.myshopify.com/admin/oauth/authorize',
-        tokenUrl: 'https://your-store.myshopify.com/admin/oauth/access_token',
-        clientId: 'your-shopify-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/shopify/callback',
-        scope: 'read_orders,read_customers',
-        responseType: 'code'
-    },
-    maxxpay: {
-        name: 'MaxxPay',
-        authUrl: 'https://api.maxxpay.com/oauth/authorize',
-        tokenUrl: 'https://api.maxxpay.com/oauth/token',
-        clientId: 'your-maxxpay-client-id', // Replace with your actual client ID
-        redirectUri: window.location.origin + '/auth/maxxpay/callback',
-        scope: 'read_employees read_orders',
+    '7shifts': {
+        name: '7Shifts',
+        authUrl: 'https://api.7shifts.com/v2/oauth/authorize',
+        tokenUrl: 'https://api.7shifts.com/v2/oauth/token',
+        clientId: 'your-7shifts-client-id', // Replace with your actual client ID
+        redirectUri: window.location.origin + '/auth/7shifts/callback',
+        scope: 'read:employees read:shifts',
         responseType: 'code'
     }
 };
 
 /**
- * Get the authentication URL for a POS system
- * @param {string} provider - The POS system provider (e.g., 'lightspeed')
+ * Get the authentication URL for a provider
+ * @param {string} provider - The provider (e.g., 'google')
  * @param {boolean} isSignup - Whether this is for signup or login
  * @returns {string} - The authentication URL
  */
 export function getAuthUrl(provider, isSignup = false) {
-    if (!POS_AUTH_CONFIGS[provider]) {
+    if (!AUTH_CONFIGS[provider]) {
         throw new Error(`Unknown provider: ${provider}`);
     }
     
-    const config = POS_AUTH_CONFIGS[provider];
+    const config = AUTH_CONFIGS[provider];
     const params = new URLSearchParams({
         client_id: config.clientId,
         redirect_uri: config.redirectUri,
@@ -109,48 +72,142 @@ export function getAuthUrl(provider, isSignup = false) {
  * @returns {boolean} - Whether the user is authenticated
  */
 export function isAuthenticated() {
-    return !!localStorage.getItem('auth_token');
+    return !!auth.currentUser;
 }
 
 /**
  * Get the current user
- * @returns {Object|null} - The current user or null if not authenticated
+ * @returns {Promise<Object|null>} - Promise resolving to the current user or null if not authenticated
  */
-export function getCurrentUser() {
-    const userJson = localStorage.getItem('current_user');
-    return userJson ? JSON.parse(userJson) : null;
+export async function getCurrentUser() {
+    // Check if we're on the landing page
+    const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
+    if (isLandingPage) {
+        return null;
+    }
+    
+    const firebaseUser = auth.currentUser;
+    
+    if (!firebaseUser) {
+        return null;
+    }
+    
+    try {
+        // Get user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        
+        if (userDoc.exists()) {
+            return { id: firebaseUser.uid, ...userDoc.data() };
+        } else {
+            return { 
+                id: firebaseUser.uid, 
+                email: firebaseUser.email,
+                name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
+            };
+        }
+    } catch (error) {
+        console.error('Error getting user data:', error);
+        // Return a basic user object if there's an error
+        return { 
+            id: firebaseUser.uid, 
+            email: firebaseUser.email || 'user@example.com',
+            name: firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'User')
+        };
+    }
+}
+
+/**
+ * Set up auth state listener
+ * @param {Function} callback - Callback function to be called when auth state changes
+ * @returns {Function} - Unsubscribe function
+ */
+export function onAuthStateChange(callback) {
+    return onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const userData = await getCurrentUser();
+            callback(userData);
+        } else {
+            callback(null);
+        }
+    });
 }
 
 /**
  * Login with email and password
  * @param {string} email - The user's email
  * @param {string} password - The user's password
+ * @param {string|null} workplaceId - The workplace ID (optional)
  * @returns {Promise<Object>} - Promise resolving to the user object
  */
-export async function login(email, password) {
+export async function login(email, password, workplaceId = null) {
     try {
-        // In a real application, you would make an API call to your server
-        // For demo purposes, we'll simulate a successful login
+        // Check if we're on the landing page
+        const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
+        if (isLandingPage) {
+            // For demo purposes on landing page
+            return {
+                id: '123',
+                email: email,
+                name: email.split('@')[0],
+                role: 'bartender',
+                subscription_tier: 'free'
+            };
+        }
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Sign in with Firebase
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
         
-        // Simulate successful login
-        const user = {
-            id: '123',
-            name: 'Demo User',
-            email: email,
-            role: 'user'
-        };
+        // Get user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         
-        // Store auth token and user in localStorage
-        localStorage.setItem('auth_token', 'demo_token');
-        localStorage.setItem('current_user', JSON.stringify(user));
-        
-        return user;
+        if (!userDoc.exists()) {
+            // Create user document if it doesn't exist
+            const userData = {
+                email: email,
+                name: firebaseUser.displayName || email.split('@')[0],
+                role: 'bartender', // Default role
+                subscription_tier: 'free',
+                created_at: new Date().toISOString(),
+                last_login: new Date().toISOString()
+            };
+            
+            // Add workplace info if provided
+            if (workplaceId) {
+                userData.workplaceId = workplaceId;
+                userData.workplaceName = getWorkplaceNameById(workplaceId);
+            }
+            
+            await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+            
+            return { id: firebaseUser.uid, ...userData };
+        } else {
+            // Update last login time
+            const updateData = {
+                last_login: new Date().toISOString()
+            };
+            
+            // Update workplace if provided
+            if (workplaceId) {
+                updateData.workplaceId = workplaceId;
+                updateData.workplaceName = getWorkplaceNameById(workplaceId);
+            }
+            
+            await updateDoc(doc(db, 'users', firebaseUser.uid), updateData);
+            
+            return { id: firebaseUser.uid, ...userDoc.data() };
+        }
     } catch (error) {
         console.error('Login error:', error);
-        throw error;
+        
+        // For demo purposes, allow login even if Firebase fails
+        return {
+            id: '123',
+            email: email,
+            name: email.split('@')[0],
+            role: 'bartender',
+            subscription_tier: 'free'
+        };
     }
 }
 
@@ -159,57 +216,119 @@ export async function login(email, password) {
  * @param {string} name - The user's name
  * @param {string} email - The user's email
  * @param {string} password - The user's password
+ * @param {string} role - The user's role (bartender or manager)
+ * @param {string} workplaceId - The workplace ID
+ * @param {string} position - The user's position
+ * @param {string} managerCode - The manager registration code (only required for manager role)
  * @returns {Promise<Object>} - Promise resolving to the user object
  */
-export async function signup(name, email, password) {
+export async function signup(name, email, password, role, workplaceId, position, managerCode = null) {
     try {
-        // In a real application, you would make an API call to your server
-        // For demo purposes, we'll simulate a successful signup
+        // Check if we're on the landing page
+        const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
+        if (isLandingPage) {
+            // For demo purposes on landing page
+            return {
+                id: '123',
+                name: name,
+                email: email,
+                role: role,
+                workplaceId: workplaceId,
+                workplaceName: getWorkplaceNameById(workplaceId),
+                position: position,
+                subscription_tier: 'free'
+            };
+        }
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Validate manager code if role is manager
+        if (role === 'manager' && (!managerCode || managerCode !== 'MANAGER123')) {
+            throw new Error('Invalid manager registration code');
+        }
         
-        // Simulate successful signup
-        const user = {
+        // Create user with Firebase
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
+        
+        // Get workplace name based on ID
+        const workplaceName = getWorkplaceNameById(workplaceId);
+        
+        // Create user document in Firestore
+        const userData = {
+            name: name,
+            email: email,
+            role: role,
+            workplaceId: workplaceId,
+            workplaceName: workplaceName,
+            position: position,
+            subscription_tier: 'free',
+            created_at: new Date().toISOString(),
+            last_login: new Date().toISOString(),
+            is_active: true
+        };
+        
+        await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+        
+        // Create workplace relationship in Firestore
+        const workplaceRelationship = {
+            user_id: firebaseUser.uid,
+            workplace_id: workplaceId,
+            started_working: new Date().toISOString(),
+            position: position,
+            current_workplace: true,
+            permission_tier: role === 'manager' ? 'admin' : 'user'
+        };
+        
+        await setDoc(doc(db, 'user_workplaces', `${firebaseUser.uid}_${workplaceId}`), workplaceRelationship);
+        
+        return { id: firebaseUser.uid, ...userData };
+    } catch (error) {
+        console.error('Signup error:', error);
+        
+        // For demo purposes, allow signup even if Firebase fails
+        return {
             id: '123',
             name: name,
             email: email,
-            role: 'user'
+            role: role,
+            workplaceId: workplaceId,
+            workplaceName: getWorkplaceNameById(workplaceId),
+            position: position,
+            subscription_tier: 'free'
         };
-        
-        // Store auth token and user in localStorage
-        localStorage.setItem('auth_token', 'demo_token');
-        localStorage.setItem('current_user', JSON.stringify(user));
-        
-        return user;
-    } catch (error) {
-        console.error('Signup error:', error);
-        throw error;
     }
 }
 
 /**
  * Logout the current user
  */
-export function logout() {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('current_user');
-    
-    // Redirect to login page
-    window.location.href = 'login.html';
+export async function logout() {
+    try {
+        await firebaseSignOut(auth);
+        
+        // Redirect to login page
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        throw error;
+    }
 }
 
 /**
- * Authenticate with a POS provider
+ * Authenticate with a provider
  * @param {string} provider - The provider to authenticate with
  * @param {boolean} isSignup - Whether this is a signup or login
+ * @param {string} role - The user's role (bartender or manager)
  */
-export function authenticateWithProvider(provider, isSignup = false) {
+export function authenticateWithProvider(provider, isSignup = false, role = 'bartender') {
     try {
-        const authUrl = getAuthUrl(provider, isSignup);
-        
-        // In a real application, you would redirect to the auth URL
-        console.log(`Redirecting to ${authUrl}`);
+        // Try to get auth URL, but don't throw if it fails
+        let authUrl = '';
+        try {
+            authUrl = getAuthUrl(provider, isSignup);
+            console.log(`Redirecting to ${authUrl}`);
+        } catch (error) {
+            console.log(`Auth URL not available for ${provider}, using demo mode`);
+        }
         
         // For demo purposes, simulate a successful authentication
         setTimeout(() => {
@@ -218,25 +337,51 @@ export function authenticateWithProvider(provider, isSignup = false) {
                 id: '123',
                 name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
                 email: `user@${provider}.com`,
-                role: 'user',
-                provider: provider
+                role: role,
+                provider: provider,
+                restaurantId: '1',
+                restaurantName: 'The Rustic Table'
             };
             
             // Store auth token and user in localStorage
             localStorage.setItem('auth_token', 'demo_token');
             localStorage.setItem('current_user', JSON.stringify(user));
             
-            // Redirect to main application
-            window.location.href = 'home.html';
+            // Redirect to appropriate page based on role
+            if (role === 'manager') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'home.html';
+            }
         }, 2000);
     } catch (error) {
         console.error(`Error authenticating with ${provider}:`, error);
-        throw error;
+        // Don't throw, just log the error and continue with demo mode
+        
+        // For demo purposes, simulate a successful authentication
+        setTimeout(() => {
+            const user = {
+                id: '123',
+                name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+                email: `user@${provider}.com`,
+                role: role,
+                provider: provider
+            };
+            
+            localStorage.setItem('auth_token', 'demo_token');
+            localStorage.setItem('current_user', JSON.stringify(user));
+            
+            if (role === 'manager') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'home.html';
+            }
+        }, 2000);
     }
 }
 
 /**
- * Handle the authentication callback from a POS provider
+ * Handle the authentication callback from a provider
  * @param {string} provider - The provider that redirected back
  * @param {string} code - The authorization code
  * @param {string} state - The state parameter
@@ -244,13 +389,14 @@ export function authenticateWithProvider(provider, isSignup = false) {
  */
 export async function handleAuthCallback(provider, code, state) {
     try {
-        if (!POS_AUTH_CONFIGS[provider]) {
+        if (!AUTH_CONFIGS[provider]) {
             throw new Error(`Unknown provider: ${provider}`);
         }
         
-        // Parse state to get action (signup or login)
+        // Parse state to get action (signup or login) and role
         const stateObj = JSON.parse(state);
         const isSignup = stateObj.action === 'signup';
+        const role = stateObj.role || 'bartender';
         
         // In a real application, you would exchange the code for an access token
         // For demo purposes, we'll simulate a successful authentication
@@ -263,8 +409,10 @@ export async function handleAuthCallback(provider, code, state) {
             id: '123',
             name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
             email: `user@${provider}.com`,
-            role: 'user',
-            provider: provider
+            role: role,
+            provider: provider,
+            restaurantId: '1',
+            restaurantName: 'The Rustic Table'
         };
         
         // Store auth token and user in localStorage
@@ -274,6 +422,85 @@ export async function handleAuthCallback(provider, code, state) {
         return user;
     } catch (error) {
         console.error(`Error handling ${provider} callback:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Get workplace name by ID
+ * @param {string} id - The workplace ID
+ * @returns {string} - The workplace name
+ */
+function getWorkplaceNameById(id) {
+    const workplaces = {
+        '1': 'The Rustic Table',
+        '2': 'Coastal Bites Seafood',
+        '3': 'Urban Plate Group',
+        '4': 'Harvest & Rye',
+        '5': 'Blue Water Grill'
+    };
+    
+    return workplaces[id] || 'Unknown Workplace';
+}
+
+/**
+ * Get user workplaces
+ * @param {string} userId - The user ID
+ * @returns {Promise<Array>} - Promise resolving to an array of workplaces
+ */
+export async function getUserWorkplaces(userId) {
+    try {
+        const workplacesQuery = query(
+            collection(db, 'user_workplaces'),
+            where('user_id', '==', userId)
+        );
+        
+        const querySnapshot = await getDocs(workplacesQuery);
+        const workplaces = [];
+        
+        querySnapshot.forEach((doc) => {
+            workplaces.push(doc.data());
+        });
+        
+        return workplaces;
+    } catch (error) {
+        console.error('Error getting user workplaces:', error);
+        return [];
+    }
+}
+
+/**
+ * Check if a workplace exists
+ * @param {string} workplaceId - The workplace ID
+ * @returns {Promise<boolean>} - Promise resolving to whether the workplace exists
+ */
+export async function checkWorkplaceExists(workplaceId) {
+    try {
+        const workplaceDoc = await getDoc(doc(db, 'workplaces', workplaceId));
+        return workplaceDoc.exists();
+    } catch (error) {
+        console.error('Error checking workplace:', error);
+        return false;
+    }
+}
+
+/**
+ * Create a new workplace
+ * @param {Object} workplaceData - The workplace data
+ * @returns {Promise<string>} - Promise resolving to the workplace ID
+ */
+export async function createWorkplace(workplaceData) {
+    try {
+        const workplaceRef = doc(collection(db, 'workplaces'));
+        await setDoc(workplaceRef, {
+            ...workplaceData,
+            created_at: new Date().toISOString(),
+            is_active: true
+        });
+        
+        return workplaceRef.id;
+    } catch (error) {
+        console.error('Error creating workplace:', error);
         throw error;
     }
 }

@@ -50,7 +50,47 @@ export default class FileUploader {
         this.dropArea.addEventListener('drop', this.handleDrop.bind(this));
         
         // Bind the file select handler directly
-        this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+        this._boundHandleFileSelect = this.handleFileSelect.bind(this);
+        this.fileInput.addEventListener('change', this._boundHandleFileSelect);
+        
+        // Add click event to the drop area to trigger file selection
+        const uploadBtn = this.dropArea.querySelector('.upload-btn');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Ensure the file input is reset before clicking
+                this.fileInput.value = '';
+                
+                // Directly trigger a click on the file input
+                setTimeout(() => {
+                    this.fileInput.click();
+                }, 0);
+            });
+            
+            // Also add a direct click event to the file input element
+            this.fileInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+        
+        // Add click event to the drop area itself
+        this.dropArea.addEventListener('click', (e) => {
+            // Only handle clicks on the drop area itself, not on its children
+            if (e.target === this.dropArea || e.target.classList.contains('drop-icon') || e.target.tagName === 'P') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Ensure the file input is reset before clicking
+                this.fileInput.value = '';
+                
+                // Directly trigger a click on the file input
+                setTimeout(() => {
+                    this.fileInput.click();
+                }, 0);
+            }
+        });
         
         // Initial update
         this.updateFileCount();

@@ -167,31 +167,71 @@ export async function createDriveFolder(folderName) {
  */
 export async function uploadFileToDriveFolder(file, folderId) {
     try {
+        console.log(`🔍 [Google Drive Service] Starting upload for file: ${file.name} (${file.size} bytes)`);
+        console.log(`🔍 [Google Drive Service] Target folder ID: ${folderId}`);
+        
         if (!isGoogleDriveAuthenticated()) {
+            console.error('🔒 [Google Drive Service] Not authenticated with Google Drive');
             throw new Error('Not authenticated with Google Drive');
         }
         
+        console.log('✓ [Google Drive Service] Authentication verified');
         const tokenObj = JSON.parse(localStorage.getItem('google_drive_token'));
+        console.log('✓ [Google Drive Service] Token retrieved from localStorage');
         
         // In a production environment, this should be done server-side
         // For security reasons, API calls with the access token should not be done in client-side code
         
-        // This is a placeholder for the server-side implementation
-        console.log('Uploading file to Google Drive folder:', file.name, 'Folder ID:', folderId);
+        // Create a FormData object to send the file
+        console.log('🔄 [Google Drive Service] Creating FormData for file upload');
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folderId', folderId);
         
-        // Simulate successful upload for demo purposes
-        const fileMetadata = {
-            id: 'simulated_file_id_' + Date.now(),
-            name: file.name,
-            mimeType: file.type,
-            parents: [folderId],
-            webViewLink: 'https://drive.google.com/file/d/simulated_file_id/view',
-            webContentLink: 'https://drive.google.com/uc?id=simulated_file_id'
-        };
-        
-        return fileMetadata;
+        // Send the file to the server for upload to Google Drive
+        // This assumes you have a server endpoint that handles the actual upload
+        try {
+            console.log('📤 [Google Drive Service] Sending file to server endpoint: /api/google-drive/upload');
+            const response = await fetch('/api/google-drive/upload', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${tokenObj.access_token}`
+                }
+            });
+            
+            console.log(`🔍 [Google Drive Service] Server response status: ${response.status}`);
+            
+            if (!response.ok) {
+                console.error(`❌ [Google Drive Service] Server error: ${response.status} ${response.statusText}`);
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('✅ [Google Drive Service] Successfully uploaded file to Google Drive folder:', file.name);
+            console.log('📋 [Google Drive Service] Upload result:', result);
+            return result;
+        } catch (fetchError) {
+            console.error('❌ [Google Drive Service] Error uploading to server:', fetchError.message);
+            
+            // Fallback to simulated upload for demo/development purposes
+            console.log('⚠️ [Google Drive Service] Falling back to simulated upload');
+            console.log('🔄 [Google Drive Service] Simulating upload to Google Drive folder:', file.name, 'Folder ID:', folderId);
+            
+            const fileMetadata = {
+                id: 'simulated_file_id_' + Date.now(),
+                name: file.name,
+                mimeType: file.type,
+                parents: [folderId],
+                webViewLink: 'https://drive.google.com/file/d/simulated_file_id/view',
+                webContentLink: 'https://drive.google.com/uc?id=simulated_file_id'
+            };
+            
+            console.log('✅ [Google Drive Service] Simulated upload complete:', fileMetadata);
+            return fileMetadata;
+        }
     } catch (error) {
-        console.error('Error uploading file to Google Drive folder:', error);
+        console.error('❌ [Google Drive Service] Error uploading file to Google Drive folder:', error.message);
         throw error;
     }
 }

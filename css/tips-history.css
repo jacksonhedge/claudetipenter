@@ -1,0 +1,228 @@
+/* Tips History Styles */
+
+.tips-history-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.tips-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.tips-history-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-orange);
+}
+
+.tips-history-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.tips-history-btn {
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.export-history-btn {
+    background-color: var(--primary-yellow);
+    color: var(--primary-orange);
+    border: 1px solid var(--primary-orange);
+}
+
+.export-history-btn:hover {
+    background-color: var(--primary-orange);
+    color: white;
+}
+
+.clear-history-btn {
+    background-color: #f8f8f8;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+}
+
+.clear-history-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.tips-history-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #777;
+}
+
+.tips-history-empty i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #ddd;
+}
+
+.tips-history-empty p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.tips-history-list {
+    margin-top: 20px;
+}
+
+.history-item {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.history-item:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #eee;
+}
+
+.history-date-time {
+    display: flex;
+    flex-direction: column;
+}
+
+.history-date {
+    font-weight: 600;
+    color: var(--primary-orange);
+    font-size: 1rem;
+}
+
+.history-time {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.history-summary {
+    display: flex;
+    gap: 20px;
+}
+
+.history-receipts, .history-total-tips {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.history-receipts .label, .history-total-tips .label {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.history-receipts .value, .history-total-tips .value {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+.history-total-tips .value {
+    color: var(--primary-orange);
+}
+
+.history-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.history-view-btn {
+    padding: 6px 12px;
+    background-color: var(--primary-yellow);
+    color: var(--primary-orange);
+    border: 1px solid var(--primary-orange);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-view-btn:hover {
+    background-color: var(--primary-orange);
+    color: white;
+}
+
+.history-details {
+    padding: 15px;
+    background-color: white;
+    border-top: 1px solid #eee;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th {
+    background-color: #f5f5f5;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+}
+
+.history-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table tr:hover td {
+    background-color: #f9f9f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .history-summary {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .history-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+    
+    .history-table {
+        font-size: 0.9rem;
+    }
+    
+    .history-table th, .history-table td {
+        padding: 8px 5px;
+    }
+}

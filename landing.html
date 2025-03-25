@@ -4,9 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TipEnter - Automatic Tip Entering Solution</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
     <link rel="stylesheet" href="css/landing.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Prevent Firebase initialization -->
+    <script>
+        // Block all Firebase imports
+        // This needs to run before any other scripts
+        (function() {
+            // Override importScripts to block Firebase
+            if (typeof importScripts === 'function') {
+                const originalImportScripts = importScripts;
+                window.importScripts = function(url) {
+                    if (url.includes('firebase')) {
+                        console.log('Blocked Firebase import:', url);
+                        return;
+                    }
+                    return originalImportScripts.apply(this, arguments);
+                };
+            }
+            
+            // Override fetch to block Firebase requests
+            const originalFetch = window.fetch;
+            window.fetch = function(url, options) {
+                if (typeof url === 'string' && url.includes('firestore.googleapis.com')) {
+                    console.log('Blocked Firebase fetch:', url);
+                    return Promise.reject(new Error('Firebase fetch blocked'));
+                }
+                return originalFetch.apply(this, arguments);
+            };
+            
+            // Override XMLHttpRequest to block Firebase requests
+            const originalXHROpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+                if (typeof url === 'string' && url.includes('firestore.googleapis.com')) {
+                    console.log('Blocked Firebase XHR:', url);
+                    this.abort();
+                    return;
+                }
+                return originalXHROpen.apply(this, arguments);
+            };
+            
+            // Create a more comprehensive mock of Firebase
+            window.firebase = {
+                initializeApp: function() { 
+                    console.log('Mock Firebase initializeApp called');
+                    return {
+                        firestore: function() { return {}; },
+                        auth: function() { return {}; }
+                    }; 
+                },
+                auth: function() { 
+                    console.log('Mock Firebase auth called');
+                    return { 
+                        onAuthStateChanged: function(callback) { callback(null); return function() {}; },
+                        signInWithEmailAndPassword: function() { return Promise.resolve({}); },
+                        createUserWithEmailAndPassword: function() { return Promise.resolve({}); },
+                        signOut: function() { return Promise.resolve(); }
+                    }; 
+                },
+                firestore: function() { 
+                    console.log('Mock Firebase firestore called');
+                    return {
+                        collection: function() { return { doc: function() { return {}; } }; },
+                        doc: function() { return {}; },
+                        getDoc: function() { return Promise.resolve({ exists: function() { return false; } }); },
+                        setDoc: function() { return Promise.resolve(); },
+                        updateDoc: function() { return Promise.resolve(); },
+                        query: function() { return {}; },
+                        where: function() { return {}; },
+                        getDocs: function() { return Promise.resolve({ forEach: function() {} }); },
+                        addDoc: function() { return Promise.resolve(); }
+                    }; 
+                },
+                analytics: function() { 
+                    console.log('Mock Firebase analytics called');
+                    return {}; 
+                }
+            };
+
+            // Also mock the Firebase modules that might be imported
+            window.initializeApp = window.firebase.initializeApp;
+            window.getAuth = window.firebase.auth;
+            window.getFirestore = window.firebase.firestore;
+            window.getAnalytics = window.firebase.analytics;
+            
+            // Prevent any script from loading Firebase
+            const originalCreateElement = document.createElement;
+            document.createElement = function(tagName) {
+                const element = originalCreateElement.call(document, tagName);
+                if (tagName.toLowerCase() === 'script') {
+                    const originalSetAttribute = element.setAttribute;
+                    element.setAttribute = function(name, value) {
+                        if (name === 'src' && value && value.includes('firebase')) {
+                            console.log('Blocked loading Firebase script:', value);
+                            return;
+                        }
+                        return originalSetAttribute.call(this, name, value);
+                    };
+                }
+                return element;
+            };
+            
+            console.log('Firebase blocking initialized');
+        })();
+    </script>
 </head>
 <body>
     <!-- Header -->
@@ -14,6 +118,9 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">TipEnter</div>
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
                 <nav class="nav-links">
                     <a href="#features">Features</a>
                     <a href="#how-it-works">How It Works</a>
@@ -40,9 +147,15 @@
                 <h1>Automatic Tip Entering</h1>
                 <p>Scan in your tips automatically!</p>
                 <div class="hero-buttons">
-                    <a href="try-it-out.html" class="hero-cta try-it-btn">Try it out</a>
+                    <a href="try-it-out.html" class="hero-cta try-it-btn">
+                        <i class="fas fa-star"></i> Try Free (5 images)
+                    </a>
+                    <a href="login.html#signup" class="hero-cta signup-btn">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </a>
                     <a href="javascript:void(0);" class="hero-cta demo-btn">Book a Demo</a>
                 </div>
+                <p class="hero-note">Try for free with up to 5 images. Create an account to export and save your data.</p>
                 
                 <div class="pos-logos">
                     <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
@@ -282,6 +395,54 @@
             <div class="cta-content">
                 <h2>Ready to Streamline Your Tip Processing?</h2>
                 <p>Join hundreds of restaurants saving time and reducing errors with TipEnter's automatic tip recognition system.</p>
+                
+                <div class="pricing-tiers">
+                    <div class="pricing-card free-tier">
+                        <div class="pricing-header">
+                            <h3>Free Trial</h3>
+                            <p class="pricing-price">$0</p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="fas fa-check"></i> Process up to 5 images</li>
+                            <li><i class="fas fa-check"></i> Basic recognition</li>
+                            <li><i class="fas fa-check"></i> View results online</li>
+                            <li><i class="fas fa-times"></i> No data export</li>
+                            <li><i class="fas fa-times"></i> No POS integration</li>
+                        </ul>
+                        <a href="try-it-out.html" class="pricing-btn">Try Now</a>
+                    </div>
+                    
+                    <div class="pricing-card bartender-tier">
+                        <div class="pricing-header">
+                            <h3>Bartender</h3>
+                            <p class="pricing-price">$4.99<span>/month</span></p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="fas fa-check"></i> Unlimited images</li>
+                            <li><i class="fas fa-check"></i> Advanced AI recognition</li>
+                            <li><i class="fas fa-check"></i> Export to CSV/Excel</li>
+                            <li><i class="fas fa-check"></i> POS integration</li>
+                            <li><i class="fas fa-check"></i> Personal cloud storage</li>
+                        </ul>
+                        <a href="login.html#signup" class="pricing-btn">Sign Up</a>
+                    </div>
+                    
+                    <div class="pricing-card restaurant-tier">
+                        <div class="pricing-badge">BEST VALUE</div>
+                        <div class="pricing-header">
+                            <h3>Restaurant</h3>
+                            <p class="pricing-price">$89.99<span>/month</span></p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="fas fa-check"></i> Everything in Bartender plan</li>
+                            <li><i class="fas fa-check"></i> Scanner included</li>
+                            <li><i class="fas fa-check"></i> Team access (up to 5 users)</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                        </ul>
+                        <a href="login.html#signup" class="pricing-btn">Sign Up</a>
+                    </div>
+                </div>
+                
                 <div class="cta-buttons">
                     <a href="javascript:void(0);" class="cta-primary">Book a Demo</a>
                     <a href="#features" class="cta-secondary">Learn More</a>
@@ -344,6 +505,22 @@
     <script>
         // Simple animation for elements when they come into view
         document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            const headerContent = document.querySelector('.header-content');
+            
+            mobileMenuToggle.addEventListener('click', function() {
+                headerContent.classList.toggle('mobile-menu-active');
+            });
+            
+            // Close mobile menu when clicking on a link
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    headerContent.classList.remove('mobile-menu-active');
+                });
+            });
+            
             const animateElements = document.querySelectorAll('.animate');
             
             const observer = new IntersectionObserver((entries) => {

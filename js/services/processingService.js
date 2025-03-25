@@ -5,6 +5,9 @@ import { processWithSelectedAPI, calculateEstimatedProcessingTime, updateApiCost
 import { processFilesForSubmission } from './fileService.js';
 import { formatMonetaryValues } from '../utils/dataUtils.js';
 import { updateProgressBar, createCountdown } from '../utils/uiUtils.js';
+import { queueFilesForGoogleDriveUpload } from './backgroundUploadService.js';
+import { uploadBase64ImageToStorage } from './firebaseStorageService.js';
+import { auth } from '../firebase-config.js';
 
 // Store current data for sorting and filtering
 let currentData = null;
@@ -76,30 +79,9 @@ export async function processImages(progressBar, countdownTimer, onProgress, onC
                     imageUrl = `data:${base64Files[index].type};base64,${base64Files[index].data}`;
                     console.log(`Using actual image for index ${index}`);
                 } else {
-                    // Fallback to a colored rectangle if no image is available
-                    console.log(`No image data available for index ${index}, using fallback`);
-                    const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6'];
-                    const color = colors[index % colors.length];
-                    
-                    // Create a canvas element
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 300;
-                    canvas.height = 200;
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Fill background
-                    ctx.fillStyle = color;
-                    ctx.fillRect(0, 0, 300, 200);
-                    
-                    // Add text
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 20px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(`Receipt Image ${index + 1}`, 150, 100);
-                    
-                    // Convert to data URL
-                    imageUrl = canvas.toDataURL('image/png');
+                    // No fallback image, just use null for the image URL
+                    console.log(`No image data available for index ${index}, using null`);
+                    imageUrl = null;
                 }
                 
                 return {
@@ -109,6 +91,106 @@ export async function processImages(progressBar, countdownTimer, onProgress, onC
             });
             
             console.log('Processed images with URLs:', processedImages);
+            
+            // Queue files for background upload to Google Drive
+            // This happens after processing is complete and won't block the UI
+            console.log('🚀 [Processing Service] Initiating background upload to Google Drive');
+            console.log(`🚀 [Processing Service] Sending ${base64Files.length} files to Google Drive`);
+            queueFilesForGoogleDriveUpload(base64Files);
+            console.log('✓ [Processing Service] Files queued for Google Drive upload');
+            
+            // Also upload to Firebase Storage if user is authenticated
+            if (auth.currentUser) {
+                try {
+                    console.log('🚀 [Processing Service] Initiating upload to Firebase Storage');
+                    
+                    // Get current restaurant/bar ID if available
+                    let restaurantId = null;
+                    let restaurantName = "Unknown Restaurant";
+                    try {
+                        const selectedBar = localStorage.getItem('selectedBar');
+                        if (selectedBar) {
+                            const barData = JSON.parse(selectedBar);
+                            restaurantId = barData.id || barData.barId;
+                            restaurantName = barData.name || barData.barName || restaurantName;
+                        }
+                    } catch (error) {
+                        console.error('Error getting restaurant ID:', error);
+                    }
+                    
+                    console.log(`📋 [Firebase Upload] Starting batch upload of ${base64Files.length} files to Firebase Storage`);
+                    console.log(`📋 [Firebase Upload] User: ${auth.currentUser.email || auth.currentUser.uid}`);
+                    console.log(`📋 [Firebase Upload] Restaurant: ${restaurantName} (ID: ${restaurantId || 'none'})`);
+                    
+                    let successCount = 0;
+                    let errorCount = 0;
+                    
+                    // Upload each file to Firebase Storage
+                    for (const fileData of base64Files) {
+                        console.log(`📤 [Firebase Upload] Processing file: ${fileData.name}`);
+                        
+                        try {
+                            // Create metadata including restaurant/bar info
+                            const metadata = {
+                                restaurantId: restaurantId,
+                                restaurantName: restaurantName,
+                                uploadedAt: new Date().toISOString(),
+                                uploadedBy: auth.currentUser.uid,
+                                uploadedByEmail: auth.currentUser.email || 'unknown'
+                            };
+                            
+                            // Upload to Firebase Storage
+                            await uploadBase64ImageToStorage(fileData, metadata);
+                            successCount++;
+                            
+                            console.log(`✓ [Firebase Upload] Successfully uploaded file ${successCount}/${base64Files.length}`);
+                        } catch (error) {
+                            console.error(`❌ [Firebase Upload] Error uploading ${fileData.name}:`, error);
+                            errorCount++;
+                        }
+                    }
+                    
+                    // Log final summary
+                    console.log(`🎯 [Firebase Upload] Upload summary:`);
+                    console.log(`   ✅ Successfully uploaded: ${successCount}/${base64Files.length} files`);
+                    if (errorCount > 0) {
+                        console.log(`   ❌ Failed uploads: ${errorCount}`);
+                    }
+                    
+                    // Show notification with results
+                    if (successCount > 0) {
+                        if (errorCount === 0) {
+                            showNotification(`Successfully uploaded ${successCount} images to Firebase Storage`, 'success', 5000);
+                        } else {
+                            showNotification(`Uploaded ${successCount}/${base64Files.length} images to Firebase Storage (${errorCount} failed)`, 'warning', 5000);
+                        }
+                    } else if (errorCount > 0) {
+                        showNotification(`Failed to upload images to Firebase Storage`, 'error', 5000);
+                    }
+                    
+                    // If user has the profile modal open with images tab, refresh the image viewer
+                    const profileModal = document.getElementById('profileModal');
+                    if (profileModal && window.getComputedStyle(profileModal).display !== 'none') {
+                        const imageViewer = document.querySelector('.firebase-image-viewer');
+                        if (imageViewer) {
+                            const refreshButton = imageViewer.querySelector('.refresh-button');
+                            if (refreshButton) {
+                                // Use a small delay to ensure all images are available
+                                setTimeout(() => {
+                                    refreshButton.click();
+                                }, 1000);
+                            }
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ [Firebase Upload] Error in batch upload process:', error);
+                    showNotification('Error uploading images to Firebase Storage', 'error', 5000);
+                }
+            } else {
+                console.log('ℹ️ [Firebase Upload] User not authenticated, skipping Firebase Storage upload');
+                showNotification('Log in to save your images to your account', 'info', 5000);
+            }
         }
         
         // Complete progress bar

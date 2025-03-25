@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/epson-scanner.css">
+    <link rel="stylesheet" href="css/table-styles.css">
+    <link rel="stylesheet" href="css/organized-tips.css">
+    <link rel="stylesheet" href="css/export-modal.css">
+    <link rel="stylesheet" href="css/celebration-popup.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js library for PDF handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <!-- jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Left sidebar styles */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .sidebar-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .sidebar-menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-menu-item.active {
+            background-color: #3498db;
+            position: relative;
+        }
+        
+        .sidebar-menu-item.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: #f39c12;
+        }
+        
+        .sidebar-menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            background-color: #f5f7fa;
+        }
+        
+        /* Move POS logos to the right */
+        .pos-logos-right {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            z-index: 100;
+        }
+        
+        .pos-logo {
+            height: 60px;
+            width: 60px;
+            object-fit: contain;
+            filter: grayscale(0%);
+            opacity: 1;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pos-logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 1rem 0;
+            }
+            
+            .sidebar-brand, .sidebar-menu-item span {
+                display: none;
+            }
+            
+            .sidebar-menu-item {
+                padding: 1rem;
+                justify-content: center;
+            }
+            
+            .sidebar-menu-item i {
+                font-size: 1.2rem;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .pos-logo {
+                height: 45px;
+                width: 45px;
+                padding: 6px;
+            }
+        }
+        
+        /* Adjust the API cost display */
+        .api-cost {
+            top: 20px;
+            right: 20px;
+        }
+        
+        /* Adjust the container to fit with sidebar */
+        .container {
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        
+        /* Hide the original nav */
+        .main-nav {
+            display: none;
+        }
+        
+        /* Adjust tab content to fill available space */
+        main.tab-content {
+            margin-top: 1rem;
+            background-color: var(--secondary-yellow);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        
+        /* Style the upload area like try-it-out page */
+        .drop-area {
+            width: 100%;
+            height: 400px;
+            margin: 0 auto 1rem;
+            border: 2px dashed var(--primary-orange);
+            border-radius: 10px;
+            background-color: var(--secondary-yellow);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drop-area::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 15px,
+                rgba(247, 110, 17, 0.1) 15px,
+                rgba(247, 110, 17, 0.1) 16px
+            );
+            z-index: 1;
+        }
+        
+        .drop-area::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 15px,
+                rgba(247, 110, 17, 0.1) 15px,
+                rgba(247, 110, 17, 0.1) 16px
+            );
+            z-index: 1;
+        }
+        
+        .drop-icon {
+            font-size: 4rem;
+            color: var(--primary-orange);
+            opacity: 0.3;
+            z-index: 2;
+        }
+        
+        /* Style the footer to be at the bottom */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 250px;
+            right: 0;
+            background-color: #f5f7fa;
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            z-index: 90;
+        }
+        
+        @media (max-width: 992px) {
+            footer {
+                left: 200px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            footer {
+                left: 70px;
+            }
+        }
+        
+        /* Add some CSS variables for consistent styling */
+        :root {
+            --primary-orange: #F76E11;
+            --primary-red: #FF5757;
+            --primary-yellow: #FFBC80;
+            --secondary-yellow: #FFF2D8;
+            --text-light: #ffffff;
+            --gradient-bg: linear-gradient(135deg, #FF8C42, #F76E11, #FF5757);
+        }
+        
+        /* Style the buttons like try-it-out page */
+        .process-btn, .scan-btn, .upload-btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .process-btn {
+            background: var(--gradient-bg);
+            color: var(--text-light);
+        }
+        
+        .process-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .scan-btn {
+            background: var(--gradient-bg);
+            color: var(--text-light);
+        }
+        
+        .scan-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .upload-btn {
+            background-color: var(--text-light);
+            color: var(--primary-orange);
+            border: 2px solid var(--primary-orange);
+        }
+        
+        .upload-btn:hover {
+            background-color: var(--primary-yellow);
+            color: var(--primary-orange);
+            transform: translateY(-3px);
+        }
+        
+        /* Section description styles */
+        .section-description {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-description h2 {
+            color: var(--primary-orange);
+            margin-bottom: 0.75rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .section-description p {
+            color: #555;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .section-description {
+                padding: 1rem;
+            }
+            
+            .section-description h2 {
+                font-size: 1.5rem;
+            }
+            
+            .section-description p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Right side POS logos -->
+    <div class="pos-logos-right">
+        <img src="assets/images/lightspeedLogo.png" alt="Lightspeed POS" class="pos-logo">
+        <img src="assets/images/ToastLogo.png" alt="Toast POS" class="pos-logo">
+        <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
+        <img src="assets/images/squarelogo.png" alt="Square POS" class="pos-logo">
+    </div>
+    
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">TipEnter</div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item active" data-tab="scanner-tab">
+                    <i class="fas fa-calculator"></i>
+                    <span>Tip Analyzer Tool</span>
+                </li>
+                <li class="sidebar-menu-item" data-tab="organized-tab">
+                    <i class="fas fa-images"></i>
+                    <span>Organized Images</span>
+                </li>
+                <li class="sidebar-menu-item" data-tab="file-organizer-tab">
+                    <i class="fas fa-folder-open"></i>
+                    <span>File Organizer</span>
+                </li>
+                <li class="sidebar-menu-item" data-tab="organized-without-tip-tab">
+                    <i class="fas fa-file-image"></i>
+                    <span>Organized Images without Tip</span>
+                </li>
+                <li class="sidebar-menu-item" data-tab="epson-scanner-tab">
+                    <i class="fas fa-scanner"></i>
+                    <span>Epson Scanner</span>
+                </li>
+                <li class="sidebar-menu-item auth-link" id="authLink">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container">
+                <nav class="main-nav">
+                    <div class="nav-brand">TipEnter</div>
+                    <div class="nav-actions">
+                        <a href="login.html" class="auth-link" id="authLink">Login</a>
+                    </div>
+                    <ul class="nav-tabs">
+                        <div class="tab-group">
+                            <li class="nav-item active" data-tab="scanner-tab">Tip Analyzer</li>
+                            <li class="nav-item related-tab" data-tab="organized-tab">Organized Images</li>
+                        </div>
+                        <div class="tab-group">
+                            <li class="nav-item" data-tab="file-organizer-tab">File Organizer</li>
+                            <li class="nav-item related-tab" data-tab="organized-without-tip-tab">Organized Images without Tip</li>
+                        </div>
+                        <div class="tab-group">
+                            <li class="nav-item" data-tab="epson-scanner-tab">Epson Scanner</li>
+                        </div>
+                    </ul>
+                </nav>
+                
+                <!-- Scanner Tab -->
+                <main id="scanner-tab" class="tab-content active">
+                    <!-- Content for scanner tab -->
+                    <div class="section-description">
+                        <h2>Tip Analyzer</h2>
+                        <p>Here you can scan your tip sheets. Upload images or PDFs of receipts to extract tip information and organize your data efficiently.</p>
+                    </div>
+                    <!-- Rest of scanner tab content -->
+                </main>
+                
+                <!-- File Organizer Tab -->
+                <main id="file-organizer-tab" class="tab-content">
+                    <!-- Content for file organizer tab -->
+                    <div class="section-description">
+                        <h2>File Organizer</h2>
+                        <p>Upload and organize your files in a structured format. This tool helps you manage and categorize your documents for better accessibility.</p>
+                    </div>
+                    <!-- Rest of file organizer tab content -->
+                </main>
+                
+                <!-- Organized Tab -->
+                <main id="organized-tab" class="tab-content">
+                    <div class="section-description">
+                        <h2>Organized Images</h2>
+                        <p>View and manage your processed images with tip information. Filter, sort, and export your data in various formats.</p>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <select id="filterField" class="filter-select">
+                                <option value="customer_name">Customer Name</option>
+                                <option value="check_number">Check Number</option>
+                                <option value="amount">Amount</option>
+                                <option value="payment_type">Payment Type</option>
+                                <option value="time">Time</option>
+                                <option value="total">Total</option>
+                                <option value="tip">Tip</option>
+                            </select>
+                            <input type="text" id="filterValue" class="filter-input" placeholder="Filter value...">
+                            <select id="filterSortOrder" class="filter-select">
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                            <button id="applyFilterBtn" class="filter-btn">Apply Filter</button>
+                            <button id="clearFilterBtn" class="clear-btn">Clear</button>
+                        </div>
+                        <div class="view-toggle">
+                            <button id="gridViewBtn" class="view-btn active">Grid View</button>
+                            <button id="slideshowViewBtn" class="view-btn">Slideshow</button>
+                            <button id="exportSlideshowBtn" class="export-btn">Export Slideshow</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Export Options Modal -->
+                    <div id="exportOptionsModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Export Options</h2>
+                                <span class="close-modal">&times;</span>
+                            </div>
+                            <div class="modal-body">
+                                <div class="export-option">
+                                    <button id="exportEmailBtn" class="export-option-btn">
+                                        <i class="fas fa-envelope"></i>
+                                        Export to Email
+                                    </button>
+                                    <div id="emailInputContainer" class="input-container" style="display: none;">
+                                        <input type="email" id="emailInput" placeholder="Enter your email" value="">
+                                        <button id="confirmEmailBtn" class="confirm-btn">Confirm</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="export-option">
+                                    <button id="exportTextBtn" class="export-option-btn">
+                                        <i class="fas fa-sms"></i>
+                                        Export to Text
+                                    </button>
+                                    <div id="textInputContainer" class="input-container" style="display: none;">
+                                        <input type="tel" id="phoneInput" placeholder="Enter your phone number" value="">
+                                        <button id="confirmTextBtn" class="confirm-btn">Confirm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid for organized images -->
+                    <div id="organizedGrid" class="organized-grid">
+                        <!-- Grid items will be added dynamically -->
+                    </div>
+                </main>
+                
+                <!-- Organized Without Tip Tab -->
+                <main id="organized-without-tip-tab" class="tab-content">
+                    <div class="section-description">
+                        <h2>Organized Images without Tip</h2>
+                        <p>View and manage your processed images without tip information. Filter, sort, and export your data in various formats.</p>
+                    </div>
+                    <!-- Rest of organized without tip tab content -->
+                </main>
+                
+                <!-- Epson Scanner Tab -->
+                <main id="epson-scanner-tab" class="tab-content">
+                    <div class="section-description">
+                        <h2>Epson Scanner</h2>
+                        <p>Connect to your Epson scanner to directly scan receipts and process them in TipEnter.</p>
+                    </div>
+                    <!-- Rest of epson scanner tab content -->
+                </main>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Slideshow Modal -->
+    <div id="slideshowModal" class="slideshow-modal">
+        <div class="slideshow-modal-content">
+            <div class="slideshow-modal-header">
+                <h2>Receipt Images</h2>
+                <span class="slideshow-close">&times;</span>
+            </div>
+            <div class="slideshow-controls">
+                <button id="prevSlideBtn" class="slide-nav-btn">Previous</button>
+                <div id="slideCounter">1 / 10</div>
+                <button id="nextSlideBtn" class="slide-nav-btn">Next</button>
+            </div>
+            <div id="slideshowImageContainer" class="slideshow-image-container">
+                <!-- Slideshow content will be added dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p>&copy; 2025 TipEnter. All rights reserved.</p>
+                <p>Version 1.5.0</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Main JavaScript -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

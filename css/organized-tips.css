@@ -1,0 +1,335 @@
+/**
+ * Organized Tips CSS
+ * Styles for the organized tips UI component
+ */
+
+/* Container for the organized tips UI */
+.organized-tips-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Header styles */
+.organized-tips-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.organized-tips-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.organized-tips-title h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.organized-tips-title .highlight {
+    background-color: var(--primary-orange);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.organized-tips-title .highlight:hover {
+    background-color: #e05e01;
+}
+
+.organized-tips-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.organized-tips-total .label {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.25rem;
+}
+
+.organized-tips-total .amount {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-orange);
+}
+
+/* Filter styles */
+.organized-tips-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #f5f7fa;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.filter-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-value:hover {
+    color: var(--primary-orange);
+}
+
+/* Payment item styles */
+.organized-tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.payment-item {
+    display: flex;
+    align-items: center;
+    background-color: #f5f7fa;
+    border-radius: 10px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.payment-item:hover {
+    background-color: #edf0f5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.payment-tab {
+    width: 80px;
+    margin-right: 1rem;
+}
+
+.payment-tab .label {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 0.25rem;
+}
+
+.payment-tab .value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.payment-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.card-icon {
+    width: 60px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.visa-icon {
+    background-color: #1a1f71;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mastercard-icon {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.mastercard-red, .mastercard-yellow {
+    width: 50%;
+    height: 100%;
+}
+
+.mastercard-red {
+    background-color: #eb001b;
+}
+
+.mastercard-yellow {
+    background-color: #f79e1b;
+}
+
+.discover-icon {
+    background-color: #ff6000;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-number {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.card-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.payment-amount {
+    display: flex;
+    gap: 1.5rem;
+    margin-left: auto;
+    margin-right: 1.5rem;
+}
+
+.amount-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.amount-label {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 0.25rem;
+}
+
+.amount-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.payment-tip {
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--primary-orange);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 8px;
+}
+
+.tip-amount {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.tip-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: #777;
+}
+
+.empty-state p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .payment-item {
+        flex-wrap: wrap;
+    }
+    
+    .payment-card {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-amount {
+        margin-left: 0;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .organized-tips-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .organized-tips-total {
+        align-items: flex-start;
+    }
+    
+    .payment-item {
+        padding: 0.75rem;
+    }
+    
+    .payment-tab {
+        width: 60px;
+        margin-right: 0.75rem;
+    }
+    
+    .payment-amount {
+        gap: 1rem;
+    }
+    
+    .payment-tip {
+        width: 80px;
+        padding: 0.5rem;
+    }
+    
+    .tip-amount {
+        font-size: 1.1rem;
+    }
+}

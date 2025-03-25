@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Lucide icons (non-React version) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Tailwind CSS for styling React components -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Recharts for data visualization -->
+    <script src="https://unpkg.com/recharts@2.1.9/umd/Recharts.min.js"></script>
+    
+</head>
+<body>
+    <!-- Admin Login Overlay -->
+    <div id="admin-login-overlay" class="admin-login-overlay">
+        <div class="admin-login-card">
+            <div class="admin-login-header">
+                <h1>TipEnter Admin</h1>
+                <p>Enter password to continue</p>
+            </div>
+            <div class="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="admin-password" class="admin-password-input">
+                        <button type="button" id="toggle-password" class="toggle-password-btn">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="password-error" class="password-error"></div>
+                <button id="admin-login-btn" class="admin-login-btn">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-container" id="admin-container" style="display: none;">
+        <!-- Admin Sidebar -->
+        <div class="admin-sidebar">
+            <div class="admin-header">
+                <h1>TipEnter</h1>
+                <p>Admin Dashboard</p>
+            </div>
+            
+            <nav class="admin-nav">
+                <div class="nav-main-items">
+                    <a href="#" class="admin-nav-item active" data-tab="home-tab">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="users-tab">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="restaurants-tab">
+                        <i class="fas fa-utensils"></i>
+                        <span>Restaurants</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="api-tester-tab">
+                        <i class="fas fa-code"></i>
+                        <span>API Tester</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="billing-tab">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Billing</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="team-tab">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Team</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="downloads-tab">
+                        <i class="fas fa-download"></i>
+                        <span>Downloads</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="trends-tab">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Trends</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="7shifts-tab">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>7shifts Playground</span>
+                    </a>
+                </div>
+                <div class="nav-footer">
+                    <a href="#" id="sign-out-btn" class="admin-nav-item sign-out-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+        
+        <!-- Admin Content -->
+        <div class="admin-content">
+            <!-- Home Tab -->
+            <div id="home-tab" class="tab-content active">
+                <div class="admin-card">
+                    <h2>Dashboard Overview</h2>
+                    
+                    <!-- Stats Boxes -->
+                    <div class="stats-container">
+                        <div class="stats-box">
+                            <div class="stats-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3>Unique Users</h3>
+                                <div class="stats-number">1,248</div>
+                                <div class="stats-trend positive">
+                                    <i class="fas fa-arrow-up"></i> 12% from last month
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-box">
+                            <div class="stats-icon">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3>Unique Restaurants</h3>
+                                <div class="stats-number">342</div>
+                                <div class="stats-trend positive">
+                                    <i class="fas fa-arrow-up"></i> 8% from last month
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-box">
+                            <div class="stats-icon">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3>Total Scans</h3>
+                                <div class="stats-number">24,892</div>
+                                <div class="stats-trend positive">
+                                    <i class="fas fa-arrow-up"></i> 15% from last month
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-box">
+                            <div class="stats-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="stats-content">
+                                <h3>Active Subscriptions</h3>
+                                <div class="stats-number">189</div>
+                                <div class="stats-trend positive">
+                                    <i class="fas fa-arrow-up"></i> 5% from last month
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="subscription-dashboard-container">
+                        <!-- React component will be mounted here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>User Management</h2>
+                    <div class="users-container">
+                        <div class="users-actions">
+                            <div class="search-filter">
+                                <input type="text" id="user-search" placeholder="Search users..." class="search-input">
+                                <select id="user-filter" class="filter-select">
+                                    <option value="all">All Roles</option>
+                                    <option value="bartender">Bartender</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                                <button id="search-btn" class="search-btn">Search</button>
+                            </div>
+                            <button id="add-user-btn" class="add-user-btn">Add New User</button>
+                        </div>
+                        
+                        <div class="users-table-container">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Email address</th>
+                                        <th>Restaurant/Bar</th>
+                                        <th>User Type</th>
+                                        <th>Created</th>
+                                        <th>Signed In</th>
+                                        <th>User UID</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <!-- User data will be loaded here -->
+                                    <tr class="loading-row">
+                                        <td colspan="7" class="loading-message">Loading user data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination">
+                            <button id="prev-page" class="pagination-btn" disabled>&lt; Previous</button>
+                            <span id="page-info">Page 1 of 1</span>
+                            <button id="next-page" class="pagination-btn" disabled>Next &gt;</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Restaurants Tab -->
+            <div id="restaurants-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Restaurant List</h2>
+                    <div class="restaurants-container">
+                        <div class="restaurants-actions">
+                            <div class="search-filter">
+                                <input type="text" id="restaurant-search" placeholder="Search restaurants..." class="search-input">
+                                <select id="restaurant-filter" class="filter-select">
+                                    <option value="all">All Types</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="bar">Bar</option>
+                                    <option value="cafe">Cafe</option>
+                                    <option value="pub">Pub</option>
+                                </select>
+                                <button id="search-restaurant-btn" class="search-btn">Search</button>
+                            </div>
+                            <button id="add-restaurant-btn" class="add-user-btn">Add New Restaurant</button>
+                        </div>
+                        
+                        <div class="restaurants-table-container">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Address</th>
+                                        <th>Phone</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="restaurants-table-body">
+                                    <!-- Restaurant data will be loaded here -->
+                                    <tr class="loading-row">
+                                        <td colspan="6" class="loading-message">Loading restaurant data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination">
+                            <button id="prev-restaurant-page" class="pagination-btn" disabled>&lt; Previous</button>
+                            <span id="restaurant-page-info">Page 1 of 1</span>
+                            <button id="next-restaurant-page" class="pagination-btn" disabled>Next &gt;</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add Restaurant Modal -->
+                <div id="add-restaurant-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-modal">&times;</span>
+                        <h2>Add New Restaurant</h2>
+                        <form id="add-restaurant-form">
+                            <div class="form-group">
+                                <label for="restaurant-name">Restaurant Name</label>
+                                <input type="text" id="restaurant-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-type">Type</label>
+                                <select id="restaurant-type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="bar">Bar</option>
+                                    <option value="cafe">Cafe</option>
+                                    <option value="pub">Pub</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-address">Address</label>
+                                <input type="text" id="restaurant-address" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-city">City</label>
+                                <input type="text" id="restaurant-city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-state">State</label>
+                                <input type="text" id="restaurant-state" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-zip">ZIP Code</label>
+                                <input type="text" id="restaurant-zip" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-phone">Phone</label>
+                                <input type="tel" id="restaurant-phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-email">Email</label>
+                                <input type="email" id="restaurant-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="restaurant-website">Website</label>
+                                <input type="url" id="restaurant-website">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <div class="location-search">
+                                    <input type="text" id="location-search-input" placeholder="Search for a location">
+                                    <button type="button" id="search-location-btn">Search</button>
+                                </div>
+                                <div id="map-container" class="map-container"></div>
+                                <input type="hidden" id="restaurant-lat">
+                                <input type="hidden" id="restaurant-lng">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancel-restaurant-btn" class="cancel-btn">Cancel</button>
+                                <button type="submit" id="submit-restaurant-btn" class="submit-btn">Add Restaurant</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Tester Tab -->
+            <div id="api-tester-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>API Tester</h2>
+                    <div class="api-tester-container">
+                        <div class="api-form">
+                            <div class="form-group">
+                                <label for="api-endpoint">API Endpoint</label>
+                                <select id="api-endpoint" class="api-select">
+                                    <option value="process-images">Process Images</option>
+                                    <option value="subscription-status">Subscription Status</option>
+                                    <option value="user-data">User Data</option>
+                                    <option value="restaurant-data">Restaurant Data</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="api-method">Method</label>
+                                <select id="api-method" class="api-select">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="api-params">Parameters (JSON)</label>
+                                <textarea id="api-params" class="api-textarea" rows="5" placeholder='{"key": "value"}'></textarea>
+                            </div>
+                            <button id="api-test-btn" class="api-test-btn">Test API</button>
+                        </div>
+                        <div class="api-result">
+                            <h3>Response</h3>
+                            <pre id="api-response" class="api-response">// API response will appear here</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Billing Tab -->
+            <div id="billing-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Billing Management</h2>
+                    <div class="billing-container">
+                        <div class="billing-summary">
+                            <h3>Revenue Summary</h3>
+                            <div class="billing-stats">
+                                <div class="billing-stat">
+                                    <span class="stat-label">Monthly Revenue</span>
+                                    <span class="stat-value">$12,480</span>
+                                </div>
+                                <div class="billing-stat">
+                                    <span class="stat-label">Annual Revenue</span>
+                                    <span class="stat-value">$149,760</span>
+                                </div>
+                                <div class="billing-stat">
+                                    <span class="stat-label">Active Subscriptions</span>
+                                    <span class="stat-value">189</span>
+                                </div>
+                                <div class="billing-stat">
+                                    <span class="stat-label">Avg. Subscription Value</span>
+                                    <span class="stat-value">$66</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="billing-actions">
+                            <button class="billing-btn">Export Billing Data</button>
+                            <button class="billing-btn">Manage Plans</button>
+                            <button class="billing-btn">View Invoices</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Tab -->
+            <div id="team-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Team Management</h2>
+                    <div class="team-container">
+                        <div class="team-actions">
+                            <button class="team-btn">Add Team Member</button>
+                            <button class="team-btn">Manage Roles</button>
+                        </div>
+                        <div class="team-list">
+                            <div class="team-member">
+                                <div class="member-avatar">JD</div>
+                                <div class="member-info">
+                                    <h4>John Doe</h4>
+                                    <p>Administrator</p>
+                                </div>
+                                <div class="member-actions">
+                                    <button class="member-btn">Edit</button>
+                                    <button class="member-btn">Remove</button>
+                                </div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">JS</div>
+                                <div class="member-info">
+                                    <h4>Jane Smith</h4>
+                                    <p>Support</p>
+                                </div>
+                                <div class="member-actions">
+                                    <button class="member-btn">Edit</button>
+                                    <button class="member-btn">Remove</button>
+                                </div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">RJ</div>
+                                <div class="member-info">
+                                    <h4>Robert Johnson</h4>
+                                    <p>Developer</p>
+                                </div>
+                                <div class="member-actions">
+                                    <button class="member-btn">Edit</button>
+                                    <button class="member-btn">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Downloads Tab -->
+            <div id="downloads-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Downloads</h2>
+                    <div class="downloads-container">
+                        <div class="downloads-section">
+                            <h3>Reports</h3>
+                            <div class="download-item">
+                                <div class="download-info">
+                                    <i class="fas fa-file-excel"></i>
+                                    <span>Monthly User Report</span>
+                                </div>
+                                <button class="download-btn">Download</button>
+                            </div>
+                            <div class="download-item">
+                                <div class="download-info">
+                                    <i class="fas fa-file-excel"></i>
+                                    <span>Restaurant Activity Report</span>
+                                </div>
+                                <button class="download-btn">Download</button>
+                            </div>
+                            <div class="download-item">
+                                <div class="download-info">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>Financial Summary</span>
+                                </div>
+                                <button class="download-btn">Download</button>
+                            </div>
+                        </div>
+                        <div class="downloads-section">
+                            <h3>Resources</h3>
+                            <div class="download-item">
+                                <div class="download-info">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>User Manual</span>
+                                </div>
+                                <button class="download-btn">Download</button>
+                            </div>
+                            <div class="download-item">
+                                <div class="download-info">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>API Documentation</span>
+                                </div>
+                                <button class="download-btn">Download</button>
+                            </div>
+                            <div class="download-item">
+                                <div class="download-info">
+                                    <i class="fas fa-file-archive"></i>
+                                    <span>Marketing Materials</span>
+                                </div>
+                                <button class="download-btn">Download</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trends Tab -->
+            <div id="trends-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Trends & Analytics</h2>
+                    <div class="trends-container">
+                        <div class="trends-filters">
+                            <div class="filter-group">
+                                <label for="trend-period">Time Period</label>
+                                <select id="trend-period" class="trend-select">
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days" selected>Last 30 Days</option>
+                                    <option value="90days">Last 90 Days</option>
+                                    <option value="year">Last Year</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="trend-metric">Metric</label>
+                                <select id="trend-metric" class="trend-select">
+                                    <option value="users" selected>Users</option>
+                                    <option value="restaurants">Restaurants</option>
+                                    <option value="scans">Scans</option>
+                                    <option value="subscriptions">Subscriptions</option>
+                                </select>
+                            </div>
+                            <button id="trend-update-btn" class="trend-btn">Update</button>
+                        </div>
+                        <div class="trends-chart">
+                            <div id="trend-chart-container" class="chart-container">
+                                <!-- Chart will be rendered here -->
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-line"></i>
+                                    <p>Select metrics and click Update to view trends</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="trends-insights">
+                            <h3>Key Insights</h3>
+                            <ul class="insights-list">
+                                <li>User growth is up 12% compared to previous period</li>
+                                <li>Restaurant onboarding has increased by 8%</li>
+                                <li>Scan volume peaks on Friday and Saturday evenings</li>
+                                <li>Subscription conversion rate is 4.2%</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 7shifts API Playground Tab -->
+            <div id="7shifts-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>7shifts API Playground</h2>
+                    <div class="api-tester-container">
+                        <div class="api-form">
+                            <div class="form-group">
+                                <label for="7shifts-endpoint">7shifts API Endpoint</label>
+                                <select id="7shifts-endpoint" class="api-select">
+                                    <option value="users">Users</option>
+                                    <option value="shifts">Shifts</option>
+                                    <option value="departments">Departments</option>
+                                    <option value="locations">Locations</option>
+                                    <option value="roles">Roles</option>
+                                    <option value="time_punches">Time Punches</option>
+                                    <option value="time_off">Time Off</option>
+                                    <option value="availability">Availability</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="7shifts-method">Method</label>
+                                <select id="7shifts-method" class="api-select">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="7shifts-api-key">API Key</label>
+                                <input type="text" id="7shifts-api-key" class="api-input" placeholder="Enter your 7shifts API key">
+                            </div>
+                            <div class="form-group">
+                                <label for="7shifts-params">Parameters (JSON)</label>
+                                <textarea id="7shifts-params" class="api-textarea" rows="5" placeholder='{"location_id": 123, "start_date": "2025-03-24", "end_date": "2025-03-31"}'></textarea>
+                            </div>
+                            <button id="7shifts-test-btn" class="api-test-btn">Test API</button>
+                        </div>
+                        <div class="api-result">
+                            <h3>Response</h3>
+                            <pre id="7shifts-response" class="api-response">// 7shifts API response will appear here</pre>
+                        </div>
+                    </div>
+                    <div class="api-docs">
+                        <h3>Quick Reference</h3>
+                        <div class="api-docs-content">
+                            <p>The 7shifts API allows you to access and manage your restaurant's scheduling data. Here are some common endpoints:</p>
+                            <ul>
+                                <li><strong>Users</strong> - Get information about your staff members</li>
+                                <li><strong>Shifts</strong> - View and manage scheduled shifts</li>
+                                <li><strong>Departments</strong> - Access department information</li>
+                                <li><strong>Locations</strong> - Get details about your locations</li>
+                                <li><strong>Roles</strong> - View staff roles and permissions</li>
+                                <li><strong>Time Punches</strong> - Access clock-in/clock-out data</li>
+                                <li><strong>Time Off</strong> - Manage time-off requests</li>
+                                <li><strong>Availability</strong> - View staff availability</li>
+                            </ul>
+                            <p>For full documentation, visit the <a href="https://developers.7shifts.com/reference" target="_blank">7shifts API Reference</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="admin-footer">
+        <p>Powered by Claude API | <span class="version">v1.0.0</span></p>
+        <p>Made with ❤️ in Pittsburgh</p>
+    </footer>
+    
+    <!-- Import Firebase from firebase-config.js -->
+    <script type="module" src="js/firebase-config.js"></script>
+    
+    <!-- Admin Login Script -->
+    <script type="module" src="js/admin-login.js"></script>
+    
+    <!-- Admin JavaScript -->
+    <script type="module" src="js/admin.js"></script>
+    
+    <!-- Admin Components -->
+    <script type="module" src="js/admin-components.js"></script>
+    
+    <!-- React Components -->
+    <!-- JSX files are loaded via the admin-components.js file -->
+</body>
+</html>

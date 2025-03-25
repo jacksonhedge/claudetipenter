@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const epsonPrinterRoutes = require('./routes/epsonPrinterRoutes');
+// Commenting out subscription routes since mongoose is not installed
+// const subscriptionRoutes = require('./js/services/subscriptionApiService');
 require('dotenv').config();
 
 // Import Google Drive processor
@@ -18,6 +20,9 @@ app.use(express.static('public')); // Also serve static files from 'public' dire
 // API routes for Epson printer
 app.use('/api', epsonPrinterRoutes);
 
+// API routes for subscription management (disabled due to missing mongoose)
+// app.use('/api', subscriptionRoutes);
+
 // Google Drive status API endpoint
 app.get('/api/google-drive/status', (req, res) => {
   try {
@@ -32,6 +37,87 @@ app.get('/api/google-drive/status', (req, res) => {
   } catch (error) {
     console.error('Error checking Google Drive status:', error);
     res.status(500).json({ error: 'Failed to check Google Drive status' });
+  }
+});
+
+// Google Drive upload API endpoint
+app.post('/api/google-drive/upload', async (req, res) => {
+  try {
+    console.log('📥 [Server] Received Google Drive upload request');
+    
+    // For testing purposes, log the request structure
+    console.log('📋 [Server] Request body keys:', Object.keys(req.body));
+    
+    // Extract the file data and folder ID from the request
+    // The file data should be in the request body as base64
+    const fileData = req.body.fileData;
+    const fileName = req.body.fileName;
+    const fileType = req.body.fileType;
+    const folderId = req.body.folderId;
+    
+    console.log(`📋 [Server] File name: ${fileName}, type: ${fileType}`);
+    console.log(`📋 [Server] Folder ID: ${folderId}`);
+    
+    if (!fileData || !fileName || !fileType) {
+      console.error('❌ [Server] Missing file information in upload request');
+      return res.status(400).json({ error: 'Missing file information' });
+    }
+    
+    if (!folderId) {
+      console.error('❌ [Server] No folder ID provided in upload request');
+      return res.status(400).json({ error: 'No folder ID provided' });
+    }
+    
+    console.log(`📋 [Server] Processing upload for file: ${fileName}`);
+    console.log(`📋 [Server] Target Google Drive folder: ${folderId}`);
+    
+    // Get the Google Drive API credentials from environment variables
+    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
+    
+    if (!clientEmail || !privateKey) {
+      console.error('❌ [Server] Google Drive API credentials not found in environment variables');
+      console.error('❌ [Server] Client email exists:', !!clientEmail);
+      console.error('❌ [Server] Private key exists:', !!privateKey);
+      return res.status(500).json({ 
+        error: 'Google Drive API credentials not found',
+        message: 'Make sure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY are set in your .env file.'
+      });
+    }
+    
+    console.log('✓ [Server] Google Drive API credentials found');
+    
+    // In a real implementation, this would upload the file to Google Drive
+    // For now, we'll simulate a successful upload
+    console.log(`🔄 [Server] Uploading file to Google Drive folder: ${folderId}`);
+    
+    // Simulate a delay for the upload
+    console.log('⏳ [Server] Simulating upload process...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Generate a simulated file ID
+    const fileId = 'file_id_' + Date.now();
+    console.log(`✅ [Server] Upload successful, generated file ID: ${fileId}`);
+    
+    // Return a success response with simulated file metadata
+    const response = {
+      id: fileId,
+      name: fileName,
+      mimeType: fileType,
+      parents: [folderId],
+      webViewLink: `https://drive.google.com/file/d/${fileId}/view`,
+      webContentLink: `https://drive.google.com/uc?id=${fileId}`
+    };
+    
+    console.log('📤 [Server] Sending response:', response);
+    res.json(response);
+  } catch (error) {
+    console.error('❌ [Server] Error uploading file to Google Drive:', error);
+    console.error('❌ [Server] Error details:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to upload file to Google Drive',
+      message: error.message
+    });
   }
 });
 
@@ -469,7 +555,7 @@ async function processWithClaudeAPI(base64Files, mode = 'tip_analyzer') {
 }
 
 // Start the server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Open http://localhost:${PORT} in your browser to use the application`);

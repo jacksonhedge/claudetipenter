@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TipEnter - Try with your receipts</title>
+    <title>TipEnter - Rapid Receipt Capture</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
     <link rel="stylesheet" href="css/landing.css">
-    <link rel="stylesheet" href="css/try-it-out.css">
+    <link rel="stylesheet" href="css/bar-selector.css">
+    <!-- Standard styles only -->
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Inline styles for quick implementation */
         .try-it-container {
-            max-width: 600px;
+            max-width: 1000px;
             margin: 2rem auto;
             padding: 2rem;
             background-color: white;
@@ -21,14 +24,14 @@
         }
         
         .try-it-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             color: var(--primary-orange);
         }
         
         .receipt-upload-area {
             width: 100%;
-            height: 300px;
-            margin: 0 auto 2rem;
+            height: 400px;
+            margin: 0 auto 1rem;
             border: 2px dashed var(--primary-orange);
             border-radius: 10px;
             background-color: var(--secondary-yellow);
@@ -88,11 +91,100 @@
             z-index: 2;
         }
         
+        .preview-container {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            padding: 0;
+            overflow-y: auto;
+        }
+        
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .preview-item {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85; /* Add some transparency to show the perforated background */
+        }
+        
+        .remove-preview {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: var(--primary-red);
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 4;
+            font-size: 0.8rem;
+        }
+        
+        .images-count {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: var(--primary-orange);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .batch-mode-indicator {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: var(--primary-orange);
+            color: white;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            animation: pulse 2s infinite;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
         .upload-buttons {
             display: flex;
             justify-content: center;
             gap: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             flex-wrap: wrap;
         }
         
@@ -129,14 +221,33 @@
         .camera-btn {
             background: var(--gradient-bg);
             color: var(--text-light);
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
         }
         
         .camera-btn:hover {
             box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
         }
         
+        .batch-btn {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+        }
+        
+        .batch-btn:hover {
+            background-color: #34495e;
+        }
+        
+        .batch-btn.active {
+            background-color: var(--primary-red);
+        }
+        
         .render-button-container {
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
         }
         
         .render-btn {
@@ -152,7 +263,6 @@
             align-items: center;
             justify-content: center;
             gap: 0.8rem;
-            margin: 0 auto;
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
             transition: all 0.3s ease;
         }
@@ -166,9 +276,30 @@
             font-size: 1.2rem;
         }
         
+        .clear-btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background-color: #f5f5f5;
+            color: #555;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .clear-btn:hover {
+            background-color: #eee;
+            transform: translateY(-2px);
+        }
+        
         .back-link {
             display: inline-block;
-            margin-top: 2rem;
+            margin-top: 1rem;
             color: var(--primary-orange);
             text-decoration: none;
             font-weight: 500;
@@ -183,191 +314,276 @@
             display: none;
         }
         
-        .preview-container {
-            display: none;
-            position: relative;
-            width: 100%;
-            height: 100%;
-            z-index: 3;
-            padding: 0;
-        }
-        
-        .preview-item {
-            position: absolute;
+        /* Firing line mode styles */
+        .firing-line-mode {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
-        .preview-image {
+        .firing-line-viewfinder {
+            position: relative;
+            width: 80%;
+            max-width: 500px;
+            height: 60vh;
+            border: 3px solid var(--primary-orange);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .firing-line-viewfinder video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: 0.85; /* Add some transparency to show the perforated background */
         }
         
-        .remove-preview {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(255, 255, 255, 0.8);
-            color: var(--primary-red);
-            border: none;
+        .firing-line-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .firing-line-capture {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            width: 25px;
-            height: 25px;
+            background-color: var(--primary-red);
+            border: 4px solid white;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            z-index: 4;
-            font-size: 0.8rem;
+            transition: all 0.2s ease;
         }
         
-        .images-count {
+        .firing-line-capture:hover {
+            transform: scale(1.05);
+            background-color: var(--primary-orange);
+        }
+        
+        .firing-line-capture i {
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .firing-line-exit {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .firing-line-exit:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .firing-line-counter {
             position: absolute;
-            bottom: 10px;
+            top: 10px;
             right: 10px;
             background-color: var(--primary-orange);
             color: white;
             border-radius: 20px;
             padding: 5px 10px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: bold;
-            z-index: 4;
         }
         
-        .trial-limit-warning {
+        .firing-line-flash {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(239, 68, 68, 0.9);
-            color: white;
-            border-radius: 5px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            z-index: 4;
-            display: none;
-            animation: fadeIn 0.3s ease-out;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
         }
         
-        /* Results styles */
-        .results-container {
+        /* Progress bar styles */
+        .progress-container {
+            margin: 2rem 0;
+            padding: 1.5rem;
             background-color: white;
             border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .results-container.error {
-            border-left: 4px solid var(--primary-red);
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: var(--gradient-bg);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-status {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        
+        .countdown-timer {
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        /* Results container styles */
+        .results-container {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
         
         .results-container h3 {
             color: var(--primary-orange);
-            margin-top: 0;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
+            text-align: center;
         }
         
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .result-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .result-image-container {
+            height: 200px;
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+        
+        .result-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .result-details {
+            padding: 1rem;
+        }
+        
+        .result-details h4 {
+            color: var(--primary-orange);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .result-table tr {
             border-bottom: 1px solid #eee;
         }
         
-        .result-label {
-            font-weight: bold;
+        .result-table tr:last-child {
+            border-bottom: none;
+        }
+        
+        .result-table td {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .result-table td:first-child {
+            font-weight: 600;
             color: #555;
+            width: 40%;
         }
         
-        .result-value {
+        .result-table td:last-child {
+            color: #333;
+        }
+        
+        .results-summary {
+            background-color: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .results-summary h4 {
             color: var(--primary-orange);
-            font-weight: 500;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
         }
         
-        .action-buttons {
+        .results-summary p {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: #333;
+        }
+        
+        .export-buttons {
             display: flex;
             justify-content: center;
             gap: 1rem;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            margin-top: 1.5rem;
         }
         
-        .reset-btn, .full-features-btn {
-            padding: 10px 20px;
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
+        .export-btn {
+            padding: 0.8rem 1.5rem;
             border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            background-color: var(--primary-orange);
+            color: white;
+            border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            color: #555;
+            gap: 0.5rem;
             transition: all 0.3s ease;
-            text-decoration: none;
         }
         
-        .reset-btn:hover, .full-features-btn:hover {
-            background-color: #eee;
+        .export-btn:hover {
+            background-color: var(--primary-red);
             transform: translateY(-2px);
-        }
-        
-        .full-features-btn {
-            background: var(--gradient-bg);
-            color: white;
-            border: none;
-        }
-        
-        .full-features-btn:hover {
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-        
-        .trial-note {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .trial-note a {
-            color: var(--primary-orange);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .trial-note a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Responsive styles */
-        @media (max-width: 768px) {
-            .try-it-container {
-                padding: 1.5rem;
-                margin: 1rem;
-            }
-            
-            .receipt-upload-area {
-                height: 250px;
-            }
-            
-            .upload-buttons {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .upload-btn {
-                width: 100%;
-                justify-content: center;
-            }
         }
     </style>
 </head>
@@ -403,8 +619,14 @@
     <section class="try-it-section">
         <div class="container">
             <div class="try-it-container">
-                <h2 class="try-it-header">Try with your receipts</h2>
-                <p class="suggestion-text" style="color: #666; margin-bottom: 1.5rem; font-style: italic;">Suggestion: Take photos with the receipts in clear light and with a solid background</p>
+                <h2 class="try-it-header">Rapid Receipt Capture</h2>
+                <div class="free-trial-badge" style="background-color: var(--primary-orange); color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-weight: bold;">
+                    <i class="fas fa-star"></i> Free Trial (5 images max)
+                </div>
+                <p class="suggestion-text" style="color: #666; margin-bottom: 1rem; font-style: italic;">Perfect for bartenders: Take 40-60 photos in quick succession with our "firing line" mode</p>
+                
+                <!-- Bar Selector Container -->
+                <div id="barSelectorContainer"></div>
                 
                 <div class="receipt-upload-area" id="uploadArea">
                     <div class="upload-placeholder">
@@ -412,10 +634,14 @@
                         <p class="receipt-text">Upload or take photos of your receipts</p>
                     </div>
                     <div class="preview-container" id="previewContainer">
-                        <!-- Preview items will be added here dynamically -->
-                        <div class="trial-limit-warning" id="trialLimitWarning">Only attach 3 in trial mode</div>
+                        <!-- Preview grid will be added here dynamically -->
+                        <div class="preview-grid" id="previewGrid"></div>
                         <div class="images-count" id="imagesCount">0 images</div>
                     </div>
+                </div>
+                
+                <div class="batch-mode-indicator" id="batchModeIndicator">
+                    <i class="fas fa-bolt"></i> Batch Mode Active
                 </div>
                 
                 <div class="upload-buttons" id="uploadButtons">
@@ -430,21 +656,49 @@
                         <span>Take images</span>
                     </label>
                     <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple>
+                    
+                    <button class="upload-btn batch-btn" id="firingLineBtn">
+                        <i class="fas fa-bolt"></i>
+                        <span>Firing Line Mode</span>
+                    </button>
                 </div>
                 
                 <div class="render-button-container" id="renderButtonContainer" style="display: none;">
                     <button class="render-btn" id="renderButton">
                         <i class="fas fa-magic"></i>
-                        <span>Render Data</span>
+                        <span>Process All Receipts</span>
+                    </button>
+                    <button class="clear-btn" id="clearButton">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear All</span>
                     </button>
                 </div>
                 
-                <a href="landing.html" class="back-link">
-                    <i class="fas fa-arrow-left"></i> Back to home
-                </a>
+                <div style="margin-top: 1rem;">
+                    <a href="landing.html" class="back-link">
+                        <i class="fas fa-arrow-left"></i> Back to home
+                    </a>
+                </div>
             </div>
         </div>
     </section>
+    
+    <!-- Firing Line Mode -->
+    <div class="firing-line-mode" id="firingLineMode">
+        <div class="firing-line-viewfinder">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <div class="firing-line-counter" id="firingLineCounter">0 images</div>
+            <div class="firing-line-flash" id="firingLineFlash"></div>
+        </div>
+        <div class="firing-line-controls">
+            <button class="firing-line-exit" id="firingLineExit">
+                <i class="fas fa-times"></i> Exit
+            </button>
+            <div class="firing-line-capture" id="firingLineCapture">
+                <i class="fas fa-camera"></i>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -487,7 +741,11 @@
         </div>
     </footer>
 
+    <!-- Standard processing script -->
     <script>
+        // Make selectedFiles globally accessible
+        window.selectedFiles = [];
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Mobile menu toggle
             const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
@@ -505,28 +763,40 @@
                 });
             });
             
+            // Get DOM elements
             const fileInput = document.getElementById('fileInput');
             const cameraInput = document.getElementById('cameraInput');
             const previewContainer = document.getElementById('previewContainer');
+            const previewGrid = document.getElementById('previewGrid');
             const uploadPlaceholder = document.querySelector('.upload-placeholder');
             const imagesCount = document.getElementById('imagesCount');
+            const firingLineBtn = document.getElementById('firingLineBtn');
+            const firingLineMode = document.getElementById('firingLineMode');
+            const firingLineExit = document.getElementById('firingLineExit');
+            const firingLineCapture = document.getElementById('firingLineCapture');
+            const firingLineCounter = document.getElementById('firingLineCounter');
+            const firingLineFlash = document.getElementById('firingLineFlash');
+            const cameraFeed = document.getElementById('cameraFeed');
+            const clearButton = document.getElementById('clearButton');
+            const renderButtonContainer = document.getElementById('renderButtonContainer');
+            const renderButton = document.getElementById('renderButton');
             
-            // Store selected files
-            let selectedFiles = [];
+            // Store selected files (using the global variable)
+            let mediaStream = null;
+            let videoTrack = null;
             
-            // Trial mode image limit
-            const MAX_IMAGES_TRIAL = 3;
-            const trialLimitWarning = document.getElementById('trialLimitWarning');
+            // Limit to 5 images for free users
+            const MAX_IMAGES = 5;
             
             // Handle file selection
             function handleFileSelect(event) {
                 const files = event.target.files;
                 if (files.length > 0) {
-                    // Add new files to the selectedFiles array (up to the limit)
+                    // Add new files to the selectedFiles array
                     for (let i = 0; i < files.length; i++) {
                         if (files[i].type.match('image.*')) {
                             // Check if adding this file would exceed the limit
-                            if (selectedFiles.length < MAX_IMAGES_TRIAL) {
+                            if (selectedFiles.length < MAX_IMAGES) {
                                 selectedFiles.push(files[i]);
                             }
                         }
@@ -534,31 +804,13 @@
                     
                     // Update the UI
                     updatePreview();
-                    
-                    // Show warning if limit reached or exceeded
-                    checkTrialLimit();
                 }
             }
-            
-            // Check if we've reached the trial limit
-            function checkTrialLimit() {
-                if (selectedFiles.length >= MAX_IMAGES_TRIAL) {
-                    trialLimitWarning.style.display = 'block';
-                } else {
-                    trialLimitWarning.style.display = 'none';
-                }
-            }
-            
-            // Get references to button containers
-            const uploadButtons = document.getElementById('uploadButtons');
-            const renderButtonContainer = document.getElementById('renderButtonContainer');
-            const renderButton = document.getElementById('renderButton');
             
             // Update preview container with selected images
             function updatePreview() {
-                // Clear existing preview items (except the counter)
-                const existingPreviews = previewContainer.querySelectorAll('.preview-item');
-                existingPreviews.forEach(item => item.remove());
+                // Clear existing preview items
+                previewGrid.innerHTML = '';
                 
                 // Show preview container if we have files
                 if (selectedFiles.length > 0) {
@@ -567,54 +819,51 @@
                     
                     // Update counter
                     imagesCount.textContent = `${selectedFiles.length} image${selectedFiles.length !== 1 ? 's' : ''}`;
+                    firingLineCounter.textContent = `${selectedFiles.length} image${selectedFiles.length !== 1 ? 's' : ''}`;
                     
-                    // Show only the most recent image (last in the array)
-                    const mostRecentFile = selectedFiles[selectedFiles.length - 1];
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        const previewItem = document.createElement('div');
-                        previewItem.className = 'preview-item';
+                    // Show all images in the grid
+                    selectedFiles.forEach((file, index) => {
+                        const reader = new FileReader();
                         
-                        const img = document.createElement('img');
-                        img.className = 'preview-image';
-                        img.src = e.target.result;
-                        img.alt = `Receipt preview`;
+                        reader.onload = function(e) {
+                            const previewItem = document.createElement('div');
+                            previewItem.className = 'preview-item';
+                            
+                            const img = document.createElement('img');
+                            img.className = 'preview-image';
+                            img.src = e.target.result;
+                            img.alt = `Receipt preview ${index + 1}`;
+                            
+                            const removeBtn = document.createElement('button');
+                            removeBtn.className = 'remove-preview';
+                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            removeBtn.addEventListener('click', function(event) {
+                                event.stopPropagation();
+                                removeImage(index);
+                            });
+                            
+                            previewItem.appendChild(img);
+                            previewItem.appendChild(removeBtn);
+                            previewGrid.appendChild(previewItem);
+                        };
                         
-                        const removeBtn = document.createElement('button');
-                        removeBtn.className = 'remove-preview';
-                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                        removeBtn.addEventListener('click', function() {
-                            // Remove the most recent file
-                            selectedFiles.pop();
-                            updatePreview();
-                            checkTrialLimit();
-                        });
-                        
-                        previewItem.appendChild(img);
-                        previewItem.appendChild(removeBtn);
-                        previewContainer.appendChild(previewItem);
-                    };
+                        reader.readAsDataURL(file);
+                    });
                     
-                    reader.readAsDataURL(mostRecentFile);
-                    
-                    // Show render button, hide upload buttons
-                    uploadButtons.style.display = 'none';
-                    renderButtonContainer.style.display = 'block';
+                    // Show render button
+                    renderButtonContainer.style.display = 'flex';
                 } else {
-                    // No files, show placeholder and upload buttons
+                    // No files, show placeholder
                     uploadPlaceholder.style.display = 'flex';
                     previewContainer.style.display = 'none';
-                    uploadButtons.style.display = 'flex';
                     renderButtonContainer.style.display = 'none';
                 }
             }
             
-            // Remove an image from the selection (not used with the new UI, but kept for reference)
+            // Remove an image from the selection
             function removeImage(index) {
                 selectedFiles.splice(index, 1);
                 updatePreview();
-                checkTrialLimit(); // Update warning display after removing an image
             }
             
             // Clear all selected files
@@ -625,212 +874,384 @@
                 updatePreview();
             }
             
-            // Handle render button click
-            renderButton.addEventListener('click', async function() {
-                // Show loading state
-                renderButton.disabled = true;
-                renderButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Processing...</span>';
-                
+            // Initialize firing line mode
+            async function initFiringLineMode() {
                 try {
-                    // Convert selected files to base64
-                    const base64Files = await Promise.all(selectedFiles.map(async (file) => {
-                        return new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                // Extract the base64 data from the result
-                                // Format: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD...
-                                const base64String = e.target.result;
-                                const base64Data = base64String.split(',')[1];
-                                resolve({
-                                    name: file.name,
-                                    type: file.type,
-                                    data: base64Data
-                                });
-                            };
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                        });
-                    }));
-                    
-                    // Send the images to the API
-                    const response = await fetch('/api/process-images', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            images: base64Files,
-                            mode: 'tip_analyzer' // Use tip analyzer mode
-                        })
+                    // Get camera access
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' }, 
+                        audio: false 
                     });
                     
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.status}`);
-                    }
+                    // Get video track
+                    videoTrack = mediaStream.getVideoTracks()[0];
                     
-                    const data = await response.json();
+                    // Set video source
+                    cameraFeed.srcObject = mediaStream;
                     
-                    // Check if we have results
-                    if (data && data.results && data.results.length > 0) {
-                        // Get the first result (since we're only showing one in the demo)
-                        const result = data.results[0];
+                    // Show firing line mode
+                    firingLineMode.style.display = 'flex';
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    alert('Could not access camera. Please check permissions and try again.');
+                }
+            }
+            
+            // Capture image in firing line mode
+            function captureImage() {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Set canvas dimensions to match video
+                canvas.width = cameraFeed.videoWidth;
+                canvas.height = cameraFeed.videoHeight;
+                
+                // Draw video frame to canvas
+                context.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+                
+                // Convert canvas to blob
+                canvas.toBlob(function(blob) {
+                    // Create file from blob
+                    const file = new File([blob], `receipt-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    
+                    // Add file to selected files
+                    selectedFiles.push(file);
+                    
+                    // Update counter
+                    firingLineCounter.textContent = `${selectedFiles.length} image${selectedFiles.length !== 1 ? 's' : ''}`;
+                    
+                    // Show flash effect
+                    firingLineFlash.style.opacity = '1';
+                    setTimeout(() => {
+                        firingLineFlash.style.opacity = '0';
+                    }, 100);
+                    
+                }, 'image/jpeg', 0.9);
+            }
+            
+            // Close firing line mode
+            function closeFiringLineMode() {
+                // Stop media stream
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Hide firing line mode
+                firingLineMode.style.display = 'none';
+                
+                // Update preview
+                updatePreview();
+            }
+            
+            // Event listeners
+            fileInput.addEventListener('change', handleFileSelect);
+            cameraInput.addEventListener('change', handleFileSelect);
+            clearButton.addEventListener('click', clearAllFiles);
+            firingLineBtn.addEventListener('click', initFiringLineMode);
+            firingLineExit.addEventListener('click', closeFiringLineMode);
+            firingLineCapture.addEventListener('click', captureImage);
+            
+            // Handle render button click
+            renderButton.addEventListener('click', async function() {
+                // Create a progress bar and countdown timer
+                const progressBarContainer = document.createElement('div');
+                progressBarContainer.className = 'progress-container';
+                progressBarContainer.innerHTML = `
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Preparing...</div>
+                    <div class="countdown-timer" id="countdownTimer">Estimated time: calculating...</div>
+                `;
+                
+                // Create a results container
+                const resultsContainer = document.createElement('div');
+                resultsContainer.className = 'results-container';
+                resultsContainer.style.display = 'none';
+                resultsContainer.innerHTML = `
+                    <h3>Processing Results</h3>
+                    <div class="results-grid" id="resultsGrid"></div>
+                `;
+                
+                // Add containers to the page
+                document.querySelector('.try-it-container').appendChild(progressBarContainer);
+                document.querySelector('.try-it-container').appendChild(resultsContainer);
+                
+                // Get progress elements
+                const progressBar = document.getElementById('progressBar');
+                const progressStatus = document.getElementById('progressStatus');
+                const countdownTimer = document.getElementById('countdownTimer');
+                
+                try {
+                    // Update progress callback
+                    const onProgress = (message, percent) => {
+                        progressStatus.textContent = message;
+                        progressBar.style.width = `${percent}%`;
+                    };
+                    
+                    // Import required modules
+                    const { processImages } = await import('./js/services/processingService.js');
+                    
+                    // Process the images
+                    onProgress('Starting processing...', 5);
+                    
+                    // Process files for submission
+                    const processFilesForSubmission = async () => {
+                        const base64Files = [];
                         
-                        // Create the results HTML with actual data
-                        const resultsHTML = `
-                            <div class="results-container">
-                                <h3>Receipt Analysis Results</h3>
-                                <p class="confidence-score" style="color: #666; margin-bottom: 1rem; font-style: italic; text-align: center;">
-                                    Confidence Score: ${(result.confidence * 100).toFixed(1)}%
-                                </p>
-                                ${result.confidence < 0.8 ? `
-                                <div class="alert-message" style="background-color: #ffebee; color: #d32f2f; padding: 10px; border-radius: 5px; margin-bottom: 1rem; text-align: center; font-weight: bold;">
-                                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
-                                    Upload receipt with better lighting, less blurry, or clearer text
-                                </div>
-                                ` : ''}
-                                <div class="result-item" style="background-color: var(--secondary-yellow); font-weight: bold;">
-                                    <div class="result-label">Bar Name:</div>
-                                    <div class="result-value">${result.establishment || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Amount:</div>
-                                    <div class="result-value">${result.amount || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Tip:</div>
-                                    <div class="result-value">${result.tip || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Total:</div>
-                                    <div class="result-value">${result.total || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Check Number:</div>
-                                    <div class="result-value">${result.check_number || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Date:</div>
-                                    <div class="result-value">${result.date || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Customer:</div>
-                                    <div class="result-value">${result.customer_name || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Payment Type:</div>
-                                    <div class="result-value">${result.payment_type || 'Not detected'}</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-label">Signed:</div>
-                                    <div class="result-value">${result.signed ? 'Yes' : 'No'}</div>
-                                </div>
-                                <div class="action-buttons">
-                                    <button class="reset-btn" id="resetButton">
-                                        <i class="fas fa-redo"></i>
-                                        <span>Try Another Receipt</span>
-                                    </button>
-                                    <a href="admin.html" class="full-features-btn">
-                                        <i class="fas fa-cogs"></i>
-                                        <span>Use Full Features</span>
-                                    </a>
-                                </div>
-                                <div class="trial-note">
-                                    <p>This is a simplified demo. For batch processing of multiple receipts, POS integration, and advanced features, use the <a href="admin.html">Tip Analyzer</a> in the admin panel.</p>
-                                </div>
-                            </div>
-                        `;
+                        // Import the compressAndConvertToBase64 function
+                        const { compressAndConvertToBase64 } = await import('./js/utils/imageUtils.js');
                         
-                        // Replace the render button with results
-                        renderButtonContainer.innerHTML = resultsHTML;
-                    } else {
-                        throw new Error('No results returned from API');
+                        // Process each file
+                        for (let i = 0; i < selectedFiles.length; i++) {
+                            const file = selectedFiles[i];
+                            try {
+                                // Compress and convert to base64
+                                const base64Data = await compressAndConvertToBase64(file);
+                                base64Files.push(base64Data);
+                                
+                                // Update progress
+                                onProgress(`Processing file ${i + 1} of ${selectedFiles.length}...`, 10 + (i / selectedFiles.length) * 20);
+                            } catch (error) {
+                                console.error(`Error processing file ${file.name}:`, error);
+                                // Continue with other files
+                            }
+                        }
+                        
+                        return base64Files;
+                    };
+                    
+                    // Create a mock file service to override the default one
+                    window.processFilesForSubmission = processFilesForSubmission;
+                    
+                    // Override the processFilesForSubmission function in the global scope
+                    // so that the processImages function will use our implementation
+                    const originalProcessFilesForSubmission = window.processFilesForSubmission;
+                    
+                    try {
+                        // Import the generateSimulatedData function for fallback
+                        const { generateSimulatedData } = await import('./js/utils/dataUtils.js');
+                        
+                        // Process the images with our custom implementation
+                        const base64Files = await processFilesForSubmission();
+                        
+                        if (base64Files.length === 0) {
+                            throw new Error('No valid files to process');
+                        }
+                        
+                        // Generate simulated data since we're in demo mode
+                        onProgress('Generating receipt data...', 50);
+                        const result = generateSimulatedData(base64Files);
+                        
+                        // Format the result
+                        onProgress('Formatting results...', 90);
+                        
+                        // Complete progress bar
+                        onProgress('Complete!', 100);
+                        
+                        // Show results
+                        setTimeout(() => {
+                            progressBarContainer.style.display = 'none';
+                            resultsContainer.style.display = 'block';
+                            
+                            // Display the results
+                            displayResults(result, resultsContainer);
+                        }, 1000);
+                    } catch (error) {
+                        throw error;
                     }
                 } catch (error) {
                     console.error('Error processing images:', error);
+                    progressStatus.textContent = `Error: ${error.message}`;
+                    progressStatus.style.color = 'red';
+                }
+            });
+            
+            // Function to display the results
+            function displayResults(data, container) {
+                const resultsGrid = document.getElementById('resultsGrid');
+                
+                if (!data || !data.results || data.results.length === 0) {
+                    resultsGrid.innerHTML = '<p>No results found.</p>';
+                    return;
+                }
+                
+                // Clear existing results
+                resultsGrid.innerHTML = '';
+                
+                // Create a card for each result
+                data.results.forEach((result, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
                     
-                    // Show error message
-                    renderButtonContainer.innerHTML = `
-                        <div class="results-container error">
-                            <h3>Error Processing Receipt</h3>
-                            <p>There was an error processing your receipt: ${error.message}</p>
-                            <div class="action-buttons">
-                                <button class="reset-btn" id="resetButton">
-                                    <i class="fas fa-redo"></i>
-                                    <span>Try Again</span>
-                                </button>
+                    // Get image URL from the processed images
+                    if (window.selectedFiles && window.selectedFiles[index]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            // Replace the placeholder with the actual image
+                            const imageContainer = card.querySelector('.result-image-container');
+                            imageContainer.innerHTML = `<img class="result-image" src="${e.target.result}" alt="Receipt ${index + 1}">`;
+                        };
+                        reader.readAsDataURL(window.selectedFiles[index]);
+                    }
+                    
+                    // Format the card content
+                    card.innerHTML = `
+                        <div class="result-image-container">
+                            <div class="no-image-placeholder" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #f5f5f5;">
+                                <i class="fas fa-receipt" style="font-size: 2rem; color: #ccc;"></i>
                             </div>
                         </div>
+                        <div class="result-details">
+                            <h4>Receipt ${index + 1}</h4>
+                            <table class="result-table">
+                                <tr>
+                                    <td>Customer:</td>
+                                    <td>${result.customer_name || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Check #:</td>
+                                    <td>${result.check_number || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Date/Time:</td>
+                                    <td>${result.date || 'N/A'} ${result.time || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Amount:</td>
+                                    <td>${result.amount || '$0.00'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tip:</td>
+                                    <td>${result.tip || '$0.00'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Total:</td>
+                                    <td>${result.total || '$0.00'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Payment:</td>
+                                    <td>${result.payment_type || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Confidence:</td>
+                                    <td>${(result.confidence * 100).toFixed(1)}%</td>
+                                </tr>
+                            </table>
+                        </div>
                     `;
-                }
-                
-                // Add reset button functionality
-                document.getElementById('resetButton').addEventListener('click', function() {
-                    clearAllFiles();
-                    renderButtonContainer.innerHTML = `
-                        <button class="render-btn" id="renderButton">
-                            <i class="fas fa-magic"></i>
-                            <span>Render Data</span>
-                        </button>
-                    `;
-                    // Re-add event listener to the new render button
-                    document.getElementById('renderButton').addEventListener('click', renderButtonClickHandler);
-                });
-            });
-            
-            // Store the click handler function for reuse
-            const renderButtonClickHandler = renderButton.onclick;
-            
-            fileInput.addEventListener('change', handleFileSelect);
-            cameraInput.addEventListener('change', handleFileSelect);
-            
-            // Allow drag and drop
-            const uploadArea = document.getElementById('uploadArea');
-            
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, preventDefaults, false);
-            });
-            
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            
-            ['dragenter', 'dragover'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, highlight, false);
-            });
-            
-            ['dragleave', 'drop'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, unhighlight, false);
-            });
-            
-            function highlight() {
-                uploadArea.classList.add('highlight');
-            }
-            
-            function unhighlight() {
-                uploadArea.classList.remove('highlight');
-            }
-            
-            uploadArea.addEventListener('drop', handleDrop, false);
-            
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                
-                if (files.length > 0) {
-                    for (let i = 0; i < files.length; i++) {
-                        if (files[i].type.match('image.*')) {
-                            // Check if adding this file would exceed the limit
-                            if (selectedFiles.length < MAX_IMAGES_TRIAL) {
-                                selectedFiles.push(files[i]);
-                            }
-                        }
-                    }
-                    updatePreview();
                     
-                    // Show warning if limit reached or exceeded
-                    checkTrialLimit();
+                    resultsGrid.appendChild(card);
+                });
+                
+                // Add a summary section
+                const summary = document.createElement('div');
+                summary.className = 'results-summary';
+                summary.innerHTML = `
+                    <h4>Summary</h4>
+                    <p>Processed ${data.results.length} receipts</p>
+                    <p>Total tips: ${calculateTotalTips(data.results)}</p>
+                    <p>Average tip percentage: ${calculateAverageTipPercentage(data.results)}%</p>
+                `;
+                
+                container.appendChild(summary);
+                
+                // Add export buttons
+                const exportButtons = document.createElement('div');
+                exportButtons.className = 'export-buttons';
+                exportButtons.innerHTML = `
+                    <button class="export-btn" id="exportCsvBtn">
+                        <i class="fas fa-file-csv"></i> Export to CSV
+                    </button>
+                    <button class="export-btn" id="exportPosBtn">
+                        <i class="fas fa-cash-register"></i> Export to POS
+                    </button>
+                    <a href="login.html#signup" class="export-btn signup-btn" style="background-color: #2c3e50;">
+                        <i class="fas fa-user-plus"></i> Sign Up for Full Access
+                    </a>
+                `;
+                
+                container.appendChild(exportButtons);
+                
+                // Add event listeners for export buttons
+                document.getElementById('exportCsvBtn').addEventListener('click', () => {
+                    showSignupPrompt('CSV export');
+                });
+                
+                document.getElementById('exportPosBtn').addEventListener('click', () => {
+                    showSignupPrompt('POS export');
+                });
+                
+                // Function to show signup prompt
+                function showSignupPrompt(feature) {
+                    const confirmed = confirm(`To use the ${feature} feature, you need to create an account. Would you like to sign up now?`);
+                    if (confirmed) {
+                        window.location.href = 'login.html#signup';
+                    }
                 }
+            }
+            
+            // Helper function to calculate total tips
+            function calculateTotalTips(results) {
+                let total = 0;
+                results.forEach(result => {
+                    const tipStr = result.tip || '$0.00';
+                    const tipValue = parseFloat(tipStr.replace(/[^0-9.-]+/g, '')) || 0;
+                    total += tipValue;
+                });
+                return `$${total.toFixed(2)}`;
+            }
+            
+            // Helper function to calculate average tip percentage
+            function calculateAverageTipPercentage(results) {
+                let totalPercentage = 0;
+                let count = 0;
+                
+                results.forEach(result => {
+                    const amountStr = result.amount || '$0.00';
+                    const tipStr = result.tip || '$0.00';
+                    
+                    const amount = parseFloat(amountStr.replace(/[^0-9.-]+/g, '')) || 0;
+                    const tip = parseFloat(tipStr.replace(/[^0-9.-]+/g, '')) || 0;
+                    
+                    if (amount > 0) {
+                        const percentage = (tip / amount) * 100;
+                        totalPercentage += percentage;
+                        count++;
+                    }
+                });
+                
+                return count > 0 ? (totalPercentage / count).toFixed(1) : '0.0';
+            }
+        });
+    </script>
+    
+    <!-- Bar Selector Script -->
+    <script type="module">
+        import BarSelector from './js/components/barSelector.js';
+        import barService from './js/services/barService.js';
+        
+        // Initialize the bar selector when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Reset bars to ensure we have the correct list
+                await barService.resetBars();
+                
+                // Create and initialize the bar selector
+                const barSelector = new BarSelector({
+                    containerId: 'barSelectorContainer',
+                    onBarSelected: (bar) => {
+                        console.log('Selected bar:', bar);
+                        // You can add additional logic here when a bar is selected
+                    }
+                });
+                
+                // Initialize the bar selector
+                await barSelector.init();
+            } catch (error) {
+                console.error('Error initializing bar selector:', error);
             }
         });
     </script>

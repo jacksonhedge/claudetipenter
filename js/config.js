@@ -16,6 +16,9 @@ const config = {
         maxImagesPerRequest: 5
     },
     
+    // Server settings
+    serverUrl: 'http://localhost:4000', // URL of the server for API requests
+    
     // File processing settings
     fileProcessing: {
         maxFiles: 100,
@@ -40,8 +43,8 @@ const config = {
     
     // Test mode settings
     testing: {
-        enabled: false, // Disable test mode to allow uploading real files
-        sampleCount: 10 // Number of sample images to generate in test mode
+        enabled: false, // Disable test mode to prevent generating sample images
+        sampleCount: 0 // Number of sample images to generate in test mode
     }
 };
 
