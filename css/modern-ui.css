@@ -129,6 +129,7 @@ header {
     position: relative !important;
     overflow: hidden !important;
     pointer-events: auto !important; /* Ensure sidebar menu items are clickable */
+    z-index: 999 !important; /* Extremely high z-index to ensure clickability */
 }
 
 .sidebar-menu-item i {
