@@ -52,6 +52,18 @@ header {
     font-weight: bold !important;
     color: var(--primary-color) !important;
     text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.logo-image {
+    height: 40px !important;
+    width: auto !important;
+}
+
+.footer-logo-image {
+    height: 50px !important;
+    width: auto !important;
 }
 
 /* Hide original navigation */
