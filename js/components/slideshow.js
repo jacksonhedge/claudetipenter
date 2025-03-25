@@ -54,11 +54,11 @@ export default class Slideshow {
         this.toggleAllImagesBtn.textContent = 'Show All Images';
         this.toggleAllImagesBtn.style.marginLeft = '10px';
         
-        // Create export PDF button
+        // Create export options button (replaces direct PDF export)
         this.exportPdfBtn = document.createElement('button');
-        this.exportPdfBtn.id = 'slideshowExportPdfBtn';
+        this.exportPdfBtn.id = 'slideshowExportBtn';
         this.exportPdfBtn.className = 'slide-nav-btn';
-        this.exportPdfBtn.textContent = 'Export PDF';
+        this.exportPdfBtn.textContent = 'Export to PDF';
         this.exportPdfBtn.style.marginLeft = '10px';
         
         // Add buttons to slideshow controls
@@ -83,8 +83,8 @@ export default class Slideshow {
         // Add event listener for toggle button
         this.toggleAllImagesBtn.addEventListener('click', this.toggleAllImages.bind(this));
         
-        // Add event listener for export PDF button
-        this.exportPdfBtn.addEventListener('click', this.handleExportPdf.bind(this));
+        // Add event listener for export options button
+        this.exportPdfBtn.addEventListener('click', this.openExportOptionsModal.bind(this));
         
         // Add event listener for clicking outside the modal content to close
         this.slideshowView.addEventListener('click', (e) => {
@@ -544,10 +544,50 @@ export default class Slideshow {
     }
     
     /**
-     * Handle Export PDF button click
+     * Open the export options modal
+     */
+    openExportOptionsModal() {
+        console.log('[Slideshow] Export button clicked, opening export options modal');
+        
+        // Get the images to export
+        const imagesToExport = this.currentDisplayedImages;
+        
+        if (imagesToExport.length === 0) {
+            console.log('[Slideshow] No images to export');
+            alert('No images available to export');
+            return;
+        }
+        
+        // Store the current images in a data attribute on the grid component
+        // This allows the export options component to access the slideshow images
+        const organizerGrid = document.getElementById('organizedGrid');
+        if (organizerGrid && organizerGrid.__component) {
+            // Temporarily store the slideshow images for export
+            organizerGrid.__component.temporarySlideshowImages = imagesToExport;
+            
+            // Dispatch a custom event to open the export options modal
+            const exportOptionsModal = document.getElementById('exportOptionsModal');
+            if (exportOptionsModal) {
+                // Create and dispatch the event
+                const event = new CustomEvent('exportOptions:open', {
+                    detail: { source: 'slideshow' }
+                });
+                document.dispatchEvent(event);
+            } else {
+                console.error('[Slideshow] Export options modal not found');
+                alert('Export options are not available');
+            }
+        } else {
+            console.error('[Slideshow] Organizer grid component not found');
+            alert('Export options are not available');
+        }
+    }
+    
+    /**
+     * Handle direct PDF export (used when called from other components)
      */
     handleExportPdf() {
-        console.log('[Slideshow] Export PDF button clicked');
+        console.log('[Slideshow] Direct PDF export requested');
         
         // Determine which images to export (current view or all)
         const imagesToExport = this.currentDisplayedImages;

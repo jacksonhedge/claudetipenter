@@ -4,7 +4,7 @@
 import { processWithSelectedAPI, calculateEstimatedProcessingTime, updateApiCostDisplay, getSelectedApi } from './apiService.js';
 import { processFilesForSubmission } from './fileService.js';
 import { formatMonetaryValues } from '../utils/dataUtils.js';
-import { updateProgressBar, createCountdown } from '../utils/uiUtils.js';
+import { updateProgressBar, createCountdown, showNotification } from '../utils/uiUtils.js';
 import { queueFilesForGoogleDriveUpload } from './backgroundUploadService.js';
 import { uploadBase64ImageToStorage } from './firebaseStorageService.js';
 import { auth } from '../firebase-config.js';

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Buttons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #F76E11;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Button Tester</h1>
+    <p>This page tests if the login buttons are working properly.</p>
+
+    <div>
+        <button id="testTabs">Test Tab Navigation</button>
+        <button id="testRoles">Test Role Selection</button>
+        <button id="testLogin">Test Login Button</button>
+        <button id="testSignup">Test Signup Button</button>
+        <button id="testSSO">Test SSO Button</button>
+    </div>
+
+    <div id="results">
+        <h3>Test Results:</h3>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            output.appendChild(p);
+            console.log(message);
+        }
+
+        document.getElementById('testTabs').addEventListener('click', function() {
+            log('Testing tab navigation...');
+            
+            // Open the login page
+            window.open('login.html', '_blank');
+            
+            log('Actions to test:');
+            log('1. Click on the "Sign Up" tab button');
+            log('2. Verify the Sign Up tab is displayed');
+            log('3. Click on the "Login" tab button');
+            log('4. Verify the Login tab is displayed');
+        });
+
+        document.getElementById('testRoles').addEventListener('click', function() {
+            log('Testing role selection...');
+            
+            // Open the login page
+            window.open('login.html', '_blank');
+            
+            log('Actions to test:');
+            log('1. Click on the "Business" role button');
+            log('2. Verify the role is selected (button should have active class)');
+            log('3. Click on the "Bartender" role button');
+            log('4. Verify the role is selected (button should have active class)');
+        });
+
+        document.getElementById('testLogin').addEventListener('click', function() {
+            log('Testing login button...');
+            
+            // Open the login page
+            window.open('login.html', '_blank');
+            
+            log('Actions to test:');
+            log('1. Enter any email in the email field (e.g., test@example.com)');
+            log('2. Enter any password in the password field (e.g., password123)');
+            log('3. Click the "Login" button');
+            log('4. Verify the login process starts (button should show loading state)');
+            log('5. Verify redirect happens after successful login');
+        });
+
+        document.getElementById('testSignup').addEventListener('click', function() {
+            log('Testing signup button...');
+            
+            // Open the login page
+            window.open('login.html', '_blank');
+            
+            log('Actions to test:');
+            log('1. Click on the "Sign Up" tab');
+            log('2. Fill in all required fields');
+            log('3. Click the "Sign Up" button');
+            log('4. Verify the signup process starts (button should show loading state)');
+        });
+
+        document.getElementById('testSSO').addEventListener('click', function() {
+            log('Testing SSO button...');
+            
+            // Open the login page
+            window.open('login.html', '_blank');
+            
+            log('Actions to test:');
+            log('1. Click on the "Login with 7Shifts" button in the login tab');
+            log('2. Verify the SSO process starts (button should show loading state)');
+            log('3. Click on the "Sign Up" tab');
+            log('4. Click on the "Sign up with 7Shifts" button');
+            log('5. Verify the SSO process starts (button should show loading state)');
+        });
+    </script>
+</body>
+</html>

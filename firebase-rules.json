@@ -1,0 +1,60 @@
+{
+  "rules": {
+    "firestore": {
+      "service": "cloud.firestore",
+      "match": "/databases/{database}/documents",
+      "rules": {
+        "users/{userId}": {
+          "allow read": "request.auth != null",
+          "allow write": "request.auth != null && request.auth.uid == userId"
+        },
+        "establishments/{establishmentId}": {
+          "allow read": "request.auth != null",
+          "allow write": "request.auth != null"
+        },
+        "staff/{staffId}": {
+          "allow read": "request.auth != null",
+          "allow write": "request.auth != null"
+        },
+        "user_workplaces/{workplaceId}": {
+          "allow read": "request.auth != null",
+          "allow write": "request.auth != null"
+        },
+        "bars/{barId}": {
+          "allow read": "request.auth != null",
+          "allow write": "request.auth != null",
+          "bartenders/{bartenderId}": {
+            "allow read": "request.auth != null",
+            "allow write": "request.auth != null"
+          },
+          "barbacks/{barbackId}": {
+            "allow read": "request.auth != null",
+            "allow write": "request.auth != null"
+          },
+          "staff/{staffId}": {
+            "allow read": "request.auth != null",
+            "allow write": "request.auth != null"
+          }
+        },
+        "user_bars/{userBarId}": {
+          "allow read": "request.auth != null",
+          "allow write": "request.auth != null"
+        }
+      }
+    },
+    "storage": {
+      "service": "firebase.storage",
+      "match": "/b/{bucket}/o",
+      "rules": {
+        "match /images/{userId}/{barId}/{allPaths=**}": {
+          "allow read": "request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'manager')",
+          "allow write": "request.auth != null && request.auth.uid == userId"
+        },
+        "match /exports/{userId}/{barId}/{allPaths=**}": {
+          "allow read": "request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'manager')",
+          "allow write": "request.auth != null && request.auth.uid == userId"
+        }
+      }
+    }
+  }
+}

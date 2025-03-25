@@ -6,6 +6,16 @@
     <title>TipEnter - Login</title>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <!-- Define CSS variables before other stylesheets -->
+    <style>
+        :root {
+            --primary-orange: #F76E11;
+            --secondary-yellow: #FCBF49;
+            --accent-red: #FF5757;
+            --light-yellow: #FFF2D8;
+        }
+    </style>
+    <!-- Main stylesheets -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/notification.css">
@@ -35,14 +45,14 @@
                                 <i class="fas fa-glass-martini-alt"></i>
                                 <span>Bartender</span>
                             </button>
-                            <button type="button" class="role-btn" data-role="manager">
-                                <i class="fas fa-user-tie"></i>
-                                <span>Bar Manager</span>
+                <button type="button" class="role-btn" data-role="manager">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Business</span>
                             </button>
                         </div>
                     </div>
                     
-                    <form id="login-form" class="auth-form">
+                    <form id="login-form" class="auth-form" onsubmit="return false;">
                         <input type="hidden" id="login-role" name="role" value="bartender">
                         
                         <div class="form-group">
@@ -69,10 +79,6 @@
                     </div>
                     
                     <div class="sso-options">
-                        <button class="sso-btn google-btn">
-                            <i class="fab fa-google"></i>
-                            <span>Login with Google</span>
-                        </button>
                         <button class="sso-btn shifts-btn">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Login with 7Shifts</span>
@@ -89,14 +95,14 @@
                                 <i class="fas fa-glass-martini-alt"></i>
                                 <span>Bartender</span>
                             </button>
-                            <button type="button" class="role-btn" data-role="manager">
-                                <i class="fas fa-user-tie"></i>
-                                <span>Bar Manager</span>
+                <button type="button" class="role-btn" data-role="manager">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Business</span>
                             </button>
                         </div>
                     </div>
                     
-                    <form id="signup-form" class="auth-form">
+                    <form id="signup-form" class="auth-form" onsubmit="return false;">
                         <input type="hidden" id="signup-role" name="role" value="bartender">
                         
                         <div class="form-group">
@@ -132,13 +138,7 @@
                         <div class="form-group restaurant-select-group">
                             <label for="signup-workplace">Workplace <span class="optional-label">(optional)</span></label>
                             <select id="signup-workplace" name="workplace">
-                                <option value="" disabled selected>Select your workplace</option>
-                                <option value="1">The Rustic Table</option>
-                                <option value="2">Coastal Bites Seafood</option>
-                                <option value="3">Urban Plate Group</option>
-                                <option value="4">Harvest & Rye</option>
-                                <option value="5">Blue Water Grill</option>
-                                <option value="other">Other</option>
+                                <option value="" disabled selected>Loading workplaces...</option>
                             </select>
                         </div>
                         <div class="form-group other-workplace-group" style="display: none;">
@@ -171,10 +171,6 @@
                     </div>
                     
                     <div class="sso-options">
-                        <button class="sso-btn google-btn">
-                            <i class="fab fa-google"></i>
-                            <span>Sign up with Google</span>
-                        </button>
                         <button class="sso-btn shifts-btn">
                             <i class="fas fa-calendar-alt"></i>
                             <span>Sign up with 7Shifts</span>
@@ -195,6 +191,21 @@
     <script type="module" src="js/firebase-config.js"></script>
     
     <!-- Main login script -->
+    <script type="module">
+        // Import the auth state monitor and other authentication components
+        import { initAuthStateMonitor } from './js/components/authStateMonitor.js';
+        
+        // Initialize auth state monitor
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                console.log('Initializing authentication on login page...');
+                initAuthStateMonitor();
+            } catch (error) {
+                console.error('Error initializing auth:', error);
+            }
+        });
+    </script>
     <script type="module" src="js/login.js"></script>
+    <script type="module" src="js/components/authControls.js"></script>
 </body>
 </html>

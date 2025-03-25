@@ -1,0 +1,57 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Base rules for authenticated users
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // User specific rules
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager');
+      allow write: if request.auth != null && (request.auth.uid == userId || 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager');
+    }
+    
+    // Establishments rules
+    match /establishments/{establishmentId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Staff rules
+    match /staff/{staffId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // User workplaces rules
+    match /user_workplaces/{workplaceId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Bar rules and subcollections
+    match /bars/{barId} {
+      allow read, write: if request.auth != null;
+      
+      match /bartenders/{bartenderId} {
+        allow read, write: if request.auth != null;
+      }
+      
+      match /barbacks/{barbackId} {
+        allow read, write: if request.auth != null;
+      }
+      
+      match /staff/{staffId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    
+    // User-bar associations
+    match /user_bars/{userBarId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

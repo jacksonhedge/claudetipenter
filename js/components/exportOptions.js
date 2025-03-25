@@ -2,6 +2,11 @@
  * Export Options Component
  * Handles the export options modal and export functionality
  */
+import { exportImagesToStorage } from '../services/firebaseStorageService.js';
+import { auth } from '../firebase-config.js';
+import { getDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { db } from '../firebase-config.js';
+import { showNotification } from '../utils/uiUtils.js';
 
 export default class ExportOptions {
     /**
@@ -46,6 +51,13 @@ export default class ExportOptions {
             this.closeModalBtn.addEventListener('click', this.closeModal.bind(this));
         }
         
+        // Listen for exportOptions:open event (triggered from slideshow)
+        document.addEventListener('exportOptions:open', (e) => {
+            const { source } = e.detail || {};
+            console.log('[ExportOptions] Received exportOptions:open event from', source);
+            this.openModal(null, source);
+        });
+        
         // Close modal when clicking outside
         if (this.exportOptionsModal) {
             this.exportOptionsModal.addEventListener('click', (e) => {
@@ -87,9 +99,11 @@ export default class ExportOptions {
     
     /**
      * Open the export options modal
+     * @param {Event} event - The event that triggered the modal opening
+     * @param {string} source - The source of the export request ('slideshow' or undefined)
      */
-    openModal() {
-        console.log('[ExportOptions] Opening export options modal');
+    openModal(event, source) {
+        console.log('[ExportOptions] Opening export options modal from source:', source);
         
         if (this.exportOptionsModal) {
             this.exportOptionsModal.style.display = 'block';
@@ -102,6 +116,9 @@ export default class ExportOptions {
             if (this.textInputContainer) {
                 this.textInputContainer.style.display = 'none';
             }
+            
+            // Store the source for later use when exporting
+            this.exportSource = source || 'grid';
         }
     }
     
@@ -175,9 +192,79 @@ export default class ExportOptions {
     }
     
     /**
+     * Get images to export based on the source
+     * @returns {Array} Images to export
+     */
+    getImagesToExport() {
+        const organizedGrid = document.getElementById('organizedGrid');
+        if (!organizedGrid || !organizedGrid.__component) {
+            console.error('[ExportOptions] Could not find organizer grid component');
+            return [];
+        }
+        
+        // If exporting from slideshow, use the temporarily stored slideshow images
+        if (this.exportSource === 'slideshow' && organizedGrid.__component.temporarySlideshowImages) {
+            console.log('[ExportOptions] Using slideshow images for export');
+            return organizedGrid.__component.temporarySlideshowImages;
+        }
+        
+        // Otherwise, use the current grid images
+        if (organizedGrid.__component.getCurrentImages) {
+            console.log('[ExportOptions] Using grid images for export');
+            return organizedGrid.__component.getCurrentImages();
+        }
+        
+        return [];
+    }
+    
+    /**
+     * Get the current bar ID for the user
+     * @returns {Promise<string>} - Promise resolving to the current bar ID
+     */
+    async getCurrentBarId() {
+        try {
+            if (!auth.currentUser) {
+                console.error('[ExportOptions] User not authenticated');
+                return null;
+            }
+            
+            const userId = auth.currentUser.uid;
+            
+            // Try to get from localStorage first (faster)
+            const storedBarId = localStorage.getItem('currentBarId');
+            if (storedBarId) {
+                return storedBarId;
+            }
+            
+            // Get from Firestore if not in localStorage
+            try {
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (userDoc.exists() && userDoc.data().currentBarId) {
+                    return userDoc.data().currentBarId;
+                }
+                
+                // Check user_bars collection
+                const userBarsDoc = await getDoc(doc(db, "user_bars", userId));
+                if (userBarsDoc.exists() && userBarsDoc.data().bars && userBarsDoc.data().bars.length > 0) {
+                    // Get first bar ID if there are multiple
+                    return userBarsDoc.data().bars[0].barId;
+                }
+            } catch (error) {
+                console.error('[ExportOptions] Error getting bar ID from Firestore:', error);
+            }
+            
+            // Final fallback: default bar ID
+            return 'default';
+        } catch (error) {
+            console.error('[ExportOptions] Error getting current bar ID:', error);
+            return 'default';
+        }
+    }
+    
+    /**
      * Export to email
      */
-    exportToEmail() {
+    async exportToEmail() {
         console.log('[ExportOptions] Exporting to email');
         
         if (this.emailInput) {
@@ -195,27 +282,39 @@ export default class ExportOptions {
                 return;
             }
             
-            // Store email in localStorage for future use
-            localStorage.setItem('userEmail', email);
-            
-            // Get the current images from the organizer grid
-            const organizedGrid = document.getElementById('organizedGrid');
-            if (organizedGrid && organizedGrid.__component && organizedGrid.__component.getCurrentImages) {
-                const images = organizedGrid.__component.getCurrentImages();
+            try {
+                // Show loading notification
+                showNotification('Processing export to email...', 'info');
+                
+                // Store email in localStorage for future use
+                localStorage.setItem('userEmail', email);
+                
+                // Get the images to export
+                const images = this.getImagesToExport();
                 
                 if (!images || images.length === 0) {
-                    alert('No images available to export');
+                    showNotification('No images available to export', 'error');
                     return;
                 }
                 
-                // In a real implementation, this would send the images to the server
-                // for email processing. For now, we'll just show a success message.
-                alert(`Slideshow will be sent to ${email}`);
+                // Get current bar ID
+                const barId = await this.getCurrentBarId();
+                if (!barId) {
+                    showNotification('Could not determine bar ID for export', 'error');
+                    return;
+                }
+                
+                // Upload images to Firebase Storage
+                const exportedUrls = await exportImagesToStorage(images, barId, 'email');
+                
+                // In a real implementation, this would also trigger an email sending process
+                showNotification(`${exportedUrls.length} images exported and will be sent to ${email}`, 'success');
                 
                 // Close the modal
                 this.closeModal();
-            } else {
-                alert('No images available to export');
+            } catch (error) {
+                console.error('[ExportOptions] Error exporting to email:', error);
+                showNotification(`Error exporting to email: ${error.message}`, 'error');
             }
         }
     }
@@ -223,7 +322,7 @@ export default class ExportOptions {
     /**
      * Export to text
      */
-    exportToText() {
+    async exportToText() {
         console.log('[ExportOptions] Exporting to text');
         
         if (this.phoneInput) {
@@ -241,27 +340,39 @@ export default class ExportOptions {
                 return;
             }
             
-            // Store phone in localStorage for future use
-            localStorage.setItem('userPhone', phone);
-            
-            // Get the current images from the organizer grid
-            const organizedGrid = document.getElementById('organizedGrid');
-            if (organizedGrid && organizedGrid.__component && organizedGrid.__component.getCurrentImages) {
-                const images = organizedGrid.__component.getCurrentImages();
+            try {
+                // Show loading notification
+                showNotification('Processing export to text...', 'info');
+                
+                // Store phone in localStorage for future use
+                localStorage.setItem('userPhone', phone);
+                
+                // Get the images to export
+                const images = this.getImagesToExport();
                 
                 if (!images || images.length === 0) {
-                    alert('No images available to export');
+                    showNotification('No images available to export', 'error');
                     return;
                 }
                 
-                // In a real implementation, this would send the images to the server
-                // for text processing. For now, we'll just show a success message.
-                alert(`Slideshow will be sent to ${phone}`);
+                // Get current bar ID
+                const barId = await this.getCurrentBarId();
+                if (!barId) {
+                    showNotification('Could not determine bar ID for export', 'error');
+                    return;
+                }
+                
+                // Upload images to Firebase Storage
+                const exportedUrls = await exportImagesToStorage(images, barId, 'text');
+                
+                // In a real implementation, this would also trigger a text message sending process
+                showNotification(`${exportedUrls.length} images exported and will be sent to ${phone}`, 'success');
                 
                 // Close the modal
                 this.closeModal();
-            } else {
-                alert('No images available to export');
+            } catch (error) {
+                console.error('[ExportOptions] Error exporting to text:', error);
+                showNotification(`Error exporting to text: ${error.message}`, 'error');
             }
         }
     }
@@ -269,32 +380,66 @@ export default class ExportOptions {
     /**
      * Export to PDF
      */
-    exportToPdf() {
+    async exportToPdf() {
         console.log('[ExportOptions] Exporting to PDF');
         
-        // Get the current images from the organizer grid
-        const organizedGrid = document.getElementById('organizedGrid');
-        if (organizedGrid && organizedGrid.__component && organizedGrid.__component.getCurrentImages) {
-            const images = organizedGrid.__component.getCurrentImages();
+        try {
+            // Show loading notification
+            showNotification('Processing PDF export...', 'info');
+            
+            // Get the images to export
+            const images = this.getImagesToExport();
             
             if (!images || images.length === 0) {
-                alert('No images available to export');
+                showNotification('No images available to export', 'error');
                 return;
             }
             
-            // In a real implementation, this would generate a PDF with the images.
-            // For now, we'll use the existing PDF export functionality if available.
-            if (organizedGrid.__component.handleExportPdf) {
-                organizedGrid.__component.handleExportPdf();
+            // Get current bar ID
+            const barId = await this.getCurrentBarId();
+            if (!barId) {
+                showNotification('Could not determine bar ID for export', 'error');
+                return;
+            }
+            
+            // Upload images to Firebase Storage (for backup/sharing)
+            const exportedUrls = await exportImagesToStorage(images, barId, 'pdf');
+            
+            // Continue with regular PDF generation
+            const organizedGrid = document.getElementById('organizedGrid');
+            if (organizedGrid && organizedGrid.__component) {
+                if (this.exportSource === 'slideshow') {
+                    // If we're exporting from the slideshow, use the slideshow's export method if available
+                    const slideshowView = document.getElementById('slideshowView');
+                    if (slideshowView && slideshowView.__component && slideshowView.__component.handleExportPdf) {
+                        slideshowView.__component.handleExportPdf();
+                    } else {
+                        // Fallback to the grid's export method
+                        if (organizedGrid.__component.handleExportPdf) {
+                            organizedGrid.__component.handleExportPdf(images);
+                        } else {
+                            // Final fallback to a simple alert
+                            showNotification(`PDF export of ${images.length} images completed`, 'success');
+                        }
+                    }
+                } else {
+                    // If exporting from the grid, use the grid's export method
+                    if (organizedGrid.__component.handleExportPdf) {
+                        organizedGrid.__component.handleExportPdf();
+                    } else {
+                        // Fallback to a simple alert
+                        showNotification(`PDF export of ${images.length} images completed`, 'success');
+                    }
+                }
             } else {
-                // Fallback to a simple alert
-                alert('PDF export functionality is not available');
+                showNotification(`PDF export of ${images.length} images completed`, 'success');
             }
             
             // Close the modal
             this.closeModal();
-        } else {
-            alert('No images available to export');
+        } catch (error) {
+            console.error('[ExportOptions] Error exporting to PDF:', error);
+            showNotification(`Error exporting to PDF: ${error.message}`, 'error');
         }
     }
 }

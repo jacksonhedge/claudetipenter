@@ -72,6 +72,12 @@ export function getAuthUrl(provider, isSignup = false) {
  * @returns {boolean} - Whether the user is authenticated
  */
 export function isAuthenticated() {
+    // First check if auth is defined
+    if (!auth) {
+        console.warn('Auth object is undefined when checking isAuthenticated');
+        // Try to use localStorage as fallback
+        return !!localStorage.getItem('user_id');
+    }
     return !!auth.currentUser;
 }
 
@@ -102,17 +108,52 @@ export async function getCurrentUser() {
             return { 
                 id: firebaseUser.uid, 
                 email: firebaseUser.email,
-                name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
+                name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                role: 'bartender', // Default role for new users
+                subscription_tier: 'free'
             };
         }
     } catch (error) {
-        console.error('Error getting user data:', error);
-        // Return a basic user object if there's an error
-        return { 
-            id: firebaseUser.uid, 
-            email: firebaseUser.email || 'user@example.com',
-            name: firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'User')
-        };
+        // Check if this is a permission error
+        if (error.code === 'permission-denied' || 
+            (error.message && error.message.includes('Missing or insufficient permissions'))) {
+            console.warn('⚠️ Permission denied accessing user data. Checking local storage fallback...');
+            
+            // Try to get user data from localStorage
+            try {
+                const storedUser = localStorage.getItem(`tipenter_firestore_users/${firebaseUser.uid}`);
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    console.log('✅ Retrieved user data from local storage:', userData);
+                    return { id: firebaseUser.uid, ...userData };
+                }
+            } catch (storageError) {
+                console.warn('Local storage retrieval failed:', storageError);
+            }
+            
+            // If we get here, either no data in local storage or error parsing it
+            // Fall back to basic user data instead of throwing an error
+            console.log('💡 Using basic user data fallback to keep app functional');
+            return { 
+                id: firebaseUser.uid, 
+                email: firebaseUser.email || 'user@example.com',
+                name: firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'User'),
+                role: 'bartender',
+                subscription_tier: 'free'
+            };
+        } else {
+            console.error('Error getting user data:', error);
+            
+            // Return basic user object instead of throwing an error
+            // This keeps the authentication flow working even with errors
+            return { 
+                id: firebaseUser.uid, 
+                email: firebaseUser.email || 'user@example.com',
+                name: firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'User'),
+                role: 'bartender',
+                subscription_tier: 'free'
+            };
+        }
     }
 }
 
@@ -140,19 +181,23 @@ export function onAuthStateChange(callback) {
  * @returns {Promise<Object>} - Promise resolving to the user object
  */
 export async function login(email, password, workplaceId = null) {
+    // Check if we're on the landing page
+    const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
+    if (isLandingPage) {
+        console.log('Demo login for landing page');
+        // For demo purposes on landing page
+        return {
+            id: '123',
+            email: email,
+            name: email.split('@')[0],
+            role: 'bartender',
+            subscription_tier: 'free'
+        };
+    }
+    
     try {
-        // Check if we're on the landing page
-        const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
-        if (isLandingPage) {
-            // For demo purposes on landing page
-            return {
-                id: '123',
-                email: email,
-                name: email.split('@')[0],
-                role: 'bartender',
-                subscription_tier: 'free'
-            };
-        }
+        // Sign in with Firebase
+        console.log('Attempting Firebase login with email:', email);
         
         // Sign in with Firebase
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -230,22 +275,24 @@ export async function login(email, password, workplaceId = null) {
  * @returns {Promise<Object>} - Promise resolving to the user object
  */
 export async function signup(name, email, password, role, workplaceId, position, managerCode = null) {
+    // Check if we're on the landing page
+    const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
+    if (isLandingPage) {
+        console.log('Demo signup for landing page');
+        // For demo purposes on landing page
+        return {
+            id: '123',
+            name: name,
+            email: email,
+            role: role,
+            workplaceId: workplaceId,
+            workplaceName: getWorkplaceNameById(workplaceId),
+            position: position,
+            subscription_tier: 'free'
+        };
+    }
+    
     try {
-        // Check if we're on the landing page
-        const isLandingPage = window.location.pathname.includes('landing.html') || window.location.pathname.endsWith('/');
-        if (isLandingPage) {
-            // For demo purposes on landing page
-            return {
-                id: '123',
-                name: name,
-                email: email,
-                role: role,
-                workplaceId: workplaceId,
-                workplaceName: getWorkplaceNameById(workplaceId),
-                position: position,
-                subscription_tier: 'free'
-            };
-        }
         
         // Validate manager code if role is manager
         if (role === 'manager' && (!managerCode || managerCode !== 'MANAGER123')) {

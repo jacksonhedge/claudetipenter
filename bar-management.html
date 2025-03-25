@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Bar Management</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/notification.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/bar-creator.css">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+    
+    <!-- Inline Styles -->
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .section-title {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #F76E11;
+        }
+        
+        .header-banner {
+            background: linear-gradient(135deg, #FF8C42, #F76E11, #FF5757);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header-banner h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .header-banner p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-bar .links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-bar a {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-bar a:hover {
+            color: #F76E11;
+        }
+        
+        .bar-list-container {
+            margin-top: 20px;
+        }
+        
+        .bar-list-container h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .back-to-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #F76E11;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .back-to-home:hover {
+            transform: translateX(-5px);
+        }
+        
+        #barList {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <div class="logo">
+            <a href="home.html">TipEnter</a>
+        </div>
+        <div class="links">
+            <a href="home.html">Home</a>
+            <a href="bar-management.html" class="active">Bar Management</a>
+            <a href="#" id="profileBtn">Profile</a>
+            <a href="#" id="authLink">Logout</a>
+        </div>
+    </div>
+    
+    <!-- Header Banner -->
+    <div class="header-banner">
+        <h1>Bar Management</h1>
+        <p>Create and manage bars for your tips</p>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        <!-- Bar Creator Card -->
+        <div class="card">
+            <h2 class="section-title">Create New Bar</h2>
+            <div id="barCreatorContainer"></div>
+        </div>
+        
+        <!-- Bar List Card -->
+        <div class="card">
+            <h2 class="section-title">Your Bars</h2>
+            <div class="bar-list-container">
+                <div id="barList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content profile-modal">
+            <span class="profile-close">&times;</span>
+            <div class="profile-header">
+                <h2>User Profile</h2>
+            </div>
+            <div class="profile-info">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-details">
+                    <div class="profile-field">
+                        <label>Name:</label>
+                        <span id="profileName">Loading...</span>
+                    </div>
+                    <div class="profile-field">
+                        <label>Email:</label>
+                        <span id="profileEmail">Loading...</span>
+                    </div>
+                    <div class="profile-field">
+                        <label>Role:</label>
+                        <span id="profileRole">Loading...</span>
+                    </div>
+                    <div class="profile-field">
+                        <label>Workplace:</label>
+                        <span id="profileWorkplace">Loading...</span>
+                    </div>
+                    <div class="profile-field">
+                        <label>Position:</label>
+                        <span id="profilePosition">Loading...</span>
+                    </div>
+                    <div class="profile-field">
+                        <label>Subscription:</label>
+                        <span id="profileSubscription">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+    
+    <!-- Scripts -->
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeFirebase } from './js/firebase-init.js';
+        import { isAuthenticated, getCurrentUser, logout } from './js/services/authService.js';
+        import BarCreator from './js/components/barCreator.js';
+        import ProfileModal from './js/components/profileModal.js';
+        import { showNotification } from './js/utils/uiUtils.js';
+        import { BarModel } from './js/models/BarModel.js';
+        
+        // Initialize Firebase
+        initializeFirebase().then(() => {
+            // Check authentication
+            if (!isAuthenticated()) {
+                // Redirect to login page if not authenticated
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Initialize components
+            const barCreator = new BarCreator({
+                containerId: 'barCreatorContainer',
+                barListId: 'barList'
+            });
+            
+            const profileModal = new ProfileModal();
+            
+            // Add event listener for bar selection
+            document.addEventListener('barSelected', async (event) => {
+                const { bar } = event.detail;
+                
+                // Save selected bar to local storage
+                localStorage.setItem('tipenter_selected_bar', JSON.stringify({
+                    id: bar.id,
+                    name: bar.name,
+                    type: bar.type,
+                    location: bar.location ? 
+                        `${bar.location.city || ''}, ${bar.location.state || ''}` : '',
+                }));
+                
+                showNotification(`Bar "${bar.name}" has been selected as your current bar.`, 'success');
+                
+                // Optionally redirect to home page after a short delay
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 2000);
+            });
+            
+            // Auth link (logout)
+            const authLink = document.getElementById('authLink');
+            if (authLink) {
+                authLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logout().then(() => {
+                        window.location.href = 'login.html';
+                    }).catch(error => {
+                        console.error('Error logging out:', error);
+                        window.location.href = 'login.html';
+                    });
+                });
+            }
+            
+            // Demo function to create a sample bar
+            window.createSampleBar = async () => {
+                try {
+                    const bar = await BarModel.createSampleBar(
+                        "The Thirsty Penguin", 
+                        "Pittsburgh, PA", 
+                        "cocktail_bar"
+                    );
+                    
+                    showNotification(`Sample bar "${bar.name}" created successfully!`, 'success');
+                    
+                    // Reload bars
+                    if (barCreator.loadBars) {
+                        barCreator.loadBars();
+                    }
+                } catch (error) {
+                    console.error('Error creating sample bar:', error);
+                    showNotification('Failed to create sample bar.', 'error');
+                }
+            };
+            
+            console.log('Bar Management Page Initialized');
+        });
+    </script>
+</body>
+</html>

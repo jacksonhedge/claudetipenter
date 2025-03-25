@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Establishment Migration Tool</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #FFF7E6;
+            color: #333333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #FFD166, #F76E11, #EF4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: #666;
+        }
+        
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 180px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF8C42, #F76E11, #FF5757);
+            color: white;
+            box-shadow: 0 4px 12px rgba(247, 110, 17, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(247, 110, 17, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: #F76E11;
+            border: 2px solid #F76E11;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #FFF2D8;
+            transform: translateY(-3px);
+        }
+        
+        .console {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 1.5rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 800px;
+            min-height: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            margin-top: 2rem;
+        }
+        
+        .console-line {
+            margin: 0;
+            padding: 3px 0;
+        }
+        
+        .success {
+            color: #2ecc71;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        .warning {
+            color: #f39c12;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+        
+        .notice {
+            font-weight: bold;
+            color: #9b59b6;
+        }
+        
+        .establishment-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid #F76E11;
+        }
+        
+        .establishment-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .establishment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        
+        .detail-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #F76E11;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading .loader {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Establishment Migration Tool</h1>
+        <p>This tool helps you migrate your existing establishments to the new bar management system. This is useful if you're experiencing permission errors when saving profiles.</p>
+        
+        <div id="establishmentContainer">
+            <p>Loading establishments...</p>
+        </div>
+        
+        <div class="actions">
+            <button id="migrateBtn" class="btn btn-primary">
+                <span class="loader"></span>
+                Migrate to Bar Management
+            </button>
+            <a href="index.html" class="btn btn-secondary">Return to Home</a>
+        </div>
+        
+        <p>After migration, you'll be able to manage your bars using the new Bar Management feature, which has improved security rules and permissions.</p>
+    </div>
+    
+    <div id="console" class="console">
+        <p class="console-line">Establishment migration console ready...</p>
+        <p class="console-line info">Click "Migrate to Bar Management" to convert your establishments to bars.</p>
+    </div>
+    
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js";
+        import { getCorkHarbourEstablishment, importEstablishmentsAsBars } from './js/services/establishmentIntegration.js';
+        
+        // DOM elements
+        const migrateBtn = document.getElementById('migrateBtn');
+        const establishmentContainer = document.getElementById('establishmentContainer');
+        const consoleElement = document.getElementById('console');
+        
+        // Console logging function
+        function log(message, type = 'default') {
+            const line = document.createElement('p');
+            line.className = `console-line ${type}`;
+            line.textContent = message;
+            consoleElement.appendChild(line);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            console.log(message);
+        }
+        
+        // Load establishments
+        async function loadEstablishments() {
+            try {
+                log('Loading Cork Harbour establishment...', 'info');
+                
+                const corkHarbour = await getCorkHarbourEstablishment();
+                
+                if (corkHarbour) {
+                    log('Found Cork Harbour establishment!', 'success');
+                    displayEstablishment(corkHarbour);
+                } else {
+                    log('Cork Harbour establishment not found.', 'warning');
+                    establishmentContainer.innerHTML = '<p>No "Cork Harbour" establishment found. Make sure you are logged in and have access to this establishment.</p>';
+                }
+            } catch (error) {
+                log(`Error loading establishments: ${error.message}`, 'error');
+                console.error('Error loading establishments:', error);
+                establishmentContainer.innerHTML = '<p>Error loading establishments. Please check the console for details.</p>';
+            }
+        }
+        
+        // Display an establishment
+        function displayEstablishment(establishment) {
+            const html = `
+                <div class="establishment-card">
+                    <div class="establishment-name">${establishment.name || 'Unnamed Establishment'}</div>
+                    <div class="establishment-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Manager:</div>
+                            <div class="detail-value">${establishment.manager || 'Not specified'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">POS System:</div>
+                            <div class="detail-value">${establishment.possystem || 'Not specified'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">ID:</div>
+                            <div class="detail-value">${establishment.id || 'Unknown'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            establishmentContainer.innerHTML = html;
+        }
+        
+        // Migrate establishments to bars
+        async function migrateEstablishments() {
+            migrateBtn.classList.add('loading');
+            migrateBtn.disabled = true;
+            
+            try {
+                log('Starting establishment migration...', 'info');
+                
+                // Import establishments as bars
+                log('Converting establishments to bars...', 'info');
+                const importCount = await importEstablishmentsAsBars();
+                
+                if (importCount > 0) {
+                    log(`✅ Successfully migrated ${importCount} establishments to the bar management system!`, 'success');
+                    log('You can now use the bar management system to manage your bars.', 'success');
+                    log('----------------------------------------', 'notice');
+                    log('IMPORTANT: The bar management system uses improved security rules', 'notice');
+                    log('that should fix your profile save errors.', 'notice');
+                    log('----------------------------------------', 'notice');
+                    log('To manage your bars, go to:', 'info');
+                    log('bar-management.html', 'info');
+                } else {
+                    log('No establishments were migrated.', 'warning');
+                    log('This could be because:', 'warning');
+                    log('1. The establishments were already migrated', 'warning');
+                    log('2. There was an error during migration', 'warning');
+                    log('3. No establishments were found', 'warning');
+                }
+            } catch (error) {
+                log(`Error during migration: ${error.message}`, 'error');
+                console.error('Error during migration:', error);
+            } finally {
+                migrateBtn.classList.remove('loading');
+                migrateBtn.disabled = false;
+            }
+        }
+        
+        // Add event listener to migrate button
+        migrateBtn.addEventListener('click', migrateEstablishments);
+        
+        // Load establishments when page loads
+        document.addEventListener('DOMContentLoaded', loadEstablishments);
+    </script>
+</body>
+</html>

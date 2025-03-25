@@ -38,8 +38,12 @@ import SubscriptionService from './services/subscriptionService.js';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 import { startAppInitialization } from './app-initialization.js';
+import { initPermissionErrorChecker } from './components/permissionErrorChecker.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize permission error checker to detect and handle Firebase permission issues
+    initPermissionErrorChecker();
+    
     // DOM Elements - Navigation
     const navItems = document.querySelectorAll('.nav-item');
     const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
@@ -243,11 +247,38 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to check if user is a manager
     async function isUserManager() {
-        if (isAuthenticated()) {
-            const user = await getCurrentUser();
-            return user && user.role === 'manager';
+        try {
+            if (isAuthenticated()) {
+                try {
+                    const user = await getCurrentUser();
+                    return user && user.role === 'manager';
+                } catch (error) {
+                    console.warn('⚠️ Error checking manager status:', error);
+                    
+                    // Try fallback from localStorage
+                    const userRole = localStorage.getItem('user_role');
+                    if (userRole) {
+                        console.log('Using role from localStorage:', userRole);
+                        return userRole === 'manager';
+                    }
+                    
+                    // Default to non-manager in case of error
+                    return false;
+                }
+            }
+            return false;
+        } catch (error) {
+            console.warn('⚠️ Error in isAuthenticated check:', error);
+            
+            // Try fallback from localStorage
+            const userRole = localStorage.getItem('user_role');
+            if (userRole) {
+                console.log('Using role from localStorage:', userRole);
+                return userRole === 'manager';
+            }
+            
+            return false;
         }
-        return false;
     }
     
     // Function to handle UI elements that should only be available to managers
@@ -596,6 +627,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         const organizedTab = document.getElementById('organized-tab');
                         if (organizedTab && organizedTab.classList.contains('active')) {
                             organizerGrid.setImages(getProcessedImages());
+                        }
+                        
+                        // Update the organized tips component with the new data
+                        if (window.organizedTips) {
+                            console.log('Updating organizedTips component with new data:', data.results);
+                            window.organizedTips.setPayments(data.results);
+                        } else {
+                            console.warn('OrganizedTips component not found - tips data will not be displayed in table view');
                         }
                         
                         // Calculate total tips and show celebration popup

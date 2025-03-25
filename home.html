@@ -3,455 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TipEnter</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <title>TipEnter | Home</title>
+    <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/epson-scanner.css">
     <link rel="stylesheet" href="css/table-styles.css">
     <link rel="stylesheet" href="css/organized-tips.css">
+    <link rel="stylesheet" href="css/tips-history.css">
     <link rel="stylesheet" href="css/export-modal.css">
     <link rel="stylesheet" href="css/celebration-popup.css">
     <link rel="stylesheet" href="css/profile.css">
-    <link rel="stylesheet" href="css/tips-history.css">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PDF.js library for PDF handling -->
+    <link rel="stylesheet" href="css/components/google-drive.css">
+    <link rel="stylesheet" href="css/auth-controls.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <!-- jsPDF library for PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        /* Left sidebar styles */
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        .sidebar {
-            width: 250px;
-            background-color: #2c3e50;
-            color: white;
-            padding: 1.5rem 0;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-        }
-        
-        .sidebar-header {
-            padding: 0 1.5rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 1.5rem;
-        }
-        
-        .sidebar-brand {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 0.5rem;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu-item {
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .sidebar-menu-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .sidebar-menu-item.active {
-            background-color: #3498db;
-            position: relative;
-        }
-        
-        .sidebar-menu-item.active::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
-            background-color: #f39c12;
-        }
-        
-        .sidebar-menu-item i {
-            width: 20px;
-            text-align: center;
-        }
-        
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 2rem;
-            background-color: #f5f7fa;
-        }
-        
-        /* Move POS logos to the right */
-        .pos-logos-right {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            z-index: 100;
-        }
-        
-        .pos-logo {
-            height: 60px;
-            width: 60px;
-            object-fit: contain;
-            filter: grayscale(0%);
-            opacity: 1;
-            transition: all 0.3s ease;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .pos-logo:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 200px;
-            }
-            
-            .main-content {
-                margin-left: 200px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 1rem 0;
-            }
-            
-            .sidebar-brand, .sidebar-menu-item span {
-                display: none;
-            }
-            
-            .sidebar-menu-item {
-                padding: 1rem;
-                justify-content: center;
-            }
-            
-            .sidebar-menu-item i {
-                font-size: 1.2rem;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-            }
-            
-            .pos-logo {
-                height: 45px;
-                width: 45px;
-                padding: 6px;
-            }
-        }
-        
-        /* Adjust the API cost display */
-        .api-cost {
-            top: 20px;
-            right: 20px;
-        }
-        
-        /* Adjust the container to fit with sidebar */
-        .container {
-            max-width: 100%;
-            padding: 0;
-            margin: 0;
-        }
-        
-        /* Hide the original nav */
-        .main-nav {
-            display: none;
-        }
-        
-        /* Adjust tab content to fill available space */
-        main.tab-content {
-            margin-top: 1rem;
-            background-color: var(--secondary-yellow);
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-        }
-        
-        /* Style the upload area like try-it-out page */
-        .drop-area {
-            width: 100%;
-            height: 400px;
-            margin: 0 auto 1rem;
-            border: 2px dashed var(--primary-orange);
-            border-radius: 10px;
-            background-color: var(--secondary-yellow);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .drop-area::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 15px,
-                rgba(247, 110, 17, 0.1) 15px,
-                rgba(247, 110, 17, 0.1) 16px
-            );
-            z-index: 1;
-        }
-        
-        .drop-area::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 15px,
-                rgba(247, 110, 17, 0.1) 15px,
-                rgba(247, 110, 17, 0.1) 16px
-            );
-            z-index: 1;
-        }
-        
-        .drop-icon {
-            font-size: 4rem;
-            color: var(--primary-orange);
-            opacity: 0.3;
-            z-index: 2;
-        }
-        
-        /* Style the footer to be at the bottom */
-        footer {
-            position: fixed;
-            bottom: 0;
-            left: 250px;
-            right: 0;
-            background-color: #f5f7fa;
-            padding: 1rem;
-            text-align: center;
-            border-top: 1px solid #e0e0e0;
-            z-index: 90;
-        }
-        
-        @media (max-width: 992px) {
-            footer {
-                left: 200px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            footer {
-                left: 70px;
-            }
-        }
-        
-        /* Add some CSS variables for consistent styling */
-        :root {
-            --primary-orange: #F76E11;
-            --primary-red: #FF5757;
-            --primary-yellow: #FFBC80;
-            --secondary-yellow: #FFF2D8;
-            --text-light: #ffffff;
-            --gradient-bg: linear-gradient(135deg, #FF8C42, #F76E11, #FF5757);
-        }
-        
-        /* Style the buttons like try-it-out page */
-        .process-btn, .scan-btn, .upload-btn {
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .process-btn {
-            background: var(--gradient-bg);
-            color: var(--text-light);
-        }
-        
-        .process-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-        }
-        
-        .scan-btn {
-            background: var(--gradient-bg);
-            color: var(--text-light);
-        }
-        
-        .scan-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-        }
-        
-        .upload-btn {
-            background-color: var(--text-light);
-            color: var(--primary-orange);
-            border: 2px solid var(--primary-orange);
-        }
-        
-        .upload-btn:hover {
-            background-color: var(--primary-yellow);
-            color: var(--primary-orange);
-            transform: translateY(-3px);
-        }
-        
-        /* Section description styles */
-        .section-description {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .section-description h2 {
-            color: var(--primary-orange);
-            margin-bottom: 0.75rem;
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-        
-        .section-description p {
-            color: #555;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            margin-bottom: 0;
-        }
-        
-        @media (max-width: 768px) {
-            .section-description {
-                padding: 1rem;
-            }
-            
-            .section-description h2 {
-                font-size: 1.5rem;
-            }
-            
-            .section-description p {
-                font-size: 1rem;
-            }
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
-    <!-- Right side POS logos -->
-    <div class="pos-logos-right">
-        <img src="assets/images/lightspeedLogo.png" alt="Lightspeed POS" class="pos-logo">
-        <img src="assets/images/ToastLogo.png" alt="Toast POS" class="pos-logo">
-        <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
-        <img src="assets/images/squarelogo.png" alt="Square POS" class="pos-logo">
+    <!-- Auth Transition Detection Script -->
+    <script>
+        // Check if this is a redirect from login or signup
+        if (sessionStorage.getItem('auth_transition') === 'true') {
+            console.log('Auth transition detected, allowing access');
+            // Clear the flag
+            sessionStorage.removeItem('auth_transition');
+        }
+    </script>
+    
+    <!-- Offline Mode Utility -->
+    <script type="module">
+        import { addOfflineModeToggle } from './js/utils/offlineUtil.js';
+        
+        // Add the offline mode toggle
+        addOfflineModeToggle();
+    </script>
+    
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">TipEnter</a>
+            <nav>
+                <ul class="main-nav">
+                    <li class="nav-item active" data-tab="tip-analyzer-tab">Tip Analyzer</li>
+                    <li class="nav-item" data-tab="organized-tab">Organized Images</li>
+                    <li class="nav-item" data-tab="organized-without-tip-tab">Without Tip</li>
+                    <li class="nav-item" data-tab="tip-history-tab">History</li>
+                    <li class="nav-item" data-tab="file-organizer-tab">File Organizer</li>
+                    <li class="auth-link-container">
+                        <a href="login.html" id="authLink">Login</a>
+                    </li>
+                </ul>
+                <button class="profile-btn" id="profileBtn">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Mobile sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="logo">TipEnter</a>
+            <button class="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item active" data-tab="tip-analyzer-tab">
+                <i class="fas fa-calculator"></i> Tip Analyzer
+            </li>
+            <li class="sidebar-menu-item" data-tab="organized-tab">
+                <i class="fas fa-th"></i> Organized Images
+            </li>
+            <li class="sidebar-menu-item" data-tab="organized-without-tip-tab">
+                <i class="fas fa-image"></i> Without Tip
+            </li>
+            <li class="sidebar-menu-item" data-tab="tip-history-tab">
+                <i class="fas fa-history"></i> Tip History
+            </li>
+            <li class="sidebar-menu-item" data-tab="file-organizer-tab">
+                <i class="fas fa-folder-open"></i> File Organizer
+            </li>
+            <li class="sidebar-menu-item auth-link">
+                <a href="login.html" id="authLinkSidebar">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            </li>
+        </ul>
     </div>
     
-    <div class="app-container">
-        <!-- Left Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-brand">TipEnter</div>
-            </div>
-            <ul class="sidebar-menu">
-                <!-- Profile Button -->
-                <li class="sidebar-menu-item profile-btn" id="profileBtn">
-                    <i class="fas fa-user-circle"></i>
-                    <span>My Profile</span>
-                </li>
-                <li class="sidebar-menu-item active" data-tab="scanner-tab">
-                    <i class="fas fa-calculator"></i>
-                    <span>Tip Analyzer Tool</span>
-                </li>
-                <li class="sidebar-menu-item" data-tab="organized-tab">
-                    <i class="fas fa-images"></i>
-                    <span>Organized Images</span>
-                </li>
-                <li class="sidebar-menu-item" data-tab="tips-history-tab">
-                    <i class="fas fa-history"></i>
-                    <span>Tips History</span>
-                </li>
-                <li class="sidebar-menu-item" data-tab="epson-scanner-tab">
-                    <i class="fas fa-scanner"></i>
-                    <span>Super Scanner!</span>
-                </li>
-                <li class="sidebar-menu-item auth-link" id="authLink">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sign Out</span>
-                </li>
-            </ul>
-            
-            <!-- Profile Modal -->
-            <div id="profileModal" class="profile-modal" style="display: none;">
-                <div class="profile-modal-content">
-                    <div class="profile-modal-header">
-                        <h2>My Profile</h2>
-                        <span class="profile-close">&times;</span>
+    <!-- Main container -->
+    <main class="container">
+        <!-- Profile Modal -->
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>My Profile</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-section">
+                        <label for="profileName">Name</label>
+                        <input type="text" id="profileName" name="name" placeholder="Your name">
                     </div>
-                    <div class="profile-modal-body">
-                        <div class="profile-info">
-                            <div class="profile-avatar">
-                                <i class="fas fa-user-circle"></i>
+                    <div class="profile-section">
+                        <label for="profileEmail">Email</label>
+                        <input type="email" id="profileEmail" name="email" placeholder="Your email" readonly>
+                    </div>
+                    <div class="profile-section">
+                        <label for="profileRole">Role</label>
+                        <input type="text" id="profileRole" name="role" placeholder="Your role" readonly>
+                    </div>
+                    <div class="profile-section">
+                        <label for="profileEstablishment">Establishment</label>
+                        <div id="profileEstablishment" class="profile-value">
+                            <span class="value-text">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="profile-section">
+                        <label for="profileSubscription">Subscription</label>
+                        <div id="profileSubscription" class="profile-value subscription-container">
+                            <span class="value-text">Loading...</span>
+                            <a href="#" class="upgrade-link">Upgrade</a>
+                        </div>
+                    </div>
+                    <div class="profile-footer">
+                        <button id="saveProfileBtn" class="btn-primary">Save Profile</button>
+                        <button id="signOutBtn" class="btn-danger">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Tip Analyzer -->
+        <div id="tip-analyzer-tab" class="tab-content active">
+            <h1>Tip Analyzer</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Receipt Images</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-uploader">
+                        <div id="dropArea" class="drop-area">
+                            <div class="drop-message">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop receipt images here or click to browse</p>
+                                <div class="button-container">
+                                    <button id="addTestImagesBtn" class="btn-outline">Add Test Images</button>
+                                </div>
+                                <input type="file" id="fileInput" accept="image/*,.pdf" multiple>
                             </div>
-                            <div class="profile-details">
-                                <div class="profile-field">
-                                    <label>Name:</label>
-                                    <span id="profileName">Loading...</span>
+                        </div>
+                        
+                        <div class="option-buttons">
+                            <div class="epson-scanner">
+                                <button id="scanBtn" class="btn-secondary">
+                                    <i class="fas fa-scanner"></i> Scan with Epson Scanner
+                                </button>
+                            </div>
+                            <div id="googleDriveContainer" class="google-drive-container">
+                                <!-- Google Drive integration will be inserted here -->
+                            </div>
+                        </div>
+                        
+                        <div class="file-list-container">
+                            <div class="file-list-header">
+                                <h3>Uploaded Files <span id="fileCount">(0)</span></h3>
+                                <div class="api-select-container">
+                                    <label for="apiSelect">API:</label>
+                                    <select id="apiSelect">
+                                        <option value="claude">Claude</option>
+                                        <option value="gpt4">GPT-4</option>
+                                        <option value="gemini">Gemini</option>
+                                    </select>
                                 </div>
-                                <div class="profile-field">
-                                    <label>Email:</label>
-                                    <span id="profileEmail">Loading...</span>
+                                <div class="simulate-toggle-container">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="simulateToggle">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span>Simulate</span>
                                 </div>
-                                <div class="profile-field">
-                                    <label>Role:</label>
-                                    <span id="profileRole">Loading...</span>
+                            </div>
+                            <div id="fileList" class="file-list"></div>
+                            <div class="process-button-container">
+                                <button id="processBtn" class="btn-primary" disabled>Process 0 Images</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <h2>Processing Results</h2>
+                
+                <div class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                    <div id="countdownTimer" class="countdown-timer"></div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab-header">
+                        <div class="tab-btn active" data-tab="table-view">Table View</div>
+                        <div class="tab-btn" data-tab="json-view">JSON View</div>
+                        <div class="tab-btn" data-tab="pos-view">POS Export</div>
+                    </div>
+                    
+                    <div class="tab-content-container">
+                        <div id="table-view" class="tab-pane active">
+                            <div class="table-controls">
+                                <div class="sort-controls">
+                                    <label for="sortField">Sort by:</label>
+                                    <select id="sortField">
+                                        <option value="customer_name">Customer Name</option>
+                                        <option value="amount">Amount</option>
+                                        <option value="date">Date</option>
+                                        <option value="tip">Tip</option>
+                                    </select>
+                                    <select id="sortOrder">
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                    <button id="sortBtn" class="btn-secondary">Sort</button>
                                 </div>
-                                <div class="profile-field">
-                                    <label>Workplace:</label>
-                                    <span id="profileWorkplace">Loading...</span>
+                                <button id="exportCsvBtn" class="btn-secondary">
+                                    <i class="fas fa-file-csv"></i> Export CSV
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Customer Name</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Check #</th>
+                                            <th>Amount</th>
+                                            <th>Tip</th>
+                                            <th>Total</th>
+                                            <th>Payment Type</th>
+                                            <th>Signed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div id="json-view" class="tab-pane">
+                            <div class="json-view-header">
+                                <button id="copyBtn" class="btn-secondary">
+                                    <i class="fas fa-copy"></i> Copy JSON
+                                </button>
+                            </div>
+                            <pre id="jsonOutput" class="json-output"></pre>
+                        </div>
+                        
+                        <div id="pos-view" class="tab-pane">
+                            <div id="posIntegrationContainer" class="pos-integration-container">
+                                <div class="pos-header">
+                                    <h3>POS System Integration</h3>
+                                    <p>Export your processed receipt data to your POS system</p>
                                 </div>
-                                <div class="profile-field">
-                                    <label>Position:</label>
-                                    <span id="profilePosition">Loading...</span>
-                                </div>
-                                <div class="profile-field">
-                                    <label>Subscription:</label>
-                                    <span id="profileSubscription">Loading...</span>
+                                
+                                <div class="pos-body">
+                                    <div class="pos-selection">
+                                        <label for="posSystemSelect">Select POS System:</label>
+                                        <select id="posSystemSelect">
+                                            <option value="toast">Toast</option>
+                                            <option value="clover">Clover</option>
+                                            <option value="square">Square</option>
+                                            <option value="lightspeed">Lightspeed</option>
+                                            <option value="custom">Custom Format</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="pos-preview">
+                                        <h4>Data Preview</h4>
+                                        <div id="posDataPreview" class="pos-data-preview">
+                                            <p>No data to preview</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="pos-actions">
+                                        <button id="posExportBtn" class="btn-primary">
+                                            <i class="fas fa-file-export"></i> Export to POS
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -460,309 +304,313 @@
             </div>
         </div>
         
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="container">
-                <nav class="main-nav">
-                    <div class="nav-brand">TipEnter</div>
-                    <div class="nav-actions">
-                        <a href="login.html" class="auth-link" id="authLink">Login</a>
+        <!-- Tab: Organized Images -->
+        <div id="organized-tab" class="tab-content">
+            <h1>Organized Receipt Images</h1>
+            
+            <div class="organized-controls">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filterField">Filter by:</label>
+                        <select id="filterField">
+                            <option value="customer_name">Customer Name</option>
+                            <option value="payment_type">Payment Type</option>
+                            <option value="date">Date</option>
+                            <option value="amount">Amount</option>
+                            <option value="signed">Signed</option>
+                        </select>
                     </div>
-                    <ul class="nav-tabs">
-                        <div class="tab-group">
-                            <li class="nav-item active" data-tab="scanner-tab">Tip Analyzer</li>
-                            <li class="nav-item related-tab" data-tab="organized-tab">Organized Images</li>
-                            <li class="nav-item related-tab" data-tab="tips-history-tab">Tips History</li>
-                        </div>
-                        <div class="tab-group">
-                            <li class="nav-item" data-tab="epson-scanner-tab">Super Scanner!</li>
-                        </div>
-                    </ul>
-                </nav>
+                    
+                    <div class="filter-group">
+                        <label for="filterValue">Value:</label>
+                        <input type="text" id="filterValue" placeholder="Filter value">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filterSortOrder">Order:</label>
+                        <select id="filterSortOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-buttons">
+                        <button id="applyFilterBtn" class="btn-secondary">Apply Filter</button>
+                        <button id="clearFilterBtn" class="btn-secondary">Clear</button>
+                    </div>
+                </div>
                 
-                <main id="scanner-tab" class="tab-content active">
-                    <div class="section-description">
-                        <h2>Tip Analyzer</h2>
-                        <p>Here you can scan your tip sheets. Upload images or PDFs of receipts to extract tip information and organize your data efficiently.</p>
+                <div class="view-controls">
+                    <button id="gridViewBtn" class="btn-view active">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button id="slideshowViewBtn" class="btn-view">
+                        <i class="fas fa-images"></i> Slideshow
+                    </button>
+                    <button id="exportSlideshowBtn" class="btn-secondary">
+                        <i class="fas fa-file-export"></i> Export Slideshow
+                    </button>
+                    <button id="exportPdfBtn" class="btn-secondary">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+            
+            <div id="organizedGrid" class="organized-grid"></div>
+            
+            <!-- Export Options Modal -->
+            <div id="exportOptionsModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Export Options</h2>
+                        <span class="close-modal">&times;</span>
                     </div>
-                    <div class="upload-section">
-                        <div class="drop-area" id="dropArea">
-                            <div class="drop-icon">📄</div>
-                            <p>Drag & drop images or PDFs here</p>
-                            <p>or</p>
-                            <div class="upload-options">
-                                <label for="fileInput" class="upload-btn" onclick="document.getElementById('fileInput').click(); return false;">Select Files</label>
-                                <button id="scanBtn" class="scan-btn">Scan with Super Scanner!</button>
+                    <div class="modal-body">
+                        <div class="export-option">
+                            <button id="exportEmailBtn" class="export-option-btn">
+                                <i class="fas fa-envelope"></i>
+                                Export to Email
+                            </button>
+                            <div id="emailInputContainer" class="input-container" style="display: none;">
+                                <input type="email" id="emailInput" placeholder="Enter email address" />
+                                <button id="confirmEmailBtn" class="confirm-btn">Send</button>
                             </div>
-                            <input type="file" id="fileInput" multiple accept="image/*,.pdf" hidden>
+                        </div>
+                        
+                        <div class="export-option">
+                            <button id="exportTextBtn" class="export-option-btn">
+                                <i class="fas fa-comment-alt"></i>
+                                Export to Phone Number
+                            </button>
+                            <div id="textInputContainer" class="input-container" style="display: none;">
+                                <input type="tel" id="phoneInput" placeholder="Enter phone number" />
+                                <button id="confirmTextBtn" class="confirm-btn">Send</button>
+                            </div>
+                        </div>
+                        
+                        <div class="export-option">
+                            <button id="exportFileBtn" class="export-option-btn">
+                                <i class="fas fa-file-pdf"></i>
+                                Export to PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Organized Images without Tip -->
+        <div id="organized-without-tip-tab" class="tab-content">
+            <h1>Organized Images without Tip</h1>
+            
+            <div class="organized-controls">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filterFieldNoTip">Filter by:</label>
+                        <select id="filterFieldNoTip">
+                            <option value="customer_name">Customer Name</option>
+                            <option value="payment_type">Payment Type</option>
+                            <option value="date">Date</option>
+                            <option value="amount">Amount</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filterValueNoTip">Value:</label>
+                        <input type="text" id="filterValueNoTip" placeholder="Filter value">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filterSortOrderNoTip">Order:</label>
+                        <select id="filterSortOrderNoTip">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-buttons">
+                        <button id="applyFilterBtnNoTip" class="btn-secondary">Apply Filter</button>
+                        <button id="clearFilterBtnNoTip" class="btn-secondary">Clear</button>
+                    </div>
+                </div>
+                
+                <div class="view-controls">
+                    <button id="gridViewBtnNoTip" class="btn-view active">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button id="slideshowViewBtnNoTip" class="btn-view">
+                        <i class="fas fa-images"></i> Slideshow
+                    </button>
+                    <button id="exportPdfBtnNoTip" class="btn-secondary">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+            
+            <div id="organizedGridNoTip" class="organized-grid"></div>
+        </div>
+        
+        <!-- Tab: File Organizer -->
+        <div id="file-organizer-tab" class="tab-content">
+            <h1>File Organizer</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Receipt Images</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-uploader">
+                        <div id="fileOrganizerDropArea" class="drop-area">
+                            <div class="drop-message">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop receipt images here or click to browse</p>
+                                <input type="file" id="fileOrganizerInput" accept="image/*,.pdf" multiple>
+                            </div>
+                        </div>
+                        
+                        <div class="option-buttons">
+                            <div class="epson-scanner">
+                                <button id="scanOrganizerBtn" class="btn-secondary">
+                                    <i class="fas fa-scanner"></i> Scan with Epson Scanner
+                                </button>
+                            </div>
+                            <div id="googleDriveOrganizerContainer" class="google-drive-container">
+                                <!-- Google Drive integration will be inserted here -->
+                            </div>
                         </div>
                         
                         <div class="file-list-container">
-                            <h3>Selected Files <span id="fileCount">(0)</span></h3>
-                            <div id="fileList" class="file-list"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Google Drive Integration Container -->
-                    <div id="googleDriveContainer" class="google-drive-container-wrapper"></div>
-                    
-                    <div class="controls">
-                        <div class="process-controls">
-                            <button id="processBtn" class="process-btn" disabled>Process Images</button>
-                        </div>
-                        <div class="requirements">
-                            <p><strong>Requirements:</strong> 3-100 images of receipts/checks</p>
-                            <p class="small-text"><strong>Extracts:</strong> date, time, customer name, check number, amount, tip, total, and signed status</p>
-                            <p class="small-text"><strong>Supported formats:</strong> JPG, PNG, GIF, BMP, PDF</p>
-                        </div>
-                    </div>
-                    
-                    <div class="results-section" id="resultsSection">
-                        <h2>Results</h2>
-                        <div class="progress-container" id="progressContainer">
-                            <div class="progress-bar" id="progressBar"></div>
-                        </div>
-                        <div class="countdown-container" id="countdownContainer">
-                            <div class="countdown-label">Estimated time remaining:</div>
-                            <div class="countdown-timer" id="countdownTimer">--:--</div>
-                        </div>
-                        <div class="results-container">
-                            <div class="table-side" style="flex: 1; width: 100%;">
-                                <div class="table-header" style="background-color: var(--primary-orange); color: white;">
-                                    <h3 style="color: white;">Table View</h3>
-                                    <div class="table-controls">
-                                        <button id="exportCsvBtn" class="export-btn">Export CSV</button>
-                                        <button id="posExportBtn" class="export-btn pos-export-btn" disabled>Export to POS</button>
-                                        <div class="sort-controls">
-                                            <select id="sortField" class="sort-select">
-                                                <option value="customer_name">Customer Name</option>
-                                                <option value="check_number">Check #</option>
-                                                <option value="amount" selected>Check Amount</option>
-                                                <option value="payment_type">Payment Type</option>
-                                                <option value="time">Closing Time</option>
-                                                <option value="total">Check Total</option>
-                                                <option value="tip">Tip</option>
-                                            </select>
-                                            <select id="sortOrder" class="sort-select">
-                                                <option value="asc">Ascending</option>
-                                                <option value="desc">Descending</option>
-                                            </select>
-                                            <button id="sortBtn" class="sort-btn">Sort</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="table-container" style="max-height: 600px;">
-                                    <table id="dataTable" class="data-table">
-                                        <thead>
-                                            <tr style="background-color: #f5f7fa;">
-                                                <th width="20%">Customer Name</th>
-                                                <th width="10%">Check #</th>
-                                                <th width="15%">Check Amount</th>
-                                                <th width="15%">Payment Type</th>
-                                                <th width="15%">Closing Time</th>
-                                                <th width="15%">Check Total</th>
-                                                <th width="10%">Tip</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tableBody">
-                                            <!-- Table rows will be added dynamically -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="file-list-header">
+                                <h3>Uploaded Files <span id="fileOrganizerCount">(0)</span></h3>
+                            </div>
+                            <div id="fileOrganizerList" class="file-list"></div>
+                            <div class="process-button-container">
+                                <button id="organizeBtn" class="btn-primary" disabled>Organize 0 Files</button>
                             </div>
                         </div>
-                        
-                        <!-- POS Integration Section -->
-                        <div class="pos-integration-section" id="posIntegrationContainer">
-                            <h3>POS Integration</h3>
-                            <div class="pos-controls">
-                                <div class="pos-select-container">
-                                    <label for="posSystemSelect">POS System:</label>
-                                    <select id="posSystemSelect" class="pos-select">
-                                        <!-- Options will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="organizerResultsSection" class="results-section" style="display: none;">
+                <h2>Organizing Results</h2>
+                
+                <div class="progress-container">
+                    <div id="organizerProgressBar" class="progress-bar"></div>
+                    <div id="organizerCountdownTimer" class="countdown-timer"></div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab-header">
+                        <div class="tab-btn active" data-tab="organizerTableView">Table View</div>
+                        <div class="tab-btn" data-tab="organizerJsonView">JSON View</div>
+                    </div>
+                    
+                    <div class="tab-content-container">
+                        <div id="organizerTableView" class="tab-pane active">
+                            <div class="table-controls">
+                                <div class="sort-controls">
+                                    <label for="organizerSortField">Sort by:</label>
+                                    <select id="organizerSortField">
+                                        <option value="customer_name">Customer Name</option>
+                                        <option value="amount">Amount</option>
+                                        <option value="date">Date</option>
                                     </select>
+                                    <select id="organizerSortOrder">
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                    <button id="organizerSortBtn" class="btn-secondary">Sort</button>
                                 </div>
-                            </div>
-                            <div id="posDataPreview" class="pos-data-preview">
-                                <!-- POS data preview will be displayed here -->
-                                <div class="empty-state">
-                                    <p>Process images to see POS data preview</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-                
-                <!-- File Organizer Tab -->
-                <main id="file-organizer-tab" class="tab-content">
-                    <!-- Content for file organizer tab -->
-                    <div class="section-description">
-                        <h2>File Organizer</h2>
-                        <p>Upload and organize your files in a structured format. This tool helps you manage and categorize your documents for better accessibility.</p>
-                    </div>
-                    <!-- Rest of file organizer tab content -->
-                </main>
-                
-                <!-- Organized Tab -->
-                <main id="organized-tab" class="tab-content">
-                    <div class="section-description">
-                        <h2>Organized Images</h2>
-                        <p>View and manage your processed images with tip information. Filter, sort, and export your data in various formats.</p>
-                    </div>
-                    
-                    <div class="filter-controls">
-                        <div class="filter-group">
-                            <select id="filterField" class="filter-select">
-                                <option value="customer_name">Customer Name</option>
-                                <option value="check_number">Check Number</option>
-                                <option value="amount">Amount</option>
-                                <option value="payment_type">Payment Type</option>
-                                <option value="time">Time</option>
-                                <option value="total">Total</option>
-                                <option value="tip">Tip</option>
-                            </select>
-                            <input type="text" id="filterValue" class="filter-input" placeholder="Filter value...">
-                            <select id="filterSortOrder" class="filter-select">
-                                <option value="asc">Ascending</option>
-                                <option value="desc">Descending</option>
-                            </select>
-                            <button id="applyFilterBtn" class="filter-btn">Apply Filter</button>
-                            <button id="clearFilterBtn" class="clear-btn">Clear</button>
-                        </div>
-                        <div class="view-toggle">
-                            <button id="gridViewBtn" class="view-btn active">Grid View</button>
-                            <button id="slideshowViewBtn" class="view-btn">Slideshow</button>
-                            <button id="exportSlideshowBtn" class="export-btn">Export Slideshow</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Export Options Modal -->
-                    <div id="exportOptionsModal" class="modal" style="display: none;">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h2>Export Options</h2>
-                                <span class="close-modal">&times;</span>
-                            </div>
-                            <div class="modal-body">
-                                <div class="export-option">
-                                    <button id="exportEmailBtn" class="export-option-btn">
-                                        <i class="fas fa-envelope"></i>
-                                        Export to Email
-                                    </button>
-                                    <div id="emailInputContainer" class="input-container" style="display: none;">
-                                        <input type="email" id="emailInput" placeholder="Enter your email" value="">
-                                        <button id="confirmEmailBtn" class="confirm-btn">Confirm</button>
-                                    </div>
-                                </div>
-                                
-                                <div class="export-option">
-                                    <button id="exportTextBtn" class="export-option-btn">
-                                        <i class="fas fa-sms"></i>
-                                        Export to Text
-                                    </button>
-                                    <div id="textInputContainer" class="input-container" style="display: none;">
-                                        <input type="tel" id="phoneInput" placeholder="Enter your phone number" value="">
-                                        <button id="confirmTextBtn" class="confirm-btn">Confirm</button>
-                                    </div>
-                                </div>
-                                
-                                <div class="export-option">
-                                    <button id="exportPdfBtn" class="export-option-btn">
-                                        <i class="fas fa-file-pdf"></i>
-                                        Export to PDF
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Grid for organized images -->
-                    <div id="organizedGrid" class="organized-grid">
-                        <!-- Grid items will be added dynamically -->
-                    </div>
-                </main>
-                
-                <!-- Organized Without Tip Tab -->
-                <main id="organized-without-tip-tab" class="tab-content">
-                    <div class="section-description">
-                        <h2>Organized Images without Tip</h2>
-                        <p>View and manage your processed images without tip information. Filter, sort, and export your data in various formats.</p>
-                    </div>
-                    <!-- Rest of organized without tip tab content -->
-                </main>
-                
-                <!-- Tips History Tab -->
-                <main id="tips-history-tab" class="tab-content">
-                    <div class="section-description">
-                        <h2>Tips History</h2>
-                        <p>View your historical tip data organized by date and time. This feature saves your processed receipts for easy reference and reporting.</p>
-                    </div>
-                    
-                    <div id="tipsHistoryContainer" class="tips-history-container">
-                        <div class="tips-history-header">
-                            <div class="tips-history-title">Tips Processing History</div>
-                            <div class="tips-history-actions">
-                                <button id="exportHistoryBtn" class="tips-history-btn export-history-btn">
-                                    <i class="fas fa-file-export"></i> Export History
+                                <button id="organizerExportCsvBtn" class="btn-secondary">
+                                    <i class="fas fa-file-csv"></i> Export CSV
                                 </button>
-                                <button id="clearHistoryBtn" class="tips-history-btn clear-history-btn">
-                                    <i class="fas fa-trash-alt"></i> Clear History
-                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Customer Name</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Check #</th>
+                                            <th>Amount</th>
+                                            <th>Total</th>
+                                            <th>Payment Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="organizerTableBody"></tbody>
+                                </table>
                             </div>
                         </div>
                         
-                        <div id="tipsHistoryEmptyState" class="tips-history-empty" style="display: none;">
-                            <i class="fas fa-history"></i>
-                            <p>No tips history available yet.</p>
-                            <p>Process receipts in the Tip Analyzer tab to start building your history.</p>
-                        </div>
-                        
-                        <div id="tipsHistoryList" class="tips-history-list">
-                            <!-- History items will be added dynamically -->
+                        <div id="organizerJsonView" class="tab-pane">
+                            <div class="json-view-header">
+                                <button id="organizerCopyBtn" class="btn-secondary">
+                                    <i class="fas fa-copy"></i> Copy JSON
+                                </button>
+                            </div>
+                            <pre id="organizerJsonOutput" class="json-output"></pre>
                         </div>
                     </div>
-                </main>
-                
-                <!-- Epson Scanner Tab -->
-                <main id="epson-scanner-tab" class="tab-content">
-                    <div class="section-description">
-                        <h2>Super Scanner!</h2>
-                        <p>Connect to your scanner to directly scan receipts and process them in TipEnter.</p>
-                    </div>
-                    <!-- Rest of epson scanner tab content -->
-                </main>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Slideshow Modal -->
-    <div id="slideshowModal" class="slideshow-modal">
-        <div class="slideshow-modal-content">
-            <div class="slideshow-modal-header">
-                <h2>Receipt Images</h2>
-                <span class="slideshow-close">&times;</span>
+        
+        <!-- Tab: Tip History -->
+        <div id="tip-history-tab" class="tab-content">
+            <div id="tipsHistoryContainer"></div>
+        </div>
+        
+        <!-- Slideshow Modal -->
+        <div id="slideshowModal" class="slideshow-modal">
+            <span class="slideshow-close">&times;</span>
+            <div class="slideshow-nav">
+                <button id="prevSlideBtn" class="slide-nav-btn"><i class="fas fa-chevron-left"></i></button>
+                <div id="slideCounter" class="slide-counter"></div>
+                <button id="nextSlideBtn" class="slide-nav-btn"><i class="fas fa-chevron-right"></i></button>
             </div>
-            <div class="slideshow-controls">
-                <button id="prevSlideBtn" class="slide-nav-btn">Previous</button>
-                <div id="slideCounter">1 / 10</div>
-                <button id="nextSlideBtn" class="slide-nav-btn">Next</button>
-            </div>
-            <div id="slideshowImageContainer" class="slideshow-image-container">
-                <!-- Slideshow content will be added dynamically -->
+            <div id="slideshowImageContainer" class="slideshow-image-container"></div>
+        </div>
+        
+        <!-- Celebration Popup -->
+        <div id="celebrationPopup" class="celebration-popup">
+            <div class="celebration-content">
+                <h2>Tip Analysis Complete!</h2>
+                <div class="tip-amount">Total Tips: <span id="tipAmount">$0.00</span></div>
+                <div class="fireworks"></div>
+                <button id="closeCelebrationBtn" class="btn-primary">Great!</button>
             </div>
         </div>
-    </div>
+    </main>
     
     <footer>
-        <div class="footer-content">
-            <div class="footer-info">
-                <p>&copy; 2025 TipEnter. All rights reserved.</p>
-                <p>Version 1.5.0</p>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">TipEnter</div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="/about">About</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Service</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2025 TipEnter. All rights reserved.
             </div>
         </div>
     </footer>
     
-    <!-- Main JavaScript -->
     <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/components/authControls.js"></script>
+    <script type="module" src="js/components/authStateMonitor.js"></script>
 </body>
 </html>

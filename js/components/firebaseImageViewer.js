@@ -4,6 +4,9 @@
  */
 import { getUserImages, getRestaurantImages } from '../services/firebaseStorageService.js';
 import { auth } from '../firebase-config.js';
+
+// Detect if running on localhost
+const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 import { showNotification } from '../utils/uiUtils.js';
 
 export class FirebaseImageViewer {

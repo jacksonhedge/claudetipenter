@@ -1,0 +1,58 @@
+/**
+ * Authentication Controls Styles
+ * Styles for auth-related buttons and controls
+ */
+
+/* Sign Out Button */
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-left: 10px;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-danger:active {
+  transform: translateY(1px);
+}
+
+.btn-danger i {
+  margin-right: 6px;
+}
+
+/* Profile footer with sign out button */
+.profile-footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .profile-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .btn-danger {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .btn-primary {
+    width: 100%;
+  }
+}

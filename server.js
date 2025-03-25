@@ -555,7 +555,7 @@ async function processWithClaudeAPI(base64Files, mode = 'tip_analyzer') {
 }
 
 // Start the server
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Open http://localhost:${PORT} in your browser to use the application`);

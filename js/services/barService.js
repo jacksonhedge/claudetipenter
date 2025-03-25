@@ -163,7 +163,18 @@ class BarService {
      */
     getDefaultBars() {
         return [
-            { name: "Cork Harbour Pub", location: "Pittsburgh, PA", type: "Pub" },
+            { 
+                name: "Cork Harbour Pub", 
+                location: "Pittsburgh, PA", 
+                type: "Pub",
+                pos_system: "Lightspeed",
+                manager: "Tanner",
+                staff: [
+                    { name: "Jackson Fitzgerald", position: "Bartender", email: "jackson@example.com" }
+                ],
+                description: "Irish pub serving craft beers and traditional pub food",
+                hours: "Mon-Fri: 3pm-2am, Sat-Sun: 12pm-2am"
+            },
             { name: "Derby on Butler", location: "Pittsburgh, PA", type: "Bar" },
             { name: "McFaddens", location: "Pittsburgh, PA", type: "Bar & Restaurant" },
             { name: "Tequila Cowboy", location: "Pittsburgh, PA", type: "Bar" },
@@ -174,6 +185,179 @@ class BarService {
             { name: "William Penn Tavern", location: "Pittsburgh, PA", type: "Tavern" },
             { name: "Froggy's", location: "Pittsburgh, PA", type: "Bar" }
         ];
+    }
+    
+    /**
+     * Create a user-bar association in Firebase
+     * @param {string} userId - The user ID
+     * @param {string} barId - The bar ID
+     * @param {string} role - The user's role (bartender, manager, etc.)
+     * @returns {Promise<void>}
+     */
+    async associateUserWithBar(userId, barId, role) {
+        try {
+            const association = {
+                user_id: userId,
+                bar_id: barId,
+                role: role,
+                created_at: new Date().toISOString()
+            };
+            
+            await setDoc(doc(db, this.userBarsCollection, `${userId}_${barId}`), association);
+            console.log(`User ${userId} associated with bar ${barId} as ${role}`);
+        } catch (error) {
+            console.error('Error associating user with bar:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get bar details including staff information
+     * @param {string} barId - The bar ID
+     * @returns {Promise<Object>} - Promise resolving to bar details
+     */
+    async getBarDetails(barId) {
+        try {
+            const barDoc = await getDoc(doc(db, this.barsCollection, barId));
+            
+            if (!barDoc.exists()) {
+                throw new Error(`Bar with ID ${barId} not found`);
+            }
+            
+            const barData = barDoc.data();
+            
+            // Get users associated with this bar
+            const userBarsSnapshot = await getDocs(collection(db, this.userBarsCollection));
+            const barStaff = [];
+            
+            userBarsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.bar_id === barId) {
+                    barStaff.push({
+                        id: data.user_id,
+                        role: data.role
+                    });
+                }
+            });
+            
+            return {
+                id: barDoc.id,
+                ...barData,
+                staff: barStaff
+            };
+        } catch (error) {
+            console.error('Error getting bar details:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Reset the database with enhanced bar data
+     * This function adds detailed information including POS systems and staff
+     * @returns {Promise<void>}
+     */
+    async resetWithEnhancedData() {
+        try {
+            // Get all existing bars
+            const barsSnapshot = await getDocs(collection(db, this.barsCollection));
+            
+            // Delete all existing bars
+            const deletePromises = [];
+            barsSnapshot.forEach(document => {
+                deletePromises.push(deleteDoc(doc(db, this.barsCollection, document.id)));
+            });
+            
+            // Wait for all deletes to complete
+            await Promise.all(deletePromises);
+            
+            // Add detailed bar data
+            const enhancedBars = [
+                { 
+                    name: "Cork Harbour Pub", 
+                    location: "Pittsburgh, PA", 
+                    type: "Pub",
+                    pos_system: "Lightspeed",
+                    manager: "Tanner",
+                    phone: "412-555-1234",
+                    address: "123 Butler St, Pittsburgh, PA 15201",
+                    description: "Irish pub serving craft beers and traditional pub food",
+                    hours: "Mon-Fri: 3pm-2am, Sat-Sun: 12pm-2am",
+                    capacity: 120,
+                    staff: [
+                        { name: "Jackson Fitzgerald", position: "Bartender", email: "jackson@example.com" }
+                    ]
+                },
+                { 
+                    name: "Derby on Butler", 
+                    location: "Pittsburgh, PA", 
+                    type: "Bar",
+                    pos_system: "Toast",
+                    manager: "Sarah Johnson"
+                },
+                { 
+                    name: "McFaddens", 
+                    location: "Pittsburgh, PA", 
+                    type: "Bar & Restaurant",
+                    pos_system: "Square" 
+                },
+                { 
+                    name: "Tequila Cowboy", 
+                    location: "Pittsburgh, PA", 
+                    type: "Bar",
+                    pos_system: "Clover" 
+                }
+            ];
+            
+            // Add enhanced bars to Firebase
+            for (const bar of enhancedBars) {
+                const staffData = bar.staff ? [...bar.staff] : [];
+                delete bar.staff; // Remove staff from bar object
+                
+                // Add the bar
+                const barRef = await addDoc(collection(db, this.barsCollection), bar);
+                
+                // If there are staff members, create user-bar associations
+                if (staffData.length > 0) {
+                    for (const staff of staffData) {
+                        // Create or update user document
+                        const userDoc = {
+                            name: staff.name,
+                            email: staff.email || `${staff.name.toLowerCase().replace(' ', '.')}@example.com`,
+                            position: staff.position,
+                            created_at: new Date().toISOString()
+                        };
+                        
+                        // Generate a deterministic user ID
+                        const userId = `user_${staff.name.toLowerCase().replace(' ', '_')}`;
+                        await setDoc(doc(db, 'users', userId), userDoc);
+                        
+                        // Create user-bar association
+                        await this.associateUserWithBar(userId, barRef.id, staff.position.toLowerCase());
+                    }
+                }
+                
+                // Add manager if specified
+                if (bar.manager) {
+                    const managerId = `user_${bar.manager.toLowerCase().replace(' ', '_')}`;
+                    const managerDoc = {
+                        name: bar.manager,
+                        email: `${bar.manager.toLowerCase().replace(' ', '.')}@example.com`,
+                        position: 'Manager',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    await setDoc(doc(db, 'users', managerId), managerDoc);
+                    await this.associateUserWithBar(managerId, barRef.id, 'manager');
+                }
+            }
+            
+            console.log('Enhanced bar data added successfully');
+            
+            // Reload bars
+            await this.loadBars();
+        } catch (error) {
+            console.error('Error resetting with enhanced data:', error);
+        }
     }
 }
 
