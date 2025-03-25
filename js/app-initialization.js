@@ -11,6 +11,7 @@ import { initGoogleDriveService } from './services/googleDriveService.js';
 import ProfileModal from './components/profileModal.js';
 import { isAuthenticated, getCurrentUser } from './services/authService.js';
 import { showNotification } from './utils/uiUtils.js';
+import { initializeFirebase } from './firebase-init.js';
 
 /**
  * Initialize the app in phases to ensure component dependencies are met
@@ -19,13 +20,20 @@ export async function initializeApp() {
     console.log('🚀 Starting application initialization...');
 
     try {
+        // Phase 0: Initialize Firebase and ensure collections exist
+        console.log('🔍 Phase 0: Initializing Firebase...');
+        await initializeFirebase();
+        
         // Phase 1: Initialize core authentication and user profile
+        console.log('🔍 Phase 1: Initializing authentication...');
         await initializeAuth();
         
         // Phase 2: Initialize main UI components
+        console.log('🔍 Phase 2: Initializing UI components...');
         await initializeUIComponents();
         
         // Phase 3: Initialize optional components
+        console.log('🔍 Phase 3: Initializing optional components...');
         await initializeOptionalComponents();
         
         console.log('✅ Application initialization complete');

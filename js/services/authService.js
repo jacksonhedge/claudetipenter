@@ -178,7 +178,14 @@ export async function login(email, password, workplaceId = null) {
                 userData.workplaceName = getWorkplaceNameById(workplaceId);
             }
             
-            await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+            try {
+                // Try to write to Firestore
+                await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+                console.log('✅ Created new user document in Firestore:', firebaseUser.uid);
+            } catch (error) {
+                console.error('❌ Failed to create user document in Firestore:', error);
+                // Continue despite the error - we'll use the userData anyway
+            }
             
             return { id: firebaseUser.uid, ...userData };
         } else {
@@ -266,19 +273,27 @@ export async function signup(name, email, password, role, workplaceId, position,
             is_active: true
         };
         
-        await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-        
-        // Create workplace relationship in Firestore
-        const workplaceRelationship = {
-            user_id: firebaseUser.uid,
-            workplace_id: workplaceId,
-            started_working: new Date().toISOString(),
-            position: position,
-            current_workplace: true,
-            permission_tier: role === 'manager' ? 'admin' : 'user'
-        };
-        
-        await setDoc(doc(db, 'user_workplaces', `${firebaseUser.uid}_${workplaceId}`), workplaceRelationship);
+        try {
+            // Create user document
+            await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+            console.log('✅ Created new user document in Firestore:', firebaseUser.uid);
+            
+            // Create workplace relationship in Firestore
+            const workplaceRelationship = {
+                user_id: firebaseUser.uid,
+                workplace_id: workplaceId,
+                started_working: new Date().toISOString(),
+                position: position,
+                current_workplace: true,
+                permission_tier: role === 'manager' ? 'admin' : 'user'
+            };
+            
+            await setDoc(doc(db, 'user_workplaces', `${firebaseUser.uid}_${workplaceId}`), workplaceRelationship);
+            console.log('✅ Created workplace relationship in Firestore');
+        } catch (firestoreError) {
+            console.error('❌ Error creating Firestore documents:', firestoreError);
+            // Continue despite the error - we'll use the userData anyway
+        }
         
         return { id: firebaseUser.uid, ...userData };
     } catch (error) {
