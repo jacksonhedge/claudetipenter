@@ -37,58 +37,28 @@ import SubscriptionService from './services/subscriptionService.js';
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
+import { startAppInitialization } from './app-initialization.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements - Navigation
     const navItems = document.querySelectorAll('.nav-item');
     const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
     const tabContents = document.querySelectorAll('.tab-content');
-    const authLink = document.getElementById('authLink');
     
-    // Check if user is authenticated and update UI accordingly
-    function updateAuthUI() {
-        if (isAuthenticated()) {
-            const user = getCurrentUser();
-            if (authLink) {
-                authLink.textContent = 'Logout';
-                authLink.classList.add('logout');
-                authLink.href = '#';
-                
-                // Create user info element if it doesn't exist
-                let userInfoEl = document.querySelector('.user-info');
-                if (!userInfoEl) {
-                    userInfoEl = document.createElement('div');
-                    userInfoEl.className = 'user-info';
-                    authLink.parentNode.insertBefore(userInfoEl, authLink);
-                }
-                
-                // Update user info
-                userInfoEl.innerHTML = `Welcome, <span class="user-name">${user.name}</span>`;
-            }
-        } else {
-            if (authLink) {
-                authLink.textContent = 'Login';
-                authLink.classList.remove('logout');
-                authLink.href = 'login.html';
-                
-                // Remove user info element if it exists
-                const userInfoEl = document.querySelector('.user-info');
-                if (userInfoEl) {
-                    userInfoEl.remove();
-                }
-            }
-        }
-    }
-    
-    // Initialize auth UI
-    updateAuthUI();
+    // Start app initialization - This handles auth UI and component init with better error handling
+    startAppInitialization();
     
     // Add event listener for auth link
+    const authLink = document.getElementById('authLink');
     if (authLink) {
         authLink.addEventListener('click', (e) => {
             if (isAuthenticated()) {
                 e.preventDefault();
                 logout();
-                updateAuthUI();
+                // Use our new initialization module for UI update
+                import('./app-initialization.js').then(module => {
+                    module.initializeApp();
+                });
             }
         });
     }
