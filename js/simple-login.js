@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Redirect to home page
             setTimeout(() => {
-                window.location.href = 'scanner';
+                window.location.href = 'scanner.html';
             }, 500);
         });
     } else {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Redirect to home page
             setTimeout(() => {
-                window.location.href = 'scanner';
+                window.location.href = 'scanner.html';
             }, 500);
         });
     }
