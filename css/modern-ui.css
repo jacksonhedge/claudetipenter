@@ -1,9 +1,9 @@
 /* Modern UI with sidebar navigation */
 :root {
-    --primary-color: #FF5D73; /* Vibrant pink/red */
+    --primary-color: #F76E11; /* Vibrant orange */
     --secondary-color: #FFD166; /* Bright yellow */
-    --accent-color: #06D6A0; /* Bright teal */
-    --dark-color: #1A1A2E; /* Deep blue */
+    --accent-color: #FF5757; /* Bright red */
+    --dark-color: #2A2A45; /* Deep blue */
     --light-color: #FFFBFA; /* Off-white */
     --sidebar-width: 250px;
     --header-height: 60px;
@@ -87,7 +87,7 @@ header {
 }
 
 .profile-btn:hover {
-    background-color: #ff3b57 !important;
+    background-color: #e76006 !important;
     transform: scale(1.05) !important;
 }
 
@@ -95,7 +95,7 @@ header {
 .sidebar {
     width: var(--sidebar-width) !important;
     height: 100vh !important;
-    background: linear-gradient(to bottom, var(--dark-color), #2A2A45) !important;
+    background: linear-gradient(to bottom, var(--dark-color), #383863) !important;
     position: fixed !important;
     top: var(--header-height) !important;
     left: 0 !important;
@@ -221,7 +221,7 @@ header {
 }
 
 .sidebar-signout-btn:hover {
-    background-color: #ff3b57 !important;
+    background-color: #e76006 !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
 }
@@ -309,8 +309,8 @@ main.container {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: #ff3b57 !important;
-    box-shadow: 0 4px 10px rgba(255, 93, 115, 0.4) !important;
+    background-color: #e76006 !important;
+    box-shadow: 0 4px 10px rgba(247, 110, 17, 0.4) !important;
     transform: translateY(-2px) !important;
 }
 
@@ -326,8 +326,8 @@ main.container {
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: #05b586 !important;
-    box-shadow: 0 4px 10px rgba(6, 214, 160, 0.4) !important;
+    background-color: #e74c3c !important;
+    box-shadow: 0 4px 10px rgba(255, 87, 87, 0.4) !important;
     transform: translateY(-2px) !important;
 }
 
@@ -345,7 +345,7 @@ main.container {
 .btn-outline:hover {
     background-color: var(--primary-color) !important;
     color: white !important;
-    box-shadow: 0 4px 10px rgba(255, 93, 115, 0.3) !important;
+    box-shadow: 0 4px 10px rgba(247, 110, 17, 0.3) !important;
 }
 
 /* File Uploader */
@@ -367,7 +367,7 @@ main.container {
 
 .drop-area:hover, .drop-area.active {
     border-color: var(--primary-color) !important;
-    background-color: #f0f7fb !important;
+    background-color: #fff8e8 !important;
     transform: translateY(-5px) !important;
 }
 

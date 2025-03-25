@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('You have been signed out successfully.');
             
             // Redirect to login page
-            window.location.href = 'login.html';
+            window.location.href = 'login';
         });
     }
 });
