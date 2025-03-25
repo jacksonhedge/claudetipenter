@@ -71,7 +71,7 @@
                                 <a href="#">Forgot password?</a>
                             </div>
                         </div>
-                        <button type="submit" class="auth-btn">Login</button>
+                        <button type="button" class="auth-btn">Login</button>
                     </form>
                     
                     <div class="divider">
@@ -187,25 +187,7 @@
         <p>Made with ❤️ in Pittsburgh</p>
     </footer>
     
-    <!-- Import Firebase from firebase-config.js -->
-    <script type="module" src="js/firebase-config.js"></script>
-    
-    <!-- Main login script -->
-    <script type="module">
-        // Import the auth state monitor and other authentication components
-        import { initAuthStateMonitor } from './js/components/authStateMonitor.js';
-        
-        // Initialize auth state monitor
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                console.log('Initializing authentication on login page...');
-                initAuthStateMonitor();
-            } catch (error) {
-                console.error('Error initializing auth:', error);
-            }
-        });
-    </script>
-    <script type="module" src="js/login.js"></script>
-    <script type="module" src="js/components/authControls.js"></script>
+    <!-- Simplified login script -->
+    <script src="js/simple-login.js"></script>
 </body>
 </html>

@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/components/google-drive.css">
     <link rel="stylesheet" href="css/auth-controls.css">
+    <link rel="stylesheet" href="css/style-fixes.css">
+    <link rel="stylesheet" href="css/modern-ui.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
@@ -71,26 +73,33 @@
         </div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item active" data-tab="tip-analyzer-tab">
-                <i class="fas fa-calculator"></i> Tip Analyzer
+                <i class="fas fa-calculator"></i> <span>Tip Analyzer</span>
             </li>
             <li class="sidebar-menu-item" data-tab="organized-tab">
-                <i class="fas fa-th"></i> Organized Images
+                <i class="fas fa-th"></i> <span>Organized Images</span>
             </li>
             <li class="sidebar-menu-item" data-tab="organized-without-tip-tab">
-                <i class="fas fa-image"></i> Without Tip
+                <i class="fas fa-image"></i> <span>Without Tip</span>
             </li>
             <li class="sidebar-menu-item" data-tab="tip-history-tab">
-                <i class="fas fa-history"></i> Tip History
+                <i class="fas fa-history"></i> <span>Tip History</span>
             </li>
             <li class="sidebar-menu-item" data-tab="file-organizer-tab">
-                <i class="fas fa-folder-open"></i> File Organizer
-            </li>
-            <li class="sidebar-menu-item auth-link">
-                <a href="login.html" id="authLinkSidebar">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </a>
+                <i class="fas fa-folder-open"></i> <span>File Organizer</span>
             </li>
         </ul>
+        
+        <!-- Profile section in sidebar -->
+        <div class="sidebar-profile" id="sidebarProfile">
+            <div class="sidebar-profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="sidebar-profile-name" id="sidebarProfileName">User Name</div>
+            <div class="sidebar-profile-email" id="sidebarProfileEmail">user@example.com</div>
+            <button class="sidebar-signout-btn" id="sidebarSignoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
     </div>
     
     <!-- Main container -->
@@ -609,8 +618,40 @@
         </div>
     </footer>
     
-    <script type="module" src="js/app.js"></script>
-    <script type="module" src="js/components/authControls.js"></script>
-    <script type="module" src="js/components/authStateMonitor.js"></script>
+    <!-- Simple Auth Check to prevent redirect issues -->
+    <script>
+        // Check if the user is logged in based on localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Checking authentication state...');
+            
+            // Check for user data in localStorage
+            const userId = localStorage.getItem('user_id');
+            const userEmail = localStorage.getItem('user_email');
+            const userRole = localStorage.getItem('user_role');
+            
+            if (!userId || !userEmail) {
+                console.log('User not logged in, redirecting to login page');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            console.log('User is logged in:', userEmail);
+            
+            // Display user info in the profile button if it exists
+            const profileBtn = document.getElementById('profileBtn');
+            if (profileBtn) {
+                profileBtn.title = `Logged in as ${userEmail}`;
+            }
+            
+            // Continue loading the app
+            const appScript = document.createElement('script');
+            appScript.type = 'module';
+            appScript.src = 'js/app.js';
+            document.body.appendChild(appScript);
+        });
+    </script>
+    
+    <!-- Sidebar Profile Handler -->
+    <script src="js/sidebar-profile.js"></script>
 </body>
 </html>
