@@ -107,28 +107,16 @@ document.addEventListener('DOMContentLoaded', () => {
         tipsHistory.loadSampleData();
     }
     
-    // Initialize Components
-    let fileUploader;
-    // Check if required elements exist before initializing FileUploader
-    if (document.getElementById('dropArea') && 
-        document.getElementById('fileInput') && 
-        document.getElementById('fileList')) {
-        fileUploader = new FileUploader({
-            dropAreaId: 'dropArea',
-            fileInputId: 'fileInput',
-            fileListId: 'fileList',
-            fileCountId: 'fileCount',
-            processBtnId: 'processBtn',
-            onFileCountChange: (count) => {
-                // Update the process button text based on file count
-                if (processBtn) {
-                    processBtn.textContent = `Process ${count} Image${count !== 1 ? 's' : ''}`;
-                }
-            }
-        });
-    } else {
-        console.log('Required elements for FileUploader not found');
-    }
+    // Component references - will be initialized by app-initialization.js
+    let fileUploader = window.appComponents?.fileUploader;
+    
+    // Define a function to get the FileUploader instance whenever it's ready
+    const getFileUploader = () => {
+        if (window.appComponents?.fileUploader) {
+            return window.appComponents.fileUploader;
+        }
+        return null;
+    };
     
     // Initialize File Organizer Uploader
     const fileOrganizerUploader = new FileUploader({

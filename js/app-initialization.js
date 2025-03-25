@@ -163,6 +163,11 @@ async function initializeUIComponents() {
  * Initialize File Uploader with retry and polling for DOM elements
  */
 function initializeFileUploader() {
+    // Initialize global app components container if it doesn't exist
+    if (!window.appComponents) {
+        window.appComponents = {};
+    }
+    
     // Try to find required elements
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
@@ -186,10 +191,15 @@ function initializeFileUploader() {
             }
         });
         
-        console.log('✅ File Uploader initialized');
+        // Store the fileUploader instance in the global appComponents object
+        window.appComponents.fileUploader = fileUploader;
+        
+        console.log('✅ File Uploader initialized and stored in window.appComponents.fileUploader');
         
         // Initialize Epson Scanner with the FileUploader instance
         initializeEpsonScanner(fileUploader);
+        
+        return fileUploader;
     } else {
         // Elements not found, log which ones are missing
         const missing = [];
@@ -199,6 +209,8 @@ function initializeFileUploader() {
         
         console.warn(`⚠️ Some required elements for FileUploader not found: ${missing.join(', ')}`);
         console.warn('⚠️ FileUploader initialization skipped');
+        
+        return null;
     }
 }
 
