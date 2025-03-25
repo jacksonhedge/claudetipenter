@@ -54,11 +54,18 @@ document.addEventListener('DOMContentLoaded', () => {
         authLink.addEventListener('click', (e) => {
             if (isAuthenticated()) {
                 e.preventDefault();
-                logout();
-                // Use our new initialization module for UI update
-                import('./app-initialization.js').then(module => {
-                    module.initializeApp();
+                console.log('🔑 Logging out user...');
+                logout().then(() => {
+                    console.log('✅ User logged out successfully');
+                    window.location.href = 'login.html';
+                }).catch(error => {
+                    console.error('❌ Error logging out:', error);
+                    // Still redirect to login page even if there's an error
+                    window.location.href = 'login.html';
                 });
+            } else {
+                // If not authenticated, the link should navigate to login.html
+                console.log('🔑 Redirecting to login page...');
             }
         });
     }
