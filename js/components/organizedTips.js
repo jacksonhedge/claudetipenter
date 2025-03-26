@@ -28,6 +28,68 @@ class OrganizedTips {
                 console.log('Filter dropdown clicked');
             });
         });
+        
+        // Add event listeners for the view control buttons
+        this.gridViewBtn = document.getElementById('gridViewBtn');
+        this.slideshowViewBtn = document.getElementById('slideshowViewBtn');
+        this.exportSlideshowBtn = document.getElementById('exportSlideshowBtn');
+        this.exportPdfBtn = document.getElementById('exportPdfBtn');
+        
+        // Grid View button
+        if (this.gridViewBtn) {
+            this.gridViewBtn.addEventListener('click', () => {
+                console.log('Grid View button clicked');
+                // Set active state for this button
+                this.gridViewBtn.classList.add('active');
+                if (this.slideshowViewBtn) this.slideshowViewBtn.classList.remove('active');
+                
+                // Find the organizer grid component and trigger its grid view mode
+                const organizedGrid = document.getElementById('organizedGrid');
+                if (organizedGrid && organizedGrid.__component) {
+                    organizedGrid.__component.setViewMode('grid');
+                }
+            });
+        }
+        
+        // Slideshow View button
+        if (this.slideshowViewBtn) {
+            this.slideshowViewBtn.addEventListener('click', () => {
+                console.log('Slideshow View button clicked');
+                // Set active state for this button
+                this.slideshowViewBtn.classList.add('active');
+                if (this.gridViewBtn) this.gridViewBtn.classList.remove('active');
+                
+                // Find the organizer grid component and trigger its slideshow view mode
+                const organizedGrid = document.getElementById('organizedGrid');
+                if (organizedGrid && organizedGrid.__component) {
+                    organizedGrid.__component.setViewMode('slideshow');
+                }
+            });
+        }
+        
+        // Export Slideshow button
+        if (this.exportSlideshowBtn) {
+            this.exportSlideshowBtn.addEventListener('click', () => {
+                console.log('Export Slideshow button clicked');
+                // Dispatch a custom event to open the export options modal
+                const event = new CustomEvent('exportOptions:open', {
+                    detail: { source: 'slideshow' }
+                });
+                document.dispatchEvent(event);
+            });
+        }
+        
+        // Export PDF button
+        if (this.exportPdfBtn) {
+            this.exportPdfBtn.addEventListener('click', () => {
+                console.log('Export PDF button clicked');
+                // Find the organizer grid component and trigger its export PDF method
+                const organizedGrid = document.getElementById('organizedGrid');
+                if (organizedGrid && organizedGrid.__component && organizedGrid.__component.handleExportPdf) {
+                    organizedGrid.__component.handleExportPdf();
+                }
+            });
+        }
     }
     
     /**

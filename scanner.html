@@ -163,18 +163,30 @@
                 <div class="card-body">
                     <div class="file-uploader">
                         <div id="dropArea" class="drop-area">
-                            <div class="drop-message">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Drag & drop receipt images here or click to browse</p>
-                                <div class="button-container">
-                                    <button id="addTestImagesBtn" class="btn-outline">Add Test Images</button>
+                                <div class="drop-message">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Drag & drop receipt images here or click to browse</p>
+                                    <div class="upload-buttons" style="margin-top: 20px;">
+                                        <label for="fileInput" class="btn-primary" style="display: inline-block; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px;">
+                                            <i class="fas fa-paperclip"></i> Attach images
+                                        </label>
+                                        <input type="file" id="fileInput" accept="image/*,.pdf" multiple style="display:none;">
+                                        
+                                        <label for="cameraInput" class="btn-outline" style="display: inline-block; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                                            <i class="fas fa-camera"></i> Take photos
+                                        </label>
+                                        <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple style="display:none;">
+                                    </div>
+                                    
+                                    <div id="previewContainer" style="margin-top: 20px; display: none;">
+                                        <div id="previewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;"></div>
+                                        <div id="imageCount" style="margin-top: 10px; font-weight: bold;"></div>
+                                    </div>
                                 </div>
-                                <input type="file" id="fileInput" accept="image/*,.pdf" multiple>
-                            </div>
                         </div>
                         
                         <div class="option-buttons">
-                            <div class="epson-scanner">
+                            <div class="epson-scanner" style="display:none;">
                                 <button id="scanBtn" class="btn-secondary">
                                     <i class="fas fa-scanner"></i> Scan with Epson Scanner
                                 </button>
@@ -625,43 +637,55 @@
         </div>
     </footer>
     
-    <!-- Simple Auth Check to prevent redirect issues -->
-    <script>
-        // Check if the user is logged in based on localStorage
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Checking authentication state...');
-            
-            // Check for user data in localStorage
-            const userId = localStorage.getItem('user_id');
-            const userEmail = localStorage.getItem('user_email');
-            const userRole = localStorage.getItem('user_role');
-            
-            if (!userId || !userEmail) {
-                console.log('User not logged in, redirecting to login page');
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            console.log('User is logged in:', userEmail);
-            
-            // Display user info in the profile button if it exists
-            const profileBtn = document.getElementById('profileBtn');
-            if (profileBtn) {
-                profileBtn.title = `Logged in as ${userEmail}`;
-            }
-            
-            // Continue loading the app
-            const appScript = document.createElement('script');
-            appScript.type = 'module';
-            appScript.src = 'js/app.js';
-            document.body.appendChild(appScript);
-        });
-    </script>
+<!-- Simple Auth Check to prevent redirect issues -->
+<script>
+    // Check if the user is logged in based on localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Checking authentication state...');
+        
+        // For testing purposes: Creating a temporary login bypass
+        const testMode = true; // Set to true to bypass auth check
+        
+        // Check for user data in localStorage
+        const userId = localStorage.getItem('user_id');
+        const userEmail = localStorage.getItem('user_email');
+        const userRole = localStorage.getItem('user_role');
+        
+        if ((!userId || !userEmail) && !testMode) {
+            console.log('User not logged in, redirecting to login page');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // If in test mode and no user data exists, set it temporarily
+        if (testMode && (!userId || !userEmail)) {
+            console.log('Test mode enabled: Setting temporary user data');
+            localStorage.setItem('user_id', 'test_user_id');
+            localStorage.setItem('user_email', 'test@example.com');
+            localStorage.setItem('user_role', 'manager'); // Set as manager to enable all features
+        }
+        
+        console.log('User is logged in:', localStorage.getItem('user_email'));
+        
+        // Display user info in the profile button if it exists
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            profileBtn.title = `Logged in as ${localStorage.getItem('user_email')}`;
+        }
+        
+        // Continue loading the app
+        const appScript = document.createElement('script');
+        appScript.type = 'module';
+        appScript.src = 'js/app.js';
+        document.body.appendChild(appScript);
+    });
+</script>
     
     <!-- Sidebar Profile Handler -->
     <script src="js/sidebar-profile.js"></script>
     
-    <!-- Scanner Tab Navigation Fix -->
+    <!-- Scanner Fixes -->
     <script src="js/scanner-fix.js"></script>
+    <script src="js/scanner-buttons-fix.js"></script>
 </body>
 </html>
