@@ -329,7 +329,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Get the selected API
             const selectedApi = apiSelect ? apiSelect.value : 'claude';
-            const isSimulated = simulateToggle && simulateToggle.checked;
+            // Always use real API in production, never simulate
+            const isSimulated = false;
             
             console.log(`Processing ${window.selectedFiles.length} images using ${selectedApi} API...`);
             
@@ -1235,59 +1236,46 @@ storeProcessedResults(results);
         });
     }
     
-    // Process image with API - Using server proxy to avoid CORS issues
+    // Process image with API using server proxy to avoid CORS issues
     async function processImageWithAPI(base64Image, fileName, apiType) {
         try {
-            console.log(`Processing ${fileName} with ${apiType} API...`);
+            console.log(`Processing ${fileName} with ${apiType} API through server proxy...`);
             
-            // Create the prompt for the API
-            const prompt = `
-                Please analyze this receipt image. Extract the following information in JSON format:
-                
-                1. Customer name (if available)
-                2. Date (format: MM/DD/YYYY)  
-                3. Time (format: HH:MM AM/PM)
-                4. Check number (if available)
-                5. Amount (pre-tip total, format: $X.XX)
-                6. Tip amount (format: $X.XX)
-                7. Total amount (format: $X.XX)
-                8. Payment type (Credit Card, Cash, etc.)
-                9. Whether it was signed (Yes/No)
-                
-                Return the data in this exact JSON structure:
-                {
-                  "customer_name": "John Doe",
-                  "date": "03/25/2025",
-                  "time": "7:30 PM",
-                  "check_number": "#1234",
-                  "amount": "$45.67",
-                  "tip": "$9.13",
-                  "total": "$54.80",
-                  "payment_type": "Credit Card",
-                  "signed": "Yes"
-                }
-                
-                If any field is not found in the receipt, use "N/A" for text fields and "$0.00" for monetary values.
-            `;
+            // Set the server proxy URL - adjust based on your deployment environment
+            const serverProxyUrl = window.location.hostname === 'localhost' ? 
+                'http://localhost:3000/api/process-receipt' : 
+                '/api/process-receipt';
             
-            // CORS issue workaround: We're getting a CORS error when calling the Claude API directly.
-            // We need to use a proxy or simulated data for development.
-            console.log('CORS issue detected with direct API call. Using simulated data for development.');
+            // Make request to the server proxy
+            const response = await fetch(serverProxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: base64Image,
+                    filename: fileName,
+                    apiType: apiType
+                })
+            });
             
-            // Since we can't make direct API calls due to CORS, we're simulating for development
-            // In a real production app, you'd need to:
-            // 1. Create a server endpoint that proxies requests to Claude API
-            // 2. Send the base64 image and prompt to your server endpoint
-            // 3. Have your server call Claude and return the results
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API error: ${errorData.error || response.statusText}`);
+            }
             
-            console.log(`Actual implementation would call ${apiType} API with the receipt image`);
+            // Parse the response
+            const data = await response.json();
             
-            // Since we've hit a CORS issue, we'll use a more realistic simulated response
-            // that would better represent what Claude would actually return
-            const result = await simulateRealisticApiResponse(fileName, apiType);
+            if (!data.success) {
+                throw new Error(data.error || 'Unknown error processing receipt');
+            }
             
-            // Add an indication that this is simulated data due to CORS limitations
-            result._note = "This is simulated data due to CORS limitations in development. In production, implement a server proxy.";
+            // Extract the result from the API response
+            const result = data.result;
+            
+            // Add model info
+            result._model = data.model || apiType;
             
             return result;
             

@@ -1,25 +1,21 @@
 {
-  "name": "tipenter",
+  "name": "tipenter-app",
   "version": "1.0.0",
-  "description": "TipEnter - Automatic Tip Entering Solution",
-  "main": "server.js",
+  "description": "TipEnter application with Claude API integration",
+  "main": "server-proxy.js",
   "scripts": {
-    "start": "node server.js",
-    "test:drive": "node test-google-drive.js",
-    "monitor:drive": "node monitor-google-drive.js",
-    "batch:drive": "node batch-process-google-drive.js",
-    "batch:drive:test": "node batch-process-google-drive.js --test"
+    "start": "node server-proxy.js",
+    "dev": "nodemon server-proxy.js"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.6.2",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.1",
-    "express": "^4.18.1",
-    "googleapis": "^105.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "node-cron": "^3.0.2"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
   },
-  "engines": {
-    "node": ">=14.0.0"
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
