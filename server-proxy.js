@@ -18,6 +18,9 @@ const port = process.env.PORT || 3000;
 // Enable CORS for all routes
 app.use(cors());
 
+// Serve static files from the current directory
+app.use(express.static(__dirname));
+
 // Middleware for parsing JSON and URL-encoded data
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
