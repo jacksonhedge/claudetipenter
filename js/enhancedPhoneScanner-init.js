@@ -14,6 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    // Firing Line Mode Variables
+    let firingLineMode = document.getElementById('firingLineMode');
+    let firingLineBtn = document.getElementById('firingLineBtn');
+    let firingLineExit = document.getElementById('firingLineExit');
+    let firingLineCapture = document.getElementById('firingLineCapture');
+    let firingLineCounter = document.getElementById('firingLineCounter');
+    let firingLineFlash = document.getElementById('firingLineFlash');
+    let cameraFeed = document.getElementById('cameraFeed');
+    let mediaStream = null;
+    let capturedImages = [];
+    
     // Initialize the scanner with configuration
     try {
         const scanner = new EnhancedPhoneScanner({
@@ -162,6 +173,99 @@ document.addEventListener('DOMContentLoaded', () => {
                     scanner.handleFiles(files);
                 });
             });
+        }
+        
+        // Initialize Firing Line Mode
+        if (firingLineBtn && firingLineMode) {
+            console.log('Initializing Firing Line Mode');
+            
+            // Function to open firing line mode
+            const openFiringLineMode = async () => {
+                try {
+                    // Request camera access
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' },
+                        audio: false 
+                    });
+                    
+                    // Set video source
+                    cameraFeed.srcObject = mediaStream;
+                    
+                    // Reset captured images
+                    capturedImages = [];
+                    firingLineCounter.textContent = '0 images';
+                    
+                    // Show firing line mode
+                    firingLineMode.style.display = 'flex';
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    alert('Could not access camera. Please check permissions and try again.');
+                }
+            };
+            
+            // Function to capture an image in firing line mode
+            const captureImage = () => {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Set canvas dimensions to match video
+                canvas.width = cameraFeed.videoWidth;
+                canvas.height = cameraFeed.videoHeight;
+                
+                // Draw video frame to canvas
+                context.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+                
+                // Convert canvas to blob
+                canvas.toBlob(function(blob) {
+                    // Create file from blob
+                    const file = new File([blob], `receipt-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    
+                    // Add file to captured images
+                    capturedImages.push(file);
+                    
+                    // Update counter
+                    firingLineCounter.textContent = `${capturedImages.length} image${capturedImages.length !== 1 ? 's' : ''}`;
+                    
+                    // Show flash effect
+                    firingLineFlash.style.opacity = '1';
+                    setTimeout(() => {
+                        firingLineFlash.style.opacity = '0';
+                    }, 100);
+                    
+                }, 'image/jpeg', 0.9);
+            };
+            
+            // Function to close firing line mode
+            const closeFiringLineMode = () => {
+                // Stop media stream
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+                
+                // Hide firing line mode
+                firingLineMode.style.display = 'none';
+                
+                // If we have captured images, process them
+                if (capturedImages.length > 0) {
+                    scanner.handleFiles(capturedImages);
+                    
+                    // Automatically process after a short delay
+                    setTimeout(() => {
+                        if (scanner.files.length > 0 && !scanner.isProcessing) {
+                            console.log(`Auto-processing ${capturedImages.length} images from firing line mode`);
+                            scanner.processImages();
+                        }
+                    }, 500);
+                }
+            };
+            
+            // Add event listeners
+            firingLineBtn.addEventListener('click', openFiringLineMode);
+            firingLineExit.addEventListener('click', closeFiringLineMode);
+            firingLineCapture.addEventListener('click', captureImage);
         }
     } catch (error) {
         console.error('Failed to initialize Enhanced Phone Scanner:', error);
