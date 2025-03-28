@@ -17,8 +17,8 @@ class EnhancedPhoneScanner {
             apiEndpoint: options.apiEndpoint || '/api/enhance-image',
             enhancementMode: 'auto', // auto, document, photo
             maxSize: 1600, // Output resolution: 1200, 1600, 2000, 2400
-            mockMode: true, // For testing without actual API
-            mockDelay: 1500, // Delay for mock responses
+            mockMode: false, // Use real Anthropic API in production
+            mockDelay: 1500, // Delay for mock responses (not used in production)
             multiPhotoMode: options.multiPhotoMode || false // Enable multi-photo mode
         };
         
