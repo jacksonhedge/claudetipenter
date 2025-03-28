@@ -1,0 +1,38 @@
+/* Custom Navigation Styles */
+
+/* Navigation items styling */
+.nav-item, .sidebar-menu-item {
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.nav-item a, .sidebar-menu-item a {
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Active navigation items with light orange background */
+.nav-item.active, .sidebar-menu-item.active {
+    background-color: #FFA559 !important; /* Light orange background */
+    border-color: #FF8C2D !important;
+}
+
+.nav-item.active a, .sidebar-menu-item.active a {
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Navigation icons in sidebar */
+.sidebar-menu-item i {
+    color: white !important;
+}
+
+/* Header background */
+header, .sidebar-header {
+    background-color: #272B40 !important; /* Dark navy background */
+}
+
+/* Fix for sidebar item hover effect */
+.sidebar-menu-item:hover {
+    background-color: rgba(255, 165, 89, 0.3) !important; /* Semi-transparent light orange */
+}
