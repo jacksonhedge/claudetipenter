@@ -74,30 +74,69 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log('Enhanced Phone Scanner initialized successfully');
         
-        // Add functionality for the "Take Photo" button to automatically process images
+        // Initialize MultiPhotoCapture for enhanced scanner page
         const takeCameraPhotoBtn = document.getElementById('takeCameraPhotoBtn');
-        const enhancedCameraInput = document.getElementById('enhancedCameraInput');
         
-        if (takeCameraPhotoBtn && enhancedCameraInput) {
-            takeCameraPhotoBtn.addEventListener('click', () => {
-                enhancedCameraInput.click();
-            });
-            
-            // Automatically process images taken with camera
-            enhancedCameraInput.addEventListener('change', () => {
-                if (enhancedCameraInput.files.length > 0) {
-                    const files = enhancedCameraInput.files;
+        // Check if we have the multi-photo capture component available
+        if (takeCameraPhotoBtn && typeof MultiPhotoCapture !== 'undefined') {
+            // Create multi-photo capture instance
+            const multiPhotoCapture = new MultiPhotoCapture({
+                onComplete: (files) => {
+                    console.log(`Multi-photo capture complete: ${files.length} images captured`);
+                    
+                    // Pass the files to the scanner for processing
                     scanner.handleFiles(files);
                     
                     // Automatically process after a short delay to allow preview to update
                     setTimeout(() => {
                         if (scanner.files.length > 0 && !scanner.isProcessing) {
-                            console.log('Auto-processing camera images with INTSIG API');
+                            console.log('Auto-processing multi-captured images with INTSIG API');
                             scanner.processImages();
                         }
                     }, 500);
+                },
+                onCancel: () => {
+                    console.log('Multi-photo capture cancelled');
                 }
             });
+            
+            // Override the camera button click to use multi-photo capture
+            takeCameraPhotoBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Launch the multi-photo capture UI
+                multiPhotoCapture.openCamera();
+            });
+            
+            console.log('Multi-photo capture initialized for enhanced scanner');
+        } else {
+            console.warn('MultiPhotoCapture not available or camera button not found, falling back to standard camera');
+            
+            // Fallback to standard camera if multi-photo not available
+            const enhancedCameraInput = document.getElementById('enhancedCameraInput');
+            
+            if (takeCameraPhotoBtn && enhancedCameraInput) {
+                takeCameraPhotoBtn.addEventListener('click', () => {
+                    enhancedCameraInput.click();
+                });
+                
+                // Automatically process images taken with camera
+                enhancedCameraInput.addEventListener('change', () => {
+                    if (enhancedCameraInput.files.length > 0) {
+                        const files = enhancedCameraInput.files;
+                        scanner.handleFiles(files);
+                        
+                        // Automatically process after a short delay to allow preview to update
+                        setTimeout(() => {
+                            if (scanner.files.length > 0 && !scanner.isProcessing) {
+                                console.log('Auto-processing camera images with INTSIG API');
+                                scanner.processImages();
+                            }
+                        }, 500);
+                    }
+                });
+            }
         }
         
         // Add test images button functionality
