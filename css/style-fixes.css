@@ -76,6 +76,143 @@ body {
     display: flex;
     justify-content: space-between;
   }
+  
+  /* iPhone specific adjustments */
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Make header more compact on mobile */
+  .header-container {
+    padding: 10px 12px;
+  }
+  
+  .logo-image {
+    height: 30px;
+  }
+  
+  /* Make tabs scroll horizontally on small screens */
+  .main-nav {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+    margin-bottom: -5px; /* Compensate for padding */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+  }
+  
+  .main-nav::-webkit-scrollbar {
+    display: none; /* Hide scrollbar in Chrome/Safari/Edge */
+  }
+  
+  .main-nav .nav-item {
+    padding: 10px 12px;
+    flex-shrink: 0;
+  }
+  
+  /* Make buttons more touch-friendly */
+  .btn-primary, .btn-secondary, .btn-outline, .upload-btn {
+    min-height: 44px;
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+  
+  /* Make file uploader more mobile-friendly */
+  .drop-area {
+    padding: 15px;
+    min-height: 150px;
+  }
+  
+  .drop-message {
+    padding: 10px;
+  }
+  
+  .upload-buttons {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  /* Adjust file preview grid for mobile */
+  #previewGrid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+    gap: 8px !important;
+  }
+  
+  /* Make process button more prominent */
+  .process-button-container {
+    margin-top: 15px;
+  }
+  
+  #processBtn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  /* Firing line adjustments for iPhone */
+  .firing-line-mode {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  
+  .firing-line-viewfinder {
+    width: 90%;
+    height: 50vh;
+  }
+  
+  .firing-line-capture {
+    width: 70px;
+    height: 70px;
+  }
+  
+  /* Table responsiveness */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .results-table th, .results-table td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  
+  /* Sort controls responsiveness */
+  .sort-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .sort-controls select, .sort-controls button {
+    flex: 1;
+    min-width: 80px;
+  }
+}
+
+/* iPhone X and newer with notch */
+@supports (padding: max(0px)) {
+  .header {
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  
+  .footer {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  
+  .sidebar {
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  
+  .firing-line-mode {
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
 }
 
 /* Fix for Firefox image sizing issues */
