@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter | Home (Test Version)</title>
+    <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/table-styles.css">
+    <link rel="stylesheet" href="css/organized-tips.css">
+    <link rel="stylesheet" href="css/tips-history.css">
+    <link rel="stylesheet" href="css/export-modal.css">
+    <link rel="stylesheet" href="css/celebration-popup.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/components/google-drive.css">
+    <link rel="stylesheet" href="css/auth-controls.css">
+    <link rel="stylesheet" href="css/style-fixes.css" type="text/css">
+    <link rel="stylesheet" href="css/modern-ui.css">
+    <link rel="stylesheet" href="css/image-enhancer.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        /* Test Mode Indicator */
+        body::before {
+            content: "TEST MODE";
+            position: fixed;
+            top: 0;
+            right: 0;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 9999;
+        }
+        
+        /* Override auth-related styles */
+        .auth-link-container {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-notice" style="background-color: #ffffcc; padding: 10px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+        <strong>Test Mode:</strong> Authentication bypass enabled. Click on menu items to test functionality.
+    </div>
+    
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="logo-image">
+            </a>
+            <nav>
+                <ul class="main-nav">
+                    <li class="nav-item active" data-tab="tip-analyzer-tab">Tip Analyzer</li>
+                    <li class="nav-item" data-tab="organized-tab">Organized Images</li>
+                    <li class="nav-item" data-tab="enhanced-scanner-tab">Enhanced Phone Scanning</li>
+                    <li class="nav-item" data-tab="organized-without-tip-tab">Without Tip</li>
+                    <li class="nav-item" data-tab="tip-history-tab">History</li>
+                    <li class="nav-item" data-tab="file-organizer-tab">File Organizer</li>
+                </ul>
+                <button class="profile-btn" id="profileBtn">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Mobile sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="logo">
+                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="logo-image">
+            </a>
+            <button class="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item active" data-tab="tip-analyzer-tab">
+                <i class="fas fa-calculator"></i> <span>Tip Analyzer</span>
+            </li>
+            <li class="sidebar-menu-item" data-tab="organized-tab">
+                <i class="fas fa-th"></i> <span>Organized Images</span>
+            </li>
+            <li class="sidebar-menu-item" data-tab="enhanced-scanner-tab">
+                <i class="fas fa-camera"></i> <span>Enhanced Phone Scanning</span>
+            </li>
+            <li class="sidebar-menu-item" data-tab="organized-without-tip-tab">
+                <i class="fas fa-image"></i> <span>Without Tip</span>
+            </li>
+            <li class="sidebar-menu-item" data-tab="tip-history-tab">
+                <i class="fas fa-history"></i> <span>Tip History</span>
+            </li>
+            <li class="sidebar-menu-item" data-tab="file-organizer-tab">
+                <i class="fas fa-folder-open"></i> <span>File Organizer</span>
+            </li>
+        </ul>
+        
+        <!-- Profile section in sidebar -->
+        <div class="sidebar-profile" id="sidebarProfile">
+            <div class="sidebar-profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="sidebar-profile-name" id="sidebarProfileName">Test User</div>
+            <div class="sidebar-profile-email" id="sidebarProfileEmail">test@example.com</div>
+            <button class="sidebar-signout-btn" id="sidebarSignoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main container -->
+    <main class="container">
+        <!-- Tab: Tip Analyzer -->
+        <div id="tip-analyzer-tab" class="tab-content active">
+            <h1>Tip Analyzer</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Receipt Images</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-uploader">
+                        <div id="dropArea" class="drop-area">
+                            <div class="drop-message">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop receipt images here or click to browse</p>
+                                <div class="button-container">
+                                    <button id="addTestImagesBtn" class="btn-outline">Add Test Images</button>
+                                </div>
+                                <input type="file" id="fileInput" accept="image/*,.pdf" multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Organized Images -->
+        <div id="organized-tab" class="tab-content">
+            <h1>Organized Receipt Images</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Organized Images</h2>
+                </div>
+                <div class="card-body">
+                    <p>This is the Organized Images tab. Content would appear here when receipts are processed.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Organized Images without Tip -->
+        <div id="organized-without-tip-tab" class="tab-content">
+            <h1>Organized Images without Tip</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Organized Images without Tip</h2>
+                </div>
+                <div class="card-body">
+                    <p>This is the Organized Images without Tip tab. Content would appear here when receipts are processed.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: File Organizer -->
+        <div id="file-organizer-tab" class="tab-content">
+            <h1>File Organizer</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>File Organizer</h2>
+                </div>
+                <div class="card-body">
+                    <p>This is the File Organizer tab. Content would appear here when files are uploaded.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Enhanced Phone Scanning -->
+        <div id="enhanced-scanner-tab" class="tab-content">
+            <h1>Enhanced Phone Scanning</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Receipt Images with IntSig Enhancement</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-uploader">
+                        <div id="enhancedScannerDropArea" class="drop-area">
+                            <div class="drop-message">
+                                <i class="fas fa-camera"></i>
+                                <p>Drag & drop receipt images here or click to browse</p>
+                                <div class="button-container">
+                                    <button id="addEnhancedTestImagesBtn" class="btn-outline">Add Test Images</button>
+                                </div>
+                                <input type="file" id="enhancedFileInput" accept="image/*,.pdf" multiple>
+                            </div>
+                        </div>
+                        
+                        <div class="option-buttons">
+                            <div class="enhancement-options">
+                                <div class="settings-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                                    <div class="settings-group" style="flex: 1;">
+                                        <label for="enhancedMode">Enhancement Mode:</label>
+                                        <select id="enhancedMode" class="form-control">
+                                            <option value="auto">Auto (Recommended)</option>
+                                            <option value="document">Document</option>
+                                            <option value="photo">Photo</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-group" style="flex: 1;">
+                                        <label for="enhancedMaxSize">Quality:</label>
+                                        <select id="enhancedMaxSize" class="form-control">
+                                            <option value="1600">Standard (1600px)</option>
+                                            <option value="1200">Low (1200px)</option>
+                                            <option value="2000">High (2000px)</option>
+                                            <option value="2400">Ultra (2400px)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="camera-options">
+                                <button id="takeCameraPhotoBtn" class="btn-secondary">
+                                    <i class="fas fa-camera"></i> Take Photo
+                                </button>
+                                <input type="file" id="enhancedCameraInput" accept="image/*" capture="environment" style="display:none;">
+                            </div>
+                        </div>
+                        
+                        <div class="file-list-container">
+                            <div class="file-list-header">
+                                <h3>Uploaded Files <span id="enhancedFileCount">(0)</span></h3>
+                            </div>
+                            <div id="enhancedFileList" class="file-list"></div>
+                            <div class="process-button-container">
+                                <button id="enhancedProcessBtn" class="btn-primary" disabled>Process 0 Images</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="enhancedResultsSection" class="results-section" style="display: none;">
+                <h2>Processing Results</h2>
+                
+                <div class="progress-container">
+                    <div id="enhancedProgressBar" class="progress-bar"></div>
+                    <div id="enhancedProgressText" class="countdown-timer"></div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab-header">
+                        <div class="tab-btn active" data-tab="enhanced-table-view">Table View</div>
+                        <div class="tab-btn" data-tab="enhanced-json-view">JSON View</div>
+                        <div class="tab-btn" data-tab="enhanced-comparison-view">Comparison View</div>
+                    </div>
+                    
+                    <div class="tab-content-container">
+                        <div id="enhanced-table-view" class="tab-pane active">
+                            <p>Table view will appear here after processing images.</p>
+                        </div>
+                        
+                        <div id="enhanced-json-view" class="tab-pane">
+                            <p>JSON view will appear here after processing images.</p>
+                        </div>
+                        
+                        <div id="enhanced-comparison-view" class="tab-pane">
+                            <h3>Enhanced Image Comparison</h3>
+                            <p class="subtitle">Compare original images with enhanced versions</p>
+                            <div id="enhancedComparisonContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Tip History -->
+        <div id="tip-history-tab" class="tab-content">
+            <h1>Tip History</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Tip History</h2>
+                </div>
+                <div class="card-body">
+                    <p>This is the Tip History tab. Content would appear here when tips are processed.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="footer-logo-image">
+                </div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="/about">About</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Service</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2025 TipEnter. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Our modified app.js for testing -->
+    <script src="js/app-modified.js"></script>
+    
+    <!-- Enhanced Phone Scanner Initialization -->
+    <script src="js/enhancedPhoneScanner-init.js"></script>
+</body>
+</html>

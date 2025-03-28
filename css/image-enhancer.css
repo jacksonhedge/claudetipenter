@@ -1,0 +1,252 @@
+/* ImageEnhancer.css */
+.image-enhancer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.control-panel {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.file-input-container {
+  margin-right: 20px;
+}
+
+.file-input-label {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.file-input {
+  display: none;
+}
+
+.enhance-options {
+  display: flex;
+  align-items: center;
+}
+
+.enhance-options select {
+  margin: 0 10px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.enhance-button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.enhance-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #f44336;
+  margin-bottom: 15px;
+}
+
+.image-preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.image-preview {
+  flex: 1;
+  min-width: 300px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.image-preview h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.image-preview img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+.border-info {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+}
+
+.border-info pre {
+  background-color: #eee;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+/* Keep the existing comparison slider styles */
+.comparison-slider {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin: 20px 0;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comparison-before,
+.comparison-after {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.comparison-before {
+    left: 0;
+    z-index: 1;
+}
+
+.comparison-after {
+    left: 0;
+    z-index: 2;
+    width: 50%;
+    border-right: 2px solid white;
+}
+
+.comparison-slider img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.slider-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 40px;
+    margin-left: -20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 3;
+    cursor: ew-resize;
+}
+
+.slider-handle::before {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 100%;
+    background-color: white;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.slider-handle::after {
+    content: '⟷';
+    display: block;
+    width: 30px;
+    height: 30px;
+    background-color: #2196F3;
+    color: white;
+    font-size: 16px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.comparison-label {
+    position: absolute;
+    bottom: 10px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 4;
+}
+
+.label-before {
+    left: 10px;
+}
+
+.label-after {
+    right: 10px;
+}
+
+/* Loading indicator */
+.loading-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 2;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .control-panel {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .file-input-container {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .enhance-options {
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+    
+    .image-preview-container {
+        flex-direction: column;
+    }
+    
+    .comparison-slider {
+        height: 300px;
+    }
+}

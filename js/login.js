@@ -97,11 +97,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Login.js: Firebase initialization error:', error);
     }
     
-    // Temporarily disable auto-redirect to fix refresh loop issues
-    // This code sets flags to prevent redirection and logs that we're disabling auto-redirect
-    console.log('⚠️ Auto-redirect is temporarily disabled to fix refresh loop issues');
-    sessionStorage.setItem('prevent_redirect', 'true');
-    localStorage.setItem('disable_redirect', 'true');
+    // Set proper authentication flags to prevent immediate redirect/signout
+    console.log('Setting proper authentication flags');
+    sessionStorage.removeItem('prevent_redirect');
+    localStorage.removeItem('disable_redirect');
+    sessionStorage.setItem('auth_transition', 'true');
     
     // Clear auth transition flag if it exists
     if (sessionStorage.getItem('auth_transition')) {
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
     
-    // Direct login function that works even when Firebase is having issues
+    // Enhanced direct login function that works even when Firebase is having issues
     function directLoginBypass(email, password, role) {
         // Store user info in localStorage for offline access
         const userId = 'user_' + Math.random().toString(36).substr(2, 9);
@@ -406,11 +406,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             createdAt: new Date().toISOString()
         };
         
-        // Store user data in localStorage
+        // Store user data in localStorage with proper authentication flags
         localStorage.setItem('user_id', userId);
         localStorage.setItem('user_email', email);
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_name', email.split('@')[0]);
+        
+        // Set auth flag to prevent immediate signout
+        sessionStorage.setItem('auth_transition', 'true');
         
         // Store the full user data object in case it's needed
         localStorage.setItem(`tipenter_firestore_users/${userId}`, JSON.stringify(userData));
@@ -438,10 +441,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Make sure we have a valid button before adding the event listener
         if (loginButton) {
             console.log('Adding click event to login button');
-            // Remove any existing event listeners
-            loginButton.removeEventListener('click', loginHandler);
-            // Add new event listener
-            loginButton.addEventListener('click', loginHandler);
+            
+            // Define a wrapper function for the login handler
+            const loginButtonHandler = (e) => {
+                console.log('Login button clicked');
+                e.preventDefault();
+                loginHandler(e);
+            };
+            
+            // Remove any existing event listeners by cloning and replacing the button
+            const newLoginButton = loginButton.cloneNode(true);
+            loginButton.parentNode.replaceChild(newLoginButton, loginButton);
+            
+            // Add click event to the new button
+            newLoginButton.addEventListener('click', loginButtonHandler);
             
             // Also add event listener to the form submit event as a backup
             loginForm.addEventListener('submit', loginHandler);
@@ -472,11 +485,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 console.log('Starting login process for', email);
                 
-                // First try the direct bypass approach
-                const userData = directLoginBypass(email, password, role);
-                
-                // We don't need to continue since directLoginBypass handles the redirect
-                return;
+                try {
+                    // First try the direct bypass approach
+                    const userData = directLoginBypass(email, password, role);
+                    
+                    // We don't need to continue since directLoginBypass handles the redirect
+                    return;
+                } catch (bypassError) {
+                    console.error('Direct login bypass failed:', bypassError);
+                    // Continue to Firebase login as fallback
+                }
                 
                 // The code below is kept as a fallback but won't be reached
                 try {

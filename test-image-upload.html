@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Test - TipEnter API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #F76E11;
+            text-align: center;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #F76E11;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #EF4444;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #F76E11;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .code-block {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .docs {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #FFF7E6;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>TipEnter API - Image Upload Test</h1>
+    
+    <div class="container">
+        <h2>Test Image Upload Endpoint</h2>
+        <div class="form-group">
+            <label for="image">Select an image:</label>
+            <input type="file" id="image" accept="image/*">
+        </div>
+        <button id="submit">Upload and Process</button>
+        
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Processing image with Claude API...</p>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="docs">
+        <h2>API Documentation</h2>
+        <h3>iOS App Implementation</h3>
+        <p>To implement this in your iOS app, you'll need to make a multipart/form-data POST request to the endpoint:</p>
+        
+        <div class="code-block">
+            <code>POST http://your-server:3000/api/upload-image</code>
+        </div>
+        
+        <p>Here's a Swift example using URLSession:</p>
+        
+        <div class="code-block">
+<pre>
+import UIKit
+
+func uploadImage(_ image: UIImage) {
+    // Convert image to data
+    guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        print("Failed to convert image to data")
+        return
+    }
+    
+    // Create URL request
+    let url = URL(string: "http://your-server:3000/api/upload-image")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    
+    // Generate boundary string
+    let boundary = "Boundary-\(UUID().uuidString)"
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    
+    // Create body
+    var body = Data()
+    
+    // Add image data
+    body.append("--\(boundary)\r\n".data(using: .utf8)!)
+    body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+    body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+    body.append(imageData)
+    body.append("\r\n".data(using: .utf8)!)
+    
+    // End boundary
+    body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+    
+    // Set body
+    request.httpBody = body
+    
+    // Create task
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            print("Error: \(error)")
+            return
+        }
+        
+        guard let data = data else {
+            print("No data received")
+            return
+        }
+        
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                print("Response: \(json)")
+                
+                // Handle the parsed receipt data here
+                if let success = json["success"] as? Bool, success {
+                    if let result = json["result"] as? [String: Any] {
+                        // Use the extracted data
+                        let amount = result["amount"] as? String ?? "unknown"
+                        let tip = result["tip"] as? String ?? "unknown"
+                        print("Amount: \(amount), Tip: \(tip)")
+                        
+                        // Update UI on main thread
+                        DispatchQueue.main.async {
+                            // Update your UI with the results
+                        }
+                    }
+                }
+            }
+        } catch {
+            print("JSON parsing error: \(error)")
+        }
+    }
+    
+    task.resume()
+}
+</pre>
+        </div>
+        
+        <h3>Response Format</h3>
+        <p>The API returns data in the following format:</p>
+        
+        <div class="code-block">
+<pre>
+{
+  "success": true,
+  "model": "claude-3-opus",
+  "result": {
+    "customer_name": "John Doe",
+    "date": "03/25/2025",
+    "time": "7:30 PM",
+    "check_number": "#1234",
+    "amount": "$45.67",
+    "tip": "$9.13",
+    "total": "$54.80",
+    "payment_type": "Credit Card",
+    "signed": "Yes"
+  }
+}
+</pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('submit').addEventListener('click', function() {
+            const fileInput = document.getElementById('image');
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.querySelector('.loading');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please select an image first');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide loading
+                loadingDiv.style.display = 'none';
+                
+                // Display result
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                // Hide loading
+                loadingDiv.style.display = 'none';
+                
+                // Display error
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Error: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

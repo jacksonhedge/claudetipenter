@@ -49,6 +49,7 @@
                 <ul class="main-nav">
                     <li class="nav-item active" data-tab="tip-analyzer-tab">Tip Analyzer</li>
                     <li class="nav-item" data-tab="organized-tab">Organized Images</li>
+                    <li class="nav-item" data-tab="enhanced-scanner-tab">Enhanced Phone Scanning</li>
                     <li class="nav-item" data-tab="organized-without-tip-tab">Without Tip</li>
                     <li class="nav-item" data-tab="tip-history-tab">History</li>
                     <li class="nav-item" data-tab="file-organizer-tab">File Organizer</li>
@@ -82,6 +83,9 @@
             </li>
             <li class="sidebar-menu-item" data-tab="organized-tab">
                 <i class="fas fa-th"></i> <span>Organized Images</span>
+            </li>
+            <li class="sidebar-menu-item" data-tab="enhanced-scanner-tab">
+                <i class="fas fa-camera"></i> <span>Enhanced Phone Scanning</span>
             </li>
             <li class="sidebar-menu-item" data-tab="organized-without-tip-tab">
                 <i class="fas fa-image"></i> <span>Without Tip</span>
@@ -573,6 +577,162 @@
             </div>
         </div>
         
+        <!-- Tab: Enhanced Phone Scanning -->
+        <div id="enhanced-scanner-tab" class="tab-content">
+            <h1>Enhanced Phone Scanning</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Receipt Images with IntSig Enhancement</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-uploader">
+                        <div id="enhancedScannerDropArea" class="drop-area">
+                            <div class="drop-message">
+                                <i class="fas fa-camera"></i>
+                                <p>Drag & drop receipt images here or click to browse</p>
+                                <div class="button-container">
+                                    <button id="addEnhancedTestImagesBtn" class="btn-outline">Add Test Images</button>
+                                </div>
+                                <input type="file" id="enhancedFileInput" accept="image/*,.pdf" multiple>
+                            </div>
+                        </div>
+                        
+                        <div class="option-buttons">
+                            <div class="enhancement-options">
+                                <div class="settings-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                                    <div class="settings-group" style="flex: 1;">
+                                        <label for="enhancedMode">Enhancement Mode:</label>
+                                        <select id="enhancedMode" class="form-control">
+                                            <option value="auto">Auto (Recommended)</option>
+                                            <option value="document">Document</option>
+                                            <option value="photo">Photo</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-group" style="flex: 1;">
+                                        <label for="enhancedMaxSize">Quality:</label>
+                                        <select id="enhancedMaxSize" class="form-control">
+                                            <option value="1600">Standard (1600px)</option>
+                                            <option value="1200">Low (1200px)</option>
+                                            <option value="2000">High (2000px)</option>
+                                            <option value="2400">Ultra (2400px)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="camera-options">
+                                <button id="takeCameraPhotoBtn" class="btn-secondary">
+                                    <i class="fas fa-camera"></i> Take Photo
+                                </button>
+                                <input type="file" id="enhancedCameraInput" accept="image/*" capture="environment" style="display:none;">
+                            </div>
+                        </div>
+                        
+                        <div class="file-list-container">
+                            <div class="file-list-header">
+                                <h3>Uploaded Files <span id="enhancedFileCount">(0)</span></h3>
+                                <div class="api-select-container">
+                                    <label for="enhancedApiSelect">API:</label>
+                                    <select id="enhancedApiSelect">
+                                        <option value="claude">Claude</option>
+                                        <option value="gpt4">GPT-4</option>
+                                        <option value="gemini">Gemini</option>
+                                    </select>
+                                </div>
+                                <div class="simulate-toggle-container">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="enhancedSimulateToggle">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span>Simulate</span>
+                                </div>
+                            </div>
+                            <div id="enhancedFileList" class="file-list"></div>
+                            <div class="process-button-container">
+                                <button id="enhancedProcessBtn" class="btn-primary" disabled>Process 0 Images</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="enhancedResultsSection" class="results-section" style="display: none;">
+                <h2>Processing Results</h2>
+                
+                <div class="progress-container">
+                    <div id="enhancedProgressBar" class="progress-bar"></div>
+                    <div id="enhancedProgressText" class="countdown-timer"></div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab-header">
+                        <div class="tab-btn active" data-tab="enhanced-table-view">Table View</div>
+                        <div class="tab-btn" data-tab="enhanced-json-view">JSON View</div>
+                        <div class="tab-btn" data-tab="enhanced-comparison-view">Comparison View</div>
+                    </div>
+                    
+                    <div class="tab-content-container">
+                        <div id="enhanced-table-view" class="tab-pane active">
+                            <div class="table-controls">
+                                <div class="sort-controls">
+                                    <label for="enhancedSortField">Sort by:</label>
+                                    <select id="enhancedSortField">
+                                        <option value="customer_name">Customer Name</option>
+                                        <option value="amount">Amount</option>
+                                        <option value="date">Date</option>
+                                        <option value="tip">Tip</option>
+                                    </select>
+                                    <select id="enhancedSortOrder">
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                    <button id="enhancedSortBtn" class="btn-secondary">Sort</button>
+                                </div>
+                                <button id="enhancedExportCsvBtn" class="btn-secondary">
+                                    <i class="fas fa-file-csv"></i> Export CSV
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Customer Name</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Check #</th>
+                                            <th>Amount</th>
+                                            <th>Tip</th>
+                                            <th>Total</th>
+                                            <th>Payment Type</th>
+                                            <th>Signed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="enhancedTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div id="enhanced-json-view" class="tab-pane">
+                            <div class="json-view-header">
+                                <button id="enhancedCopyBtn" class="btn-secondary">
+                                    <i class="fas fa-copy"></i> Copy JSON
+                                </button>
+                            </div>
+                            <pre id="enhancedJsonOutput" class="json-output"></pre>
+                        </div>
+                        
+                        <div id="enhanced-comparison-view" class="tab-pane">
+                            <h3>Enhanced Image Comparison</h3>
+                            <p class="subtitle">Compare original images with enhanced versions</p>
+                            <div id="enhancedComparisonContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Tab: Tip History -->
         <div id="tip-history-tab" class="tab-content">
             <div id="tipsHistoryContainer"></div>
@@ -660,5 +820,8 @@
     
     <!-- Sidebar Profile Handler -->
     <script src="js/sidebar-profile.js"></script>
+    
+    <!-- Enhanced Phone Scanner Integration -->
+    <script src="js/enhancedPhoneScanner-init.js"></script>
 </body>
 </html>

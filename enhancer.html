@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter | Image Enhancer</title>
+    <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/table-styles.css">
+    <link rel="stylesheet" href="css/image-enhancer.css">
+    <link rel="stylesheet" href="css/modern-ui.css">
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="logo-image">
+            </a>
+            <nav>
+                <ul class="main-nav">
+                    <li class="nav-item"><a href="scanner.html">Tip Analyzer</a></li>
+                    <li class="nav-item active"><a href="enhancer.html">Image Enhancer</a></li>
+                    <li class="auth-link-container">
+                        <a href="login.html" id="authLink">Login</a>
+                    </li>
+                </ul>
+                <button class="profile-btn" id="profileBtn">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Mobile sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="logo">
+                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="logo-image">
+            </a>
+            <button class="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="scanner.html"><i class="fas fa-calculator"></i> <span>Tip Analyzer</span></a>
+            </li>
+            <li class="sidebar-menu-item active">
+                <a href="enhancer.html"><i class="fas fa-image"></i> <span>Image Enhancer</span></a>
+            </li>
+        </ul>
+        
+        <!-- Profile section in sidebar -->
+        <div class="sidebar-profile" id="sidebarProfile">
+            <div class="sidebar-profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="sidebar-profile-name" id="sidebarProfileName">User Name</div>
+            <div class="sidebar-profile-email" id="sidebarProfileEmail">user@example.com</div>
+            <button class="sidebar-signout-btn" id="sidebarSignoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main container -->
+    <main class="container">
+        <h1>Image Enhancer</h1>
+        <p class="subtitle">Enhance receipt images for better readability and accuracy</p>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>Upload Images</h2>
+            </div>
+            <div class="card-body">
+                <div class="file-uploader">
+                    <div id="enhancerDropArea" class="drop-area">
+                        <div class="drop-message">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop images here or click to browse</p>
+                            <div class="upload-buttons" style="margin-top: 20px;">
+                                <label for="enhancerFileInput" class="btn-primary" style="display: inline-block; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px;">
+                                    <i class="fas fa-paperclip"></i> Attach images
+                                </label>
+                                <input type="file" id="enhancerFileInput" accept="image/*" multiple style="display:none;">
+                                
+                                <label for="enhancerCameraInput" class="btn-outline" style="display: inline-block; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                                    <i class="fas fa-camera"></i> Take photos
+                                </label>
+                                <input type="file" id="enhancerCameraInput" accept="image/*" capture="environment" multiple style="display:none;">
+                            </div>
+                            
+                            <div id="enhancerPreviewContainer" style="margin-top: 20px; display: none;">
+                                <div id="enhancerPreviewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;"></div>
+                                <div id="enhancerImageCount" style="margin-top: 10px; font-weight: bold;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" id="enhancerSettingsCard" style="display: none;">
+            <div class="card-header">
+                <h2>Enhancement Settings</h2>
+            </div>
+            <div class="card-body">
+                <div class="enhancer-settings">
+                    <div class="settings-row">
+                        <div class="settings-group">
+                            <label for="enhanceMode">Enhancement Mode</label>
+                            <select id="enhanceMode" class="form-control">
+                                <option value="auto">Auto (Recommended)</option>
+                                <option value="document">Document</option>
+                                <option value="photo">Photo</option>
+                            </select>
+                        </div>
+                        <div class="settings-group">
+                            <label for="maxSize">Max Output Size</label>
+                            <select id="maxSize" class="form-control">
+                                <option value="1600">1600px (Default)</option>
+                                <option value="1200">1200px</option>
+                                <option value="2000">2000px</option>
+                                <option value="2400">2400px</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="enhance-button-container">
+                        <button id="enhanceButton" class="btn-primary">
+                            <i class="fas fa-magic"></i> Enhance Images
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsContainer" style="display: none;">
+            <h2 class="result-heading">Enhancement Results</h2>
+            
+            <div class="progress-container" id="enhancerProgressContainer">
+                <div id="enhancerProgressBar" class="progress-bar"></div>
+                <div id="enhancerProgressText" class="countdown-timer">Processing...</div>
+            </div>
+            
+            <div id="comparisonContainer" style="display: none;"></div>
+        </div>
+        
+        <!-- Comparison template (will be cloned via JS) -->
+        <template id="comparisonTemplate">
+            <div class="comparison-item">
+                <h3 class="comparison-title">Image Enhancement</h3>
+                
+                <div class="comparison-slider">
+                    <div class="comparison-before">
+                        <img src="" alt="Original image" class="before-image">
+                    </div>
+                    <div class="comparison-after">
+                        <img src="" alt="Enhanced image" class="after-image">
+                    </div>
+                    <div class="slider-handle"></div>
+                    <div class="comparison-label label-before">Original</div>
+                    <div class="comparison-label label-after">Enhanced</div>
+                </div>
+                
+                <div class="comparison-info">
+                    <div class="info-item">
+                        <span class="info-label">Enhancement mode:</span>
+                        <span class="info-value mode-value">Auto</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Border detection:</span>
+                        <span class="info-value border-status">Detected</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="footer-logo-image">
+                </div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="/about">About</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Service</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2025 TipEnter. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Simple Auth Check -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Checking authentication state...');
+            
+            // For testing purposes: Creating a temporary login bypass
+            const testMode = true; // Set to true to bypass auth check
+            
+            // Check for user data in localStorage
+            const userId = localStorage.getItem('user_id');
+            const userEmail = localStorage.getItem('user_email');
+            
+            if ((!userId || !userEmail) && !testMode) {
+                console.log('User not logged in, redirecting to login page');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // If in test mode and no user data exists, set it temporarily
+            if (testMode && (!userId || !userEmail)) {
+                console.log('Test mode enabled: Setting temporary user data');
+                localStorage.setItem('user_id', 'test_user_id');
+                localStorage.setItem('user_email', 'test@example.com');
+                localStorage.setItem('user_role', 'manager');
+            }
+            
+            console.log('User is logged in:', localStorage.getItem('user_email'));
+            
+            // Display user info in the profile button if it exists
+            const profileBtn = document.getElementById('profileBtn');
+            if (profileBtn) {
+                profileBtn.title = `Logged in as ${localStorage.getItem('user_email')}`;
+            }
+            
+            // Load the enhancer script
+            const enhancerScript = document.createElement('script');
+            enhancerScript.src = 'js/components/imageEnhancer.js';
+            document.body.appendChild(enhancerScript);
+            
+            // Load the main enhancer UI script
+            enhancerScript.onload = () => {
+                const uiScript = document.createElement('script');
+                uiScript.src = 'js/enhancer-ui.js';
+                document.body.appendChild(uiScript);
+            };
+        });
+    </script>
+    
+    <!-- Sidebar Profile Handler -->
+    <script src="js/sidebar-profile.js"></script>
+</body>
+</html>

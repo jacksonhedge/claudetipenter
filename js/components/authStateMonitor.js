@@ -338,10 +338,28 @@ function updateAuthLinks(isAuthenticated) {
  * Check if the current page is protected and redirect if needed
  */
 function checkProtectedPage() {
+  // Check if we're in a transition or have flags to prevent redirect
+  if (sessionStorage.getItem('auth_transition') === 'true' || 
+      sessionStorage.getItem('prevent_redirect') === 'true' ||
+      localStorage.getItem('disable_redirect') === 'true') {
+    console.log('Auth transition or redirect prevention detected, skipping protected page check');
+    return;
+  }
+
+  // Check if we have user data in localStorage as fallback
+  const localUserId = localStorage.getItem('user_id');
+  const localUserRole = localStorage.getItem('user_role');
+  
+  if (localUserId && localUserRole) {
+    console.log('User data found in localStorage, not redirecting');
+    return;
+  }
+  
   const protectedPages = ['home.html', 'admin.html', 'profile.html'];
   const currentPage = window.location.pathname.split('/').pop();
   
   if (protectedPages.includes(currentPage)) {
+    console.log('Protected page detected, redirecting to login');
     // Redirect to login page
     window.location.href = 'login.html';
   }

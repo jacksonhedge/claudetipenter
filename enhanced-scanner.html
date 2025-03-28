@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter | Enhanced Phone Scanner</title>
+    <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/table-styles.css">
+    <link rel="stylesheet" href="css/organized-tips.css">
+    <link rel="stylesheet" href="css/celebration-popup.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/components/google-drive.css">
+    <link rel="stylesheet" href="css/auth-controls.css">
+    <link rel="stylesheet" href="css/image-enhancer.css">
+    <link rel="stylesheet" href="css/style-fixes.css">
+    <link rel="stylesheet" href="css/modern-ui.css">
+    <link rel="stylesheet" href="css/multi-photo-capture.css">
+    <style>
+        /* Fix for menu button text color */
+        .nav-item.active a {
+            color: white !important;
+        }
+        
+        /* Fix for sidebar menu button text color */
+        .sidebar-menu-item.active a span {
+            color: white !important;
+        }
+    </style>
+    <style>
+        /* Enhanced Scanner specific styles */
+        .comparison-slider {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-before,
+        .comparison-after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .comparison-before {
+            width: 50%;
+            z-index: 2;
+        }
+        
+        .before-image,
+        .after-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            cursor: ew-resize;
+            z-index: 10;
+        }
+        
+        .comparison-label {
+            position: absolute;
+            top: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .label-before {
+            left: 10px;
+        }
+        
+        .label-after {
+            right: 10px;
+        }
+        
+        .comparison-item {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .comparison-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .comparison-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            background-color: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .preview-item {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border-radius: 2px;
+        }
+        
+        .preview-details {
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 5px;
+        }
+        
+        .preview-remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: #ff5555;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+            transition: background-color 0.2s;
+        }
+        
+        .preview-remove:hover {
+            background-color: #e04040;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .settings-group {
+            flex: 1;
+        }
+        
+        .settings-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .settings-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Transition Detection Script -->
+    <script>
+        // Check if this is a redirect from login or signup
+        if (sessionStorage.getItem('auth_transition') === 'true') {
+            console.log('Auth transition detected, allowing access');
+            // Clear the flag
+            sessionStorage.removeItem('auth_transition');
+        }
+    </script>
+    
+    <!-- Offline Mode Utility -->
+    <script type="module">
+        import { addOfflineModeToggle } from './js/utils/offlineUtil.js';
+        
+        // Add the offline mode toggle
+        addOfflineModeToggle();
+    </script>
+    
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="logo-image">
+            </a>
+            <nav>
+                <ul class="main-nav">
+                    <li class="nav-item">
+                        <a href="scanner.html">Tip Analyzer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="scanner.html#organized-tab">Organized Images</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="enhanced-scanner.html">Enhanced Phone Scanning</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="scanner.html#organized-without-tip-tab">Without Tip</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="scanner.html#tip-history-tab">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="scanner.html#file-organizer-tab">File Organizer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="enhancer.html">Image Enhancer</a>
+                    </li>
+                    <li class="auth-link-container">
+                        <a href="login.html" id="authLink">Login</a>
+                    </li>
+                </ul>
+                <button class="profile-btn" id="profileBtn">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Mobile sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="logo">
+                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="logo-image">
+            </a>
+            <button class="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="scanner.html">
+                    <i class="fas fa-calculator"></i> <span>Tip Analyzer</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="scanner.html#organized-tab">
+                    <i class="fas fa-th"></i> <span>Organized Images</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item active">
+                <a href="enhanced-scanner.html">
+                    <i class="fas fa-camera"></i> <span>Enhanced Phone Scanning</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="scanner.html#organized-without-tip-tab">
+                    <i class="fas fa-image"></i> <span>Without Tip</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="scanner.html#tip-history-tab">
+                    <i class="fas fa-history"></i> <span>Tip History</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="scanner.html#file-organizer-tab">
+                    <i class="fas fa-folder-open"></i> <span>File Organizer</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="enhancer.html">
+                    <i class="fas fa-magic"></i> <span>Image Enhancer</span>
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Profile section in sidebar -->
+        <div class="sidebar-profile" id="sidebarProfile">
+            <div class="sidebar-profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="sidebar-profile-name" id="sidebarProfileName">User Name</div>
+            <div class="sidebar-profile-email" id="sidebarProfileEmail">user@example.com</div>
+            <button class="sidebar-signout-btn" id="sidebarSignoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main container -->
+    <main class="container">
+        
+        <!-- Enhanced Phone Scanner -->
+        <div id="enhanced-scanner-page">
+            <h1>Enhanced Phone Scanning</h1>
+            <p class="description">Upload receipt images to automatically enhance their quality before processing. Uses IntSig's advanced image enhancement technology to improve clarity, straighten borders, and optimize for text recognition.</p>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Receipt Images with IntSig Enhancement</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-uploader">
+                        <div id="enhancedScannerDropArea" class="drop-area">
+                            <div class="drop-message">
+                                <i class="fas fa-camera"></i>
+                                <p>Drag & drop receipt images here or click to browse</p>
+                                <div class="upload-buttons" style="margin-top: 20px;">
+                                    <label for="enhancedFileInput" class="btn-primary" style="display: inline-block; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px;">
+                                        <i class="fas fa-paperclip"></i> Attach images
+                                    </label>
+                                    <input type="file" id="enhancedFileInput" accept="image/*" multiple style="display:none;">
+                                    
+                                    <button id="takeCameraPhotoBtn" class="btn-outline" style="display: inline-block; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                                        <i class="fas fa-camera"></i> Take photos
+                                    </button>
+                                    <input type="file" id="enhancedCameraInput" accept="image/*" capture="environment" style="display:none;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="option-buttons">
+                            <div class="enhancement-options">
+                                <div class="settings-row">
+                                    <div class="settings-group">
+                                        <label for="enhancedMode">Enhancement Mode:</label>
+                                        <select id="enhancedMode" class="form-control">
+                                            <option value="auto">Auto (Recommended)</option>
+                                            <option value="document">Document</option>
+                                            <option value="photo">Photo</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-group">
+                                        <label for="enhancedMaxSize">Quality:</label>
+                                        <select id="enhancedMaxSize" class="form-control">
+                                            <option value="1600">Standard (1600px)</option>
+                                            <option value="1200">Low (1200px)</option>
+                                            <option value="2000">High (2000px)</option>
+                                            <option value="2400">Ultra (2400px)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="addEnhancedTestImagesBtn" class="btn-outline" style="margin-top: 10px;">Add Test Images</div>
+                        </div>
+                        
+                        <div id="enhancedPreviewContainer" style="margin-top: 20px; display: none;">
+                            <h3>Image Preview</h3>
+                            <div id="enhancedPreviewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;"></div>
+                            <div id="enhancedImageCount" style="margin-top: 10px; font-weight: bold;"></div>
+                        </div>
+                        
+                        <div class="process-button-container">
+                            <button id="enhancedProcessBtn" class="btn-primary" disabled>Process 0 Images</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="enhancedResultsSection" class="results-section" style="display: none;">
+                <h2>Enhancement Results</h2>
+                
+                <div class="progress-container">
+                    <div id="enhancedProgressBar" class="progress-bar"></div>
+                    <div id="enhancedProgressText" class="countdown-timer">Processing...</div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab-header">
+                        <div class="tab-btn active" data-tab="enhanced-table-view">Table View</div>
+                        <div class="tab-btn" data-tab="enhanced-json-view">JSON View</div>
+                        <div class="tab-btn" data-tab="enhanced-comparison-view">Comparison View</div>
+                    </div>
+                    
+                    <div class="tab-content-container">
+                        <div id="enhanced-table-view" class="tab-pane active">
+                            <div class="table-controls">
+                                <div class="sort-controls">
+                                    <label for="enhancedSortField">Sort by:</label>
+                                    <select id="enhancedSortField">
+                                        <option value="customer_name">Customer Name</option>
+                                        <option value="amount">Amount</option>
+                                        <option value="date">Date</option>
+                                        <option value="tip">Tip</option>
+                                    </select>
+                                    <select id="enhancedSortOrder">
+                                        <option value="asc">Ascending</option>
+                                        <option value="desc">Descending</option>
+                                    </select>
+                                    <button id="enhancedSortBtn" class="btn-secondary">Sort</button>
+                                </div>
+                                <button id="enhancedExportCsvBtn" class="btn-secondary">
+                                    <i class="fas fa-file-csv"></i> Export CSV
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Customer Name</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Check #</th>
+                                            <th>Amount</th>
+                                            <th>Tip</th>
+                                            <th>Total</th>
+                                            <th>Payment Type</th>
+                                            <th>Signed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="enhancedTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div id="enhanced-json-view" class="tab-pane">
+                            <div class="json-view-header">
+                                <button id="enhancedCopyBtn" class="btn-secondary">
+                                    <i class="fas fa-copy"></i> Copy JSON
+                                </button>
+                            </div>
+                            <pre id="enhancedJsonOutput" class="json-output"></pre>
+                        </div>
+                        
+                        <div id="enhanced-comparison-view" class="tab-pane">
+                            <h3>Enhanced Image Comparison</h3>
+                            <p class="subtitle">Compare original images with enhanced versions</p>
+                            <div id="enhancedComparisonContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="footer-logo-image">
+                </div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="/about">About</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Service</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2025 TipEnter. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Simple Auth Check to prevent redirect issues -->
+    <script>
+        // Check if the user is logged in based on localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Checking authentication state...');
+            
+            // For testing purposes: Creating a temporary login bypass
+            const testMode = true; // Set to true to bypass auth check
+            
+            // Check for user data in localStorage
+            const userId = localStorage.getItem('user_id');
+            const userEmail = localStorage.getItem('user_email');
+            const userRole = localStorage.getItem('user_role');
+            
+            if ((!userId || !userEmail) && !testMode) {
+                console.log('User not logged in, redirecting to login page');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // If in test mode and no user data exists, set it temporarily
+            if (testMode && (!userId || !userEmail)) {
+                console.log('Test mode enabled: Setting temporary user data');
+                localStorage.setItem('user_id', 'test_user_id');
+                localStorage.setItem('user_email', 'test@example.com');
+                localStorage.setItem('user_role', 'manager'); // Set as manager to enable all features
+            }
+            
+            console.log('User is logged in:', localStorage.getItem('user_email'));
+            
+            // Display user info in the profile button if it exists
+            const profileBtn = document.getElementById('profileBtn');
+            if (profileBtn) {
+                profileBtn.title = `Logged in as ${localStorage.getItem('user_email')}`;
+            }
+        });
+    </script>
+    
+    <!-- Sidebar Profile Handler -->
+    <script src="js/sidebar-profile.js"></script>
+    
+    <!-- Multi-Photo Capture Component -->
+    <script src="js/multi-photo-capture.js"></script>
+    
+    <!-- Enhanced Phone Scanner Component -->
+    <script src="js/components/enhancedPhoneScanner.js"></script>
+    
+    <!-- Initialize the Enhanced Phone Scanner -->
+    <script src="js/enhancedPhoneScanner-init.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the enhanced phone scanner
+            const enhancedScanner = new EnhancedPhoneScanner({
+                apiEndpoint: '/api/enhance-image',
+                onProgress: (progress) => {
+                    console.log('Progress:', progress);
+                },
+                onComplete: (results) => {
+                    console.log('Complete:', results);
+                },
+                onError: (error) => {
+                    console.error('Error:', error);
+                }
+            }).init();
+            
+            // Add test images button functionality
+            const addTestImagesBtn = document.getElementById('addEnhancedTestImagesBtn');
+            if (addTestImagesBtn) {
+                addTestImagesBtn.addEventListener('click', () => {
+                    // Create 3 sample test images
+                    for (let i = 0; i < 3; i++) {
+                        // Create a sample image blob (1x1 transparent pixel as base64)
+                        const base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+                        
+                        // Convert base64 to blob
+                        fetch(base64Image)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                // Create a File object
+                                const file = new File([blob], `sample-receipt-${i + 1}.png`, { type: 'image/png' });
+                                
+                                // Add to preview
+                                enhancedScanner.handleFiles([file]);
+                            });
+                    }
+                });
+            }
+            
+            // Initialize tab switching functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and panes
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Show corresponding pane
+                    const tabId = button.getAttribute('data-tab');
+                    const pane = document.getElementById(tabId);
+                    if (pane) {
+                        pane.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
