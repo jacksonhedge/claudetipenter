@@ -22,6 +22,111 @@
     <link rel="stylesheet" href="css/nav-styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        /* Firing line mode styles */
+        .firing-line-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .firing-line-viewfinder {
+            position: relative;
+            width: 80%;
+            max-width: 500px;
+            height: 60vh;
+            border: 3px solid var(--primary-orange);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .firing-line-viewfinder video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .firing-line-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .firing-line-capture {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-red);
+            border: 4px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .firing-line-capture:hover {
+            transform: scale(1.05);
+            background-color: var(--primary-orange);
+        }
+        
+        .firing-line-capture i {
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .firing-line-exit {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .firing-line-exit:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .firing-line-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--primary-orange);
+            color: white;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        
+        .firing-line-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
+        }
+    </style>
 </head>
 <body>
     <!-- Auth Transition Detection Script -->
@@ -41,6 +146,23 @@
         // Add the offline mode toggle
         addOfflineModeToggle();
     </script>
+    
+    <!-- Firing Line Mode -->
+    <div class="firing-line-mode" id="firingLineMode">
+        <div class="firing-line-viewfinder">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <div class="firing-line-counter" id="firingLineCounter">0 images</div>
+            <div class="firing-line-flash" id="firingLineFlash"></div>
+        </div>
+        <div class="firing-line-controls">
+            <button class="firing-line-exit" id="firingLineExit">
+                <i class="fas fa-times"></i> Exit
+            </button>
+            <div class="firing-line-capture" id="firingLineCapture">
+                <i class="fas fa-camera"></i>
+            </div>
+        </div>
+    </div>
     
     <header>
         <div class="container header-container">
