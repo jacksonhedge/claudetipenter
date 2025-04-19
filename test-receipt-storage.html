@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Receipt Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .log-container {
+            background-color: #000;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #51cf66;
+        }
+        .warning {
+            color: #fcc419;
+        }
+        .info {
+            color: #74c0fc;
+        }
+        button {
+            background-color: #4dabf7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #339af0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Receipt Storage</h1>
+    
+    <div class="container">
+        <p>This page tests the functionality of loading receipts from the Supabase storage bin.</p>
+        <p>Click the button below to run the test:</p>
+        
+        <button id="run-test-btn">Run Test</button>
+        
+        <div class="log-container" id="log-container">
+            <div class="log-entry info">Waiting to run test...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Override console.log to display in the log container
+        const logContainer = document.getElementById('log-container');
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function(message) {
+            // Call the original console.log
+            originalConsoleLog.apply(console, arguments);
+            
+            // Add to log container
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = message;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        };
+        
+        console.error = function(message) {
+            // Call the original console.error
+            originalConsoleError.apply(console, arguments);
+            
+            // Add to log container
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry error';
+            logEntry.textContent = typeof message === 'object' ? JSON.stringify(message) : message;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        };
+        
+        console.warn = function(message) {
+            // Call the original console.warn
+            originalConsoleWarn.apply(console, arguments);
+            
+            // Add to log container
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry warning';
+            logEntry.textContent = typeof message === 'object' ? JSON.stringify(message) : message;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        };
+        
+        // Run test button
+        document.getElementById('run-test-btn').addEventListener('click', async () => {
+            // Clear log container
+            logContainer.innerHTML = '';
+            
+            // Add initial log entry
+            console.log('Starting test...');
+            
+            try {
+                // Import the test script
+                const module = await import('./test-receipt-storage.js');
+                console.log('Test script loaded successfully');
+            } catch (error) {
+                console.error('Error loading test script:');
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>

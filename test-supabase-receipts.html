@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Receipts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #e6f2ff; /* Light blue background */
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            flex: 1;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .stat-box h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .filter-select, .date-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #495057;
+            margin-top: 10px;
+            background-color: white;
+        }
+        
+        .filter-select:focus, .date-input:focus {
+            border-color: #4dabf7;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.25);
+        }
+        .pending-icon { color: #f59f00; }
+        .approved-icon { color: #40c057; }
+        .rejected-icon { color: #fa5252; }
+        .total-icon { color: #4dabf7; }
+        
+        .log-container {
+            background-color: #000;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 150px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #51cf66;
+        }
+        .warning {
+            color: #fcc419;
+        }
+        .info {
+            color: #74c0fc;
+        }
+        button {
+            background-color: #4dabf7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #339af0;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        /* Slideshow styles */
+        .slideshow-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            position: relative;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .slideshow-image-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            overflow: hidden;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .slideshow-nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+        
+        .slideshow-nav-arrow:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .slideshow-nav-arrow.prev {
+            left: 10px;
+        }
+        
+        .slideshow-nav-arrow.next {
+            right: 10px;
+        }
+        
+        .slideshow-nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .slideshow-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .slideshow-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .slideshow-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slideshow-counter {
+            font-size: 16px;
+            color: #555;
+        }
+        
+        .slideshow-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        
+        .slideshow-info h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .slideshow-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        .slideshow-nav-btn {
+            background-color: #4dabf7;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .slideshow-nav-btn:hover {
+            background-color: #339af0;
+        }
+        
+        .slideshow-nav-btn:disabled {
+            background-color: #adb5bd;
+            cursor: not-allowed;
+        }
+        
+        /* Tip Editor Styles */
+        .tip-editor-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tip-editor-field {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .tip-editor-field label {
+            font-weight: bold;
+            color: #333;
+            min-width: 100px;
+        }
+        
+        .tip-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tip-currency {
+            position: absolute;
+            left: 10px;
+            color: #495057;
+        }
+        
+        #tip-amount-input {
+            padding: 8px 12px 8px 25px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 120px;
+        }
+        
+        .update-tip-btn {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .update-tip-btn:hover {
+            background-color: #218838;
+        }
+        
+        .clear-button-container {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        
+        .clear-tip-btn {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 300px;
+            transition: background-color 0.2s;
+        }
+        
+        .clear-tip-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .tip-editor-help {
+            margin: 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        /* Database Update Notification */
+        .db-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .db-notification.success {
+            background-color: #28a745;
+        }
+        
+        .db-notification.error {
+            background-color: #dc3545;
+        }
+        
+        .db-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Supabase Receipts</h1>
+    
+    <!-- Database update notification -->
+    <div id="db-notification" class="db-notification">
+        Database updated successfully!
+    </div>
+    
+    <div class="container">
+        <div class="stats-container">
+            <div class="stat-box">
+                <h3><i class="fas fa-building"></i> Bar</h3>
+                <select id="bar-filter" class="filter-select">
+                    <option value="all" selected>All</option>
+                    <option value="cork-harbour">Cork Harbour Pub</option>
+                    <option value="tipenter-bar">Tipenter Bar</option>
+                    <option value="downtown-pub">Downtown Pub</option>
+                </select>
+            </div>
+            <div class="stat-box">
+                <h3><i class="fas fa-cash-register"></i> POS System</h3>
+                <select id="pos-filter" class="filter-select">
+                    <option value="all" selected>All</option>
+                    <option value="toast">Toast</option>
+                    <option value="square">Square</option>
+                    <option value="lightspeed">Lightspeed</option>
+                    <option value="spoton">SpotOn</option>
+                </select>
+            </div>
+            <div class="stat-box">
+                <h3><i class="fas fa-calendar-alt"></i> Date</h3>
+                <input type="date" id="date-filter" class="date-input">
+            </div>
+            <div class="stat-box">
+                <h3><i class="fas fa-list-ol"></i> Limit</h3>
+                <select id="limit-filter" class="filter-select">
+                    <option value="5">5 Receipts</option>
+                    <option value="10" selected>10 Receipts</option>
+                    <option value="20">20 Receipts</option>
+                    <option value="50">50 Receipts</option>
+                    <option value="100">100 Receipts</option>
+                </select>
+            </div>
+            <div class="stat-box">
+                <h3><i class="fas fa-dollar-sign total-icon"></i> Total Tips</h3>
+                <div class="stat-number" id="total-tips">$0.00</div>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button id="test-storage-btn">Load Receipts from Database</button>
+        </div>
+        
+        <!-- Tip Amount Editor -->
+        <div class="tip-editor-container">
+            <div class="tip-editor-field">
+                <label for="tip-amount-input">Tip Amount:</label>
+                <div class="tip-input-wrapper">
+                    <span class="tip-currency">$</span>
+                    <input type="text" id="tip-amount-input" placeholder="0.00">
+                </div>
+                <button id="update-tip-btn" class="update-tip-btn">Update Tip</button>
+            </div>
+            <div class="clear-button-container">
+                <button id="clear-tip-btn" class="clear-tip-btn">Clear Tip Amount</button>
+            </div>
+            <p class="tip-editor-help">Edit the tip amount and click "Update Tip" to save changes for the current receipt.</p>
+        </div>
+        
+        <!-- Slideshow Container -->
+        <div class="slideshow-container" id="slideshow-container">
+            <div class="slideshow-image-container" id="slideshow-image-container">
+                <div class="slideshow-placeholder">
+                    <p>No receipt images loaded yet. Click "Load Receipts from Database" to start.</p>
+                </div>
+            </div>
+            <div class="slideshow-controls">
+                <div class="slideshow-nav">
+                    <button id="prev-slide-btn" class="slideshow-nav-btn" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <div class="slideshow-counter" id="slideshow-counter">0 / 0</div>
+                    <button id="next-slide-btn" class="slideshow-nav-btn" disabled>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="slideshow-info" id="slideshow-info">
+                <h3>Receipt Information</h3>
+                <p>Customer: <span id="receipt-customer">N/A</span></p>
+                <p>Amount: <span id="receipt-amount">$0.00</span></p>
+                <p>Tip: <span id="receipt-tip">$0.00</span></p>
+            </div>
+        </div>
+        
+        <div class="log-container" id="log-container">
+            <div class="log-entry info">Initializing...</div>
+        </div>
+    </div>
+    
+    <!-- Import Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <!-- Import Supabase from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Import Receipt Placeholder Utility -->
+    <script src="js/receipt-placeholder.js"></script>
+    
+    <!-- Import test script -->
+    <script src="test-supabase-receipts.js"></script>
+</body>
+</html>

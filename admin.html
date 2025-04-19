@@ -95,6 +95,10 @@
                         <i class="fas fa-calendar-alt"></i>
                         <span>7shifts Playground</span>
                     </a>
+                    <a href="admin-receipt-approval.html" class="admin-nav-item">
+                        <i class="fas fa-receipt"></i>
+                        <span>Receipt Approval</span>
+                    </a>
                 </div>
                 <div class="nav-footer">
                     <a href="#" id="sign-out-btn" class="admin-nav-item sign-out-btn">
@@ -638,8 +642,66 @@
     <!-- Import Firebase from firebase-config.js -->
     <script type="module" src="js/firebase-config.js"></script>
     
-    <!-- Admin Login Script -->
-    <script type="module" src="js/admin-login.js"></script>
+    <!-- Admin Login Script with Simple Password -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminLoginOverlay = document.getElementById('admin-login-overlay');
+            const adminContainer = document.getElementById('admin-container');
+            const adminLoginBtn = document.getElementById('admin-login-btn');
+            const adminPassword = document.getElementById('admin-password');
+            const passwordError = document.getElementById('password-error');
+            const togglePasswordBtn = document.getElementById('toggle-password');
+            
+            // Check if already logged in
+            if (localStorage.getItem('admin_logged_in') === 'true') {
+                adminLoginOverlay.style.display = 'none';
+                adminContainer.style.display = 'flex';
+            }
+            
+            // Handle login button click
+            adminLoginBtn.addEventListener('click', function() {
+                const password = adminPassword.value;
+                
+                if (password === 'claudeEnter') {
+                    // Correct password
+                    localStorage.setItem('admin_logged_in', 'true');
+                    adminLoginOverlay.style.display = 'none';
+                    adminContainer.style.display = 'flex';
+                    passwordError.style.display = 'none';
+                } else {
+                    // Incorrect password
+                    passwordError.textContent = 'Incorrect password. Please try again.';
+                    passwordError.style.display = 'block';
+                }
+            });
+            
+            // Handle Enter key press
+            adminPassword.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    adminLoginBtn.click();
+                }
+            });
+            
+            // Toggle password visibility
+            togglePasswordBtn.addEventListener('click', function() {
+                const type = adminPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+                adminPassword.setAttribute('type', type);
+                togglePasswordBtn.querySelector('i').classList.toggle('fa-eye');
+                togglePasswordBtn.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // Handle sign out
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('admin_logged_in');
+                    window.location.reload();
+                });
+            }
+        });
+    </script>
     
     <!-- Admin JavaScript -->
     <script type="module" src="js/admin.js"></script>

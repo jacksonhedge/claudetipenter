@@ -6,189 +6,120 @@
     <title>TipEnter - Login</title>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
-    <!-- Define CSS variables before other stylesheets -->
-    <style>
-        :root {
-            --primary-orange: #F76E11;
-            --secondary-yellow: #FCBF49;
-            --accent-red: #FF5757;
-            --light-yellow: #FFF2D8;
-        }
-    </style>
-    <!-- Main stylesheets -->
+    <link rel="icon" type="image/png" href="assets/favicon/favicon.png">
+    <!-- Styles -->
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/notification.css">
+    <link rel="stylesheet" href="css/auth.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <img src="assets/images/tipenter-logo.svg" alt="TipEnter Logo" class="login-logo">
-                <h1>TipEnter</h1>
-                <p>Simplify your tip management</p>
-            </div>
-            
-            <div class="login-tabs">
-                <button class="tab-btn active" data-tab="login-tab">Login</button>
-                <button class="tab-btn" data-tab="signup-tab">Sign Up</button>
-            </div>
-            
-            <div class="login-content">
-                <!-- Login Tab -->
-                <div id="login-tab" class="tab-panel active">
-                    <div class="role-selector">
-                        <h3>Select your role</h3>
-                        <div class="role-buttons">
-                            <button type="button" class="role-btn active" data-role="bartender">
-                                <i class="fas fa-glass-martini-alt"></i>
-                                <span>Bartender</span>
-                            </button>
-                <button type="button" class="role-btn" data-role="manager">
-                    <i class="fas fa-briefcase"></i>
-                    <span>Business</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <form id="login-form" class="auth-form" onsubmit="return false;">
-                        <input type="hidden" id="login-role" name="role" value="bartender">
-                        
-                        <div class="form-group">
-                            <label for="login-email">Email</label>
-                            <input type="email" id="login-email" name="email" required>
-                        </div>
-                        <div class="form-group password-group">
-                            <label for="login-password">Password</label>
-                            <div class="password-input-container">
-                                <input type="password" id="login-password" name="password" required>
-                                <button type="button" class="password-toggle">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="forgot-password">
-                                <a href="#">Forgot password?</a>
-                            </div>
-                        </div>
-                        <button type="button" class="auth-btn">Login</button>
-                    </form>
-                    
-                    <div class="divider">
-                        <span>or login with</span>
-                    </div>
-                    
-                    <div class="sso-options">
-                        <button class="sso-btn shifts-btn">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Login with 7Shifts</span>
-                        </button>
-                    </div>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TipEnter</div>
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
                 </div>
-                
-                <!-- Sign Up Tab -->
-                <div id="signup-tab" class="tab-panel">
-                    <div class="role-selector">
-                        <h3>Select your role</h3>
-                        <div class="role-buttons">
-                            <button type="button" class="role-btn active" data-role="bartender">
-                                <i class="fas fa-glass-martini-alt"></i>
-                                <span>Bartender</span>
-                            </button>
-                <button type="button" class="role-btn" data-role="manager">
-                    <i class="fas fa-briefcase"></i>
-                    <span>Business</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <form id="signup-form" class="auth-form" onsubmit="return false;">
-                        <input type="hidden" id="signup-role" name="role" value="bartender">
-                        
-                        <div class="form-group">
-                            <label for="signup-name">Full Name</label>
-                            <input type="text" id="signup-name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="signup-email">Email</label>
-                            <input type="email" id="signup-email" name="email" required>
-                        </div>
-                        <div class="form-group password-group">
-                            <label for="signup-password">Password</label>
-                            <div class="password-input-container">
-                                <input type="password" id="signup-password" name="password" required>
-                                <button type="button" class="password-toggle">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="password-hint">
-                                <small>Password must be at least 6 characters long</small>
-                            </div>
-                        </div>
-                        <div class="form-group password-group">
-                            <label for="signup-confirm">Confirm Password</label>
-                            <div class="password-input-container">
-                                <input type="password" id="signup-confirm" name="confirm" required>
-                                <button type="button" class="password-toggle">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="password-match-indicator" id="password-match-indicator"></div>
-                        </div>
-                        <div class="form-group restaurant-select-group">
-                            <label for="signup-workplace">Workplace <span class="optional-label">(optional)</span></label>
-                            <select id="signup-workplace" name="workplace">
-                                <option value="" disabled selected>Loading workplaces...</option>
-                            </select>
-                        </div>
-                        <div class="form-group other-workplace-group" style="display: none;">
-                            <label for="signup-other-workplace">Other Workplace Name</label>
-                            <input type="text" id="signup-other-workplace" name="other_workplace" placeholder="Enter your workplace name">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="signup-position">Position</label>
-                            <select id="signup-position" name="position" required>
-                                <option value="" disabled selected>Select your position</option>
-                                <option value="bartender">Bartender</option>
-                                <option value="server">Server</option>
-                                <option value="manager">Manager</option>
-                                <option value="owner">Owner</option>
-                            </select>
-                        </div>
-                        <div class="form-group manager-code-group" style="display: none;">
-                            <label for="signup-manager-code">Manager Registration Code</label>
-                            <input type="text" id="signup-manager-code" name="managerCode" placeholder="Enter the code provided by your restaurant">
-                            <div class="code-hint">
-                                <small>Manager accounts require a registration code from your restaurant</small>
-                            </div>
-                        </div>
-                        <button type="submit" class="auth-btn">Sign Up</button>
-                    </form>
-                    
-                    <div class="divider">
-                        <span>or sign up with</span>
-                    </div>
-                    
-                    <div class="sso-options">
-                        <button class="sso-btn shifts-btn">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Sign up with 7Shifts</span>
-                        </button>
-                    </div>
+                <nav class="nav-links">
+                    <a href="landing.html#features">Features</a>
+                    <a href="landing.html#how-it-works">How It Works</a>
+                    <a href="landing.html#testimonials">Testimonials</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="auth-container" id="authContainer">
+                <!-- Auth component will render here -->
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
                 </div>
             </div>
         </div>
-        
-    </div>
-    
-    <footer>
-        <p>Powered by Claude API | <span class="version">v1.0.0</span></p>
-        <p>Made with ❤️ in Pittsburgh</p>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>TipEnter</h3>
+                    <ul class="footer-links">
+                        <li><a href="landing.html#features">Features</a></li>
+                        <li><a href="landing.html#how-it-works">How It Works</a></li>
+                        <li><a href="landing.html#testimonials">Testimonials</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Support Center</a></li>
+                        <li><a href="#">FAQs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>© 2025 TipEnter. All rights reserved. Made with ❤️ in Pittsburgh</p>
+            </div>
+        </div>
     </footer>
+
+    <!-- Scripts -->
+    <!-- First, load Supabase client from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
     
-    <!-- Simplified login script -->
-    <script src="js/simple-login.js"></script>
+    <!-- Then load our components as modules -->
+    <script type="module">
+        // Import the auth component
+        import AuthComponent from './js/components/authComponent.js';
+        
+        // Initialize the auth component when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if we're on the signup section
+            const isSignup = window.location.hash === '#signup';
+            
+            // Create the auth component
+            const authComponent = new AuthComponent({
+                containerId: 'authContainer',
+                onAuthStateChanged: (user) => {
+                    console.log('Auth state changed:', user);
+                    
+                    // If user is logged in, redirect to home page after a short delay
+                    if (user) {
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 2000);
+                    }
+                }
+            });
+            
+            // If the URL has #signup, switch to signup view
+            if (isSignup) {
+                // We need to wait a bit for the component to initialize
+                setTimeout(() => {
+                    document.getElementById('signupLink')?.click();
+                }, 500);
+            }
+        });
+    </script>
 </body>
 </html>

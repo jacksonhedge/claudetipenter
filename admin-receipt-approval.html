@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Receipt Approval</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/receipt-approval.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Admin Login Overlay -->
+    <div id="admin-login-overlay" class="admin-login-overlay">
+        <div class="admin-login-card">
+            <div class="admin-login-header">
+                <h1>TipEnter Admin</h1>
+                <p>Enter password to continue</p>
+            </div>
+            <div class="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="admin-password" class="admin-password-input">
+                        <button type="button" id="toggle-password" class="toggle-password-btn">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="password-error" class="password-error"></div>
+                <button id="admin-login-btn" class="admin-login-btn">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-container" id="admin-container" style="display: none;">
+        <!-- Admin Sidebar -->
+        <div class="admin-sidebar">
+            <div class="admin-header">
+                <h1>TipEnter</h1>
+                <p>Receipt Approval</p>
+            </div>
+            
+            <nav class="admin-nav">
+                <div class="nav-main-items">
+                    <a href="admin.html" class="admin-nav-item">
+                        <i class="fas fa-home"></i>
+                        <span>Admin Dashboard</span>
+                    </a>
+                    <a href="#" class="admin-nav-item active" data-tab="pending-tab">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending Approval</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="approved-tab">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Approved</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="rejected-tab">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Rejected</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="settings-tab">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+                <div class="nav-footer">
+                    <a href="#" id="test-storage-btn" class="admin-nav-item">
+                        <i class="fas fa-vial"></i>
+                        <span>Test Storage</span>
+                    </a>
+                    <a href="#" id="sign-out-btn" class="admin-nav-item sign-out-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+        
+        <!-- Admin Content -->
+        <div class="admin-content">
+            <!-- Pending Approval Tab -->
+            <div id="pending-tab" class="tab-content active">
+                <div class="admin-card">
+                    <h2>Pending Receipt Approval</h2>
+                    <div class="approval-stats">
+                        <div class="stat-box">
+                            <div class="stat-icon pending-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Pending</h3>
+                                <div class="stat-number" id="pending-count">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon approved-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Approved</h3>
+                                <div class="stat-number" id="approved-count">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon rejected-icon">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Rejected</h3>
+                                <div class="stat-number" id="rejected-count">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon total-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Total Tips</h3>
+                                <div class="stat-number" id="total-tips">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="approval-filters">
+                        <div class="filter-group">
+                            <label for="date-filter">Date Range</label>
+                            <select id="date-filter" class="filter-select">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="last7days" selected>Last 7 Days</option>
+                                <option value="last30days">Last 30 Days</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" id="custom-date-range" style="display: none;">
+                            <label for="start-date">Start Date</label>
+                            <input type="date" id="start-date" class="date-input">
+                            <label for="end-date">End Date</label>
+                            <input type="date" id="end-date" class="date-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="establishment-filter">Establishment</label>
+                            <select id="establishment-filter" class="filter-select">
+                                <option value="all" selected>All Establishments</option>
+                                <!-- Establishments will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="user-filter">User</label>
+                            <select id="user-filter" class="filter-select">
+                                <option value="all" selected>All Users</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <button id="apply-filters-btn" class="filter-btn">Apply Filters</button>
+                        <button id="reset-filters-btn" class="filter-btn secondary">Reset</button>
+                    </div>
+                    
+                    <div class="receipts-container">
+                        <div id="receipts-list" class="receipts-list">
+                            <!-- Receipts will be loaded here -->
+                            <div class="loading-message">Loading receipts...</div>
+                        </div>
+                        
+                        <div id="receipt-detail" class="receipt-detail">
+                            <div class="empty-state">
+                                <i class="fas fa-receipt empty-icon"></i>
+                                <p>Select a receipt to view details</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pagination">
+                        <button id="prev-page" class="pagination-btn" disabled>&lt; Previous</button>
+                        <span id="page-info">Page 1 of 1</span>
+                        <button id="next-page" class="pagination-btn" disabled>Next &gt;</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Approved Tab -->
+            <div id="approved-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Approved Receipts</h2>
+                    
+                    <div class="approval-filters">
+                        <div class="filter-group">
+                            <label for="approved-date-filter">Date Range</label>
+                            <select id="approved-date-filter" class="filter-select">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="last7days" selected>Last 7 Days</option>
+                                <option value="last30days">Last 30 Days</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" id="approved-custom-date-range" style="display: none;">
+                            <label for="approved-start-date">Start Date</label>
+                            <input type="date" id="approved-start-date" class="date-input">
+                            <label for="approved-end-date">End Date</label>
+                            <input type="date" id="approved-end-date" class="date-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="approved-establishment-filter">Establishment</label>
+                            <select id="approved-establishment-filter" class="filter-select">
+                                <option value="all" selected>All Establishments</option>
+                                <!-- Establishments will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="approved-user-filter">User</label>
+                            <select id="approved-user-filter" class="filter-select">
+                                <option value="all" selected>All Users</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <button id="approved-apply-filters-btn" class="filter-btn">Apply Filters</button>
+                        <button id="approved-reset-filters-btn" class="filter-btn secondary">Reset</button>
+                        <button id="export-approved-btn" class="filter-btn export-btn">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                    
+                    <div class="approved-table-container">
+                        <table class="receipts-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Establishment</th>
+                                    <th>Customer</th>
+                                    <th>Check #</th>
+                                    <th>Amount</th>
+                                    <th>Tip</th>
+                                    <th>Total</th>
+                                    <th>Approved By</th>
+                                    <th>Image</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approved-table-body">
+                                <!-- Approved receipts will be loaded here -->
+                                <tr>
+                                    <td colspan="11" class="loading-message">Loading approved receipts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="pagination">
+                        <button id="approved-prev-page" class="pagination-btn" disabled>&lt; Previous</button>
+                        <span id="approved-page-info">Page 1 of 1</span>
+                        <button id="approved-next-page" class="pagination-btn" disabled>Next &gt;</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rejected Tab -->
+            <div id="rejected-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Rejected Receipts</h2>
+                    
+                    <div class="approval-filters">
+                        <div class="filter-group">
+                            <label for="rejected-date-filter">Date Range</label>
+                            <select id="rejected-date-filter" class="filter-select">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="last7days" selected>Last 7 Days</option>
+                                <option value="last30days">Last 30 Days</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" id="rejected-custom-date-range" style="display: none;">
+                            <label for="rejected-start-date">Start Date</label>
+                            <input type="date" id="rejected-start-date" class="date-input">
+                            <label for="rejected-end-date">End Date</label>
+                            <input type="date" id="rejected-end-date" class="date-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="rejected-establishment-filter">Establishment</label>
+                            <select id="rejected-establishment-filter" class="filter-select">
+                                <option value="all" selected>All Establishments</option>
+                                <!-- Establishments will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="rejected-user-filter">User</label>
+                            <select id="rejected-user-filter" class="filter-select">
+                                <option value="all" selected>All Users</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <button id="rejected-apply-filters-btn" class="filter-btn">Apply Filters</button>
+                        <button id="rejected-reset-filters-btn" class="filter-btn secondary">Reset</button>
+                        <button id="export-rejected-btn" class="filter-btn export-btn">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                    
+                    <div class="rejected-table-container">
+                        <table class="receipts-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Establishment</th>
+                                    <th>Customer</th>
+                                    <th>Check #</th>
+                                    <th>Amount</th>
+                                    <th>Tip</th>
+                                    <th>Total</th>
+                                    <th>Rejected By</th>
+                                    <th>Reason</th>
+                                    <th>Image</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rejected-table-body">
+                                <!-- Rejected receipts will be loaded here -->
+                                <tr>
+                                    <td colspan="12" class="loading-message">Loading rejected receipts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="pagination">
+                        <button id="rejected-prev-page" class="pagination-btn" disabled>&lt; Previous</button>
+                        <span id="rejected-page-info">Page 1 of 1</span>
+                        <button id="rejected-next-page" class="pagination-btn" disabled>Next &gt;</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="admin-card">
+                    <h2>Receipt Approval Settings</h2>
+                    
+                    <div class="settings-section">
+                        <h3>Approval Workflow</h3>
+                        <div class="setting-group">
+                            <label for="auto-approve-toggle">Auto-Approve Receipts</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="auto-approve-toggle" class="toggle-input">
+                                <label for="auto-approve-toggle" class="toggle-label"></label>
+                            </div>
+                            <p class="setting-description">When enabled, receipts will be automatically approved without manual review.</p>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="approval-threshold">Auto-Approval Threshold</label>
+                            <div class="threshold-input">
+                                <input type="number" id="approval-threshold" min="0" step="0.01" value="50.00">
+                                <span class="input-addon">$</span>
+                            </div>
+                            <p class="setting-description">Receipts with tips below this amount will be auto-approved (if auto-approve is enabled).</p>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="notification-toggle">Email Notifications</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notification-toggle" class="toggle-input" checked>
+                                <label for="notification-toggle" class="toggle-label"></label>
+                            </div>
+                            <p class="setting-description">Receive email notifications when new receipts are pending approval.</p>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="notification-email">Notification Email</label>
+                            <input type="email" id="notification-email" placeholder="Enter email address">
+                            <p class="setting-description">Email address to receive approval notifications.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>Approval Permissions</h3>
+                        <div class="setting-group">
+                            <label>Users with Approval Permission</label>
+                            <div class="permission-users">
+                                <div class="permission-user">
+                                    <span class="user-email">admin@example.com</span>
+                                    <button class="remove-user-btn"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="permission-user">
+                                    <span class="user-email">manager@example.com</span>
+                                    <button class="remove-user-btn"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <div class="add-user-permission">
+                                <input type="email" id="new-permission-email" placeholder="Enter email address">
+                                <button id="add-permission-btn">Add User</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-actions">
+                        <button id="save-settings-btn" class="primary-btn">Save Settings</button>
+                        <button id="reset-settings-btn" class="secondary-btn">Reset to Defaults</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Receipt Detail Modal -->
+    <div id="receipt-modal" class="modal">
+        <div class="modal-content receipt-modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="receipt-modal-header">
+                <h2>Receipt Details</h2>
+                <div class="receipt-status pending">Pending Approval</div>
+            </div>
+            <div class="receipt-modal-body">
+                <div class="receipt-columns">
+                    <div class="receipt-info-column">
+                        <div class="receipt-info-section">
+                            <h3>Receipt Information</h3>
+                            <div class="receipt-info-grid">
+                                <div class="info-group">
+                                    <label>Date</label>
+                                    <div id="modal-date" class="info-value">03/15/2025</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Time</label>
+                                    <div id="modal-time" class="info-value">7:45 PM</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Check #</label>
+                                    <div id="modal-check-number" class="info-value">1234</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Customer</label>
+                                    <div id="modal-customer" class="info-value">John Smith</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Payment Type</label>
+                                    <div id="modal-payment-type" class="info-value">Visa</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Amount</label>
+                                    <div id="modal-amount" class="info-value">$45.67</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Tip</label>
+                                    <div id="modal-tip" class="info-value">$9.13</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Total</label>
+                                    <div id="modal-total" class="info-value">$54.80</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="receipt-info-section">
+                            <h3>User Information</h3>
+                            <div class="receipt-info-grid">
+                                <div class="info-group">
+                                    <label>User</label>
+                                    <div id="modal-user" class="info-value">jane.doe@example.com</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Establishment</label>
+                                    <div id="modal-establishment" class="info-value">The Fancy Restaurant</div>
+                                </div>
+                                <div class="info-group">
+                                    <label>Submitted</label>
+                                    <div id="modal-submitted" class="info-value">03/15/2025 8:30 PM</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="receipt-actions">
+                            <div class="action-group">
+                                <label for="rejection-reason">Rejection Reason (optional)</label>
+                                <select id="rejection-reason" class="rejection-select">
+                                    <option value="">Select a reason...</option>
+                                    <option value="Invalid receipt">Invalid receipt</option>
+                                    <option value="Duplicate receipt">Duplicate receipt</option>
+                                    <option value="Incorrect amount">Incorrect amount</option>
+                                    <option value="Incorrect tip">Incorrect tip</option>
+                                    <option value="Missing signature">Missing signature</option>
+                                    <option value="Other">Other (specify below)</option>
+                                </select>
+                            </div>
+                            <div class="action-group" id="other-reason-group" style="display: none;">
+                                <label for="other-reason">Other Reason</label>
+                                <textarea id="other-reason" class="other-reason-input" placeholder="Enter rejection reason..."></textarea>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="approve-receipt-btn" class="approve-btn">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button id="reject-receipt-btn" class="reject-btn">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-image-column">
+                        <div class="receipt-image-container">
+                            <img id="receipt-image" src="data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22><rect width=%22300%22 height=%22400%22 fill=%22%23f8f9fa%22 /><text x=%22150%22 y=%22200%22 font-size=%2220%22 text-anchor=%22middle%22 alignment-baseline=%22middle%22 fill=%22%23495057%22>Receipt Image</text></svg>" alt="Receipt Image" 
+                                 onerror="this.onerror=null; this.classList.add('image-error'); this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22><rect width=%22300%22 height=%22400%22 fill=%22%23f8f9fa%22 /><text x=%22150%22 y=%22200%22 font-size=%2220%22 text-anchor=%22middle%22 alignment-baseline=%22middle%22 fill=%22%23dc3545%22>Image Not Found</text></svg>';">
+                        </div>
+                        <div class="image-controls">
+                            <button id="zoom-in-btn" class="image-control-btn">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button id="zoom-out-btn" class="image-control-btn">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button id="rotate-btn" class="image-control-btn">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            <button id="reset-image-btn" class="image-control-btn">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="admin-footer">
+        <p>Powered by Claude API | <span class="version">v1.0.0</span></p>
+        <p>Made with ❤️ in Pittsburgh</p>
+    </footer>
+    
+    <!-- Import Supabase from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Import Firebase from firebase-config.js -->
+    <script type="module" src="js/firebase-config.js"></script>
+    
+    <!-- Import Supabase from supabaseService.js -->
+    <script type="module" src="js/services/supabaseService.js"></script>
+    
+    <!-- Import Receipt Placeholder Utility -->
+    <script src="js/receipt-placeholder.js"></script>
+    
+    <!-- Admin Login Script with Simple Password -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminLoginOverlay = document.getElementById('admin-login-overlay');
+            const adminContainer = document.getElementById('admin-container');
+            const adminLoginBtn = document.getElementById('admin-login-btn');
+            const adminPassword = document.getElementById('admin-password');
+            const passwordError = document.getElementById('password-error');
+            const togglePasswordBtn = document.getElementById('toggle-password');
+            
+            // Check if already logged in
+            if (localStorage.getItem('admin_logged_in') === 'true') {
+                adminLoginOverlay.style.display = 'none';
+                adminContainer.style.display = 'flex';
+            }
+            
+            // Handle login button click
+            adminLoginBtn.addEventListener('click', function() {
+                const password = adminPassword.value;
+                
+                if (password === 'claudeEnter') {
+                    // Correct password
+                    localStorage.setItem('admin_logged_in', 'true');
+                    adminLoginOverlay.style.display = 'none';
+                    adminContainer.style.display = 'flex';
+                    passwordError.style.display = 'none';
+                } else {
+                    // Incorrect password
+                    passwordError.textContent = 'Incorrect password. Please try again.';
+                    passwordError.style.display = 'block';
+                }
+            });
+            
+            // Handle Enter key press
+            adminPassword.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    adminLoginBtn.click();
+                }
+            });
+            
+            // Toggle password visibility
+            togglePasswordBtn.addEventListener('click', function() {
+                const type = adminPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+                adminPassword.setAttribute('type', type);
+                togglePasswordBtn.querySelector('i').classList.toggle('fa-eye');
+                togglePasswordBtn.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // Handle sign out
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('admin_logged_in');
+                    window.location.reload();
+                });
+            }
+        });
+    </script>
+    
+    <!-- Receipt Approval JavaScript -->
+    <script type="module" src="js/receipt-approval.js"></script>
+</body>
+</html>
