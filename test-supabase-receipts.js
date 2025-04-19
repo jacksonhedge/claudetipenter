@@ -58,6 +58,12 @@ function initTest() {
         dateFilterInput.addEventListener('change', loadReceiptsFromStorage);
         limitFilterSelect.addEventListener('change', loadReceiptsFromStorage);
         
+        // Set the date filter to the current date
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        dateFilterInput.value = formattedDate;
+        log(`Setting initial date filter to today: ${formattedDate}`);
+        
         // Set up keyboard navigation
         document.addEventListener('keydown', handleKeyboardNavigation);
         
@@ -92,7 +98,7 @@ function initTest() {
             }
         });
         
-        // Load initial receipts from storage
+        // Load initial receipts from storage with the date filter applied
         loadReceiptsFromStorage();
     } else {
         logError('Supabase client not loaded. Make sure to include the Supabase CDN in your HTML file.');
@@ -168,7 +174,23 @@ async function updateTipAmount() {
     log(`Updating tip amount for receipt: ${receipt.customer_name} from $${receipt.tip_amount ? receipt.tip_amount.toFixed(2) : '0.00'} to $${newTipAmount.toFixed(2)}`);
     
     try {
-        // Update the receipt in the database
+        // Create a unique key for this receipt to store in localStorage
+        const receiptKey = `receipt_${receipt.bar_name}_${receipt.customer_name}_${receipt.amount}`.replace(/\s+/g, '_');
+        
+        // Get existing tip updates from localStorage
+        let tipUpdates = {};
+        const savedTipUpdates = localStorage.getItem('tipenter_tip_updates');
+        if (savedTipUpdates) {
+            tipUpdates = JSON.parse(savedTipUpdates);
+        }
+        
+        // Save this tip update
+        tipUpdates[receiptKey] = newTipAmount;
+        localStorage.setItem('tipenter_tip_updates', JSON.stringify(tipUpdates));
+        
+        log(`Saved tip update to localStorage with key: ${receiptKey}`);
+        
+        // Try to update in database if we have a receipt_id
         if (receipt.receipt_id) {
             // If we have a receipt ID, update in the database
             const { error } = await supabaseClient
@@ -176,12 +198,16 @@ async function updateTipAmount() {
                 .update({ tip_amount: newTipAmount })
                 .eq('id', receipt.receipt_id);
             
-            if (error) throw error;
-            
-            log(`Successfully updated tip amount in database for receipt ID: ${receipt.receipt_id}`);
-            
-            // Show database update notification
-            showNotification('Tip amount updated in database!', 'success');
+            if (error) {
+                logWarning(`Database update failed, but tip is saved locally: ${error.message}`);
+            } else {
+                log(`Successfully updated tip amount in database for receipt ID: ${receipt.receipt_id}`);
+                // Show database update notification
+                showNotification('Tip amount updated in database!', 'success');
+            }
+        } else {
+            // Show local storage notification instead
+            showNotification('Tip amount saved locally!', 'success');
         }
         
         // Update the receipt in the local array
@@ -217,6 +243,14 @@ async function loadReceiptsFromStorage() {
         
         // Reset stats
         totalTipsElement.textContent = "$0.00";
+        
+        // Get filter values
+        const barFilter = barFilterSelect.value;
+        const posFilter = posFilterSelect.value;
+        const dateFilter = dateFilterInput.value;
+        const limitFilter = parseInt(limitFilterSelect.value, 10);
+        
+        log(`Applying filters - Bar: ${barFilter}, POS: ${posFilter}, Date: ${dateFilter}, Limit: ${limitFilter}`);
         
         // Try to load from storage directly instead of the database table
         try {
@@ -451,6 +485,23 @@ async function clearTipAmount() {
     log(`Clearing tip amount for receipt: ${receipt.customer_name} from $${receipt.tip_amount.toFixed(2)} to $0.00`);
     
     try {
+        // Create a unique key for this receipt in localStorage
+        const receiptKey = `receipt_${receipt.bar_name}_${receipt.customer_name}_${receipt.amount}`.replace(/\s+/g, '_');
+        
+        // Get existing tip updates from localStorage
+        let tipUpdates = {};
+        const savedTipUpdates = localStorage.getItem('tipenter_tip_updates');
+        if (savedTipUpdates) {
+            tipUpdates = JSON.parse(savedTipUpdates);
+            
+            // Remove this receipt's tip from localStorage
+            if (tipUpdates[receiptKey]) {
+                delete tipUpdates[receiptKey];
+                localStorage.setItem('tipenter_tip_updates', JSON.stringify(tipUpdates));
+                log(`Removed tip amount from localStorage for key: ${receiptKey}`);
+            }
+        }
+        
         // Update the receipt in the database
         if (receipt.receipt_id) {
             // If we have a receipt ID, update in the database
@@ -459,12 +510,16 @@ async function clearTipAmount() {
                 .update({ tip_amount: 0 })
                 .eq('id', receipt.receipt_id);
             
-            if (error) throw error;
-            
-            log(`Successfully cleared tip amount in database for receipt ID: ${receipt.receipt_id}`);
-            
-            // Show database update notification
-            showNotification('Tip amount cleared in database!', 'success');
+            if (error) {
+                logWarning(`Database update failed, but tip is cleared locally: ${error.message}`);
+            } else {
+                log(`Successfully cleared tip amount in database for receipt ID: ${receipt.receipt_id}`);
+                // Show database update notification
+                showNotification('Tip amount cleared in database!', 'success');
+            }
+        } else {
+            // Show local storage notification instead
+            showNotification('Tip amount cleared locally!', 'success');
         }
         
         // Update the receipt in the local array
@@ -709,6 +764,14 @@ async function testStorage() {
     try {
         log('Loading receipts from storage bin...');
         
+        // Load saved tip updates from localStorage
+        let tipUpdates = {};
+        const savedTipUpdates = localStorage.getItem('tipenter_tip_updates');
+        if (savedTipUpdates) {
+            tipUpdates = JSON.parse(savedTipUpdates);
+            log(`Loaded ${Object.keys(tipUpdates).length} saved tip updates from localStorage`);
+        }
+        
         // Try different bucket names
         const bucketNames = ['receipts_backup', 'receipts', 'tipenter-receipts'];
         let files = [];
@@ -892,6 +955,13 @@ async function testStorage() {
                 image_url: publicUrl,
                 filename: file.name // Store the original filename
             };
+            
+            // Check if we have a saved tip update for this receipt
+            const receiptKey = `receipt_${barName}_${customerName}_${amount}`.replace(/\s+/g, '_');
+            if (tipUpdates[receiptKey]) {
+                receiptData.tip_amount = tipUpdates[receiptKey];
+                log(`Applied saved tip amount of $${tipUpdates[receiptKey].toFixed(2)} to receipt: ${customerName}`);
+            }
             
             // Add to processed receipts array
             processedReceipts.push(receiptData);
