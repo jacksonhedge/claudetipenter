@@ -128,11 +128,17 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 400px;
+            height: 450px; /* Increased height for more zoom */
             overflow: hidden;
             background-color: #eee;
             border-radius: 5px;
             margin-bottom: 15px;
+        }
+        
+        .slideshow-image {
+            max-width: 110%; /* Slightly larger than container for zoom effect */
+            max-height: 110%;
+            object-fit: contain;
         }
         
         .slideshow-nav-arrow {
@@ -143,9 +149,9 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
+            width: 36px; /* Slightly smaller */
+            height: 36px; /* Slightly smaller */
+            font-size: 18px; /* Slightly smaller */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -159,11 +165,11 @@
         }
         
         .slideshow-nav-arrow.prev {
-            left: 10px;
+            left: 5px; /* Closer to the edge */
         }
         
         .slideshow-nav-arrow.next {
-            right: 10px;
+            right: 5px; /* Closer to the edge */
         }
         
         .slideshow-nav-arrow:disabled {
@@ -171,11 +177,7 @@
             cursor: not-allowed;
         }
         
-        .slideshow-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
+        /* This is a duplicate rule that was causing a conflict - removed */
         
         .slideshow-controls {
             display: flex;
@@ -290,6 +292,62 @@
             background-color: #218838;
         }
         
+        .send-to-ai-btn {
+            padding: 12px 20px;
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .send-to-ai-btn:hover {
+            background-color: #5a32a3;
+        }
+        
+        /* Multi-select styles */
+        .receipt-checkbox {
+            margin-right: 10px;
+        }
+        
+        .multi-select-container {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .multi-select-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .multi-select-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .select-all-btn {
+            background-color: #4dabf7;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .select-all-btn:hover {
+            background-color: #339af0;
+        }
+        
         .clear-button-container {
             display: flex;
             justify-content: center;
@@ -348,6 +406,60 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* Toggle switch styles */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .toggle-label {
+            font-weight: bold;
+        }
+        .toggle-value {
+            margin-left: 10px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -380,8 +492,14 @@
                 </select>
             </div>
             <div class="stat-box">
-                <h3><i class="fas fa-calendar-alt"></i> Date</h3>
-                <input type="date" id="date-filter" class="date-input">
+                <h3><i class="fas fa-calendar-alt"></i> Date Created</h3>
+                <div class="date-info">
+                    <span id="created-at-display" class="date-value">Not selected</span>
+                </div>
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                    <input type="date" id="date-filter" class="date-input" style="flex: 1;">
+                    <button id="save-date-btn" class="save-btn" style="background-color: #28a745; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer;">Save Date</button>
+                </div>
             </div>
             <div class="stat-box">
                 <h3><i class="fas fa-list-ol"></i> Limit</h3>
@@ -411,42 +529,144 @@
                     <span class="tip-currency">$</span>
                     <input type="text" id="tip-amount-input" placeholder="0.00">
                 </div>
-                <button id="update-tip-btn" class="update-tip-btn">Update Tip</button>
+                <button id="update-tip-btn" class="update-tip-btn">Approve</button>
+                <button id="send-to-ai-btn" class="send-to-ai-btn">Send to AI to Render</button>
             </div>
+            
             <div class="clear-button-container">
                 <button id="clear-tip-btn" class="clear-tip-btn">Clear Tip Amount</button>
             </div>
-            <p class="tip-editor-help">Edit the tip amount and click "Update Tip" to save changes for the current receipt.</p>
+            <p class="tip-editor-help">Edit the tip amount and click "Approve" to save changes and approve the receipt. This will mark the receipt as approved by "super admin".</p>
         </div>
         
-        <!-- Slideshow Container -->
-        <div class="slideshow-container" id="slideshow-container">
-            <div class="slideshow-image-container" id="slideshow-image-container">
-                <div class="slideshow-placeholder">
-                    <p>No receipt images loaded yet. Click "Load Receipts from Database" to start.</p>
+        <!-- Three-column layout for Receipt Info, Slideshow, and Claude AI Tip -->
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+            <!-- Left Column: Receipt Information -->
+            <div style="flex: 2; display: flex; flex-direction: column;">
+                <div class="receipt-info-section" id="receipt-info-section" style="flex: 1; padding: 20px; background-color: #e9f7ff; border-radius: 8px; border-right: 4px solid #4dabf7; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 style="margin-top: 0; color: #4dabf7; display: flex; align-items: center;">
+                            <i class="fas fa-receipt" style="margin-right: 10px;"></i>
+                            Receipt Information
+                        </h3>
+                        
+                        <div style="background-color: #fff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <h4 style="margin-top: 0; color: #333;">Receipt Details</h4>
+                            <p style="margin-bottom: 5px;"><strong>Customer:</strong> <span id="receipt-customer-left">N/A</span></p>
+                            <p style="margin-bottom: 5px;"><strong>Amount:</strong> <span id="receipt-amount-left">$0.00</span></p>
+                            <p style="margin-bottom: 5px;"><strong>Tip:</strong> <span id="receipt-tip-left">$0.00</span></p>
+                            <p style="margin-bottom: 0;"><strong>Status:</strong> <span id="receipt-status-left">Pending</span></p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button id="approve-receipt-btn-left" class="update-tip-btn" style="background-color: #4dabf7; width: 100%; padding: 12px; font-size: 16px;">
+                            <i class="fas fa-check" style="margin-right: 5px;"></i>
+                            Approve Receipt
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="slideshow-controls">
-                <div class="slideshow-nav">
-                    <button id="prev-slide-btn" class="slideshow-nav-btn" disabled>
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                    <div class="slideshow-counter" id="slideshow-counter">0 / 0</div>
-                    <button id="next-slide-btn" class="slideshow-nav-btn" disabled>
-                        Next <i class="fas fa-chevron-right"></i>
-                    </button>
+            
+            <!-- Middle Column: Slideshow Container -->
+            <div style="flex: 3;">
+                <div class="slideshow-container" id="slideshow-container">
+                    <div class="slideshow-image-container" id="slideshow-image-container">
+                        <div class="slideshow-placeholder">
+                            <p>No receipt images loaded yet. Click "Load Receipts from Database" to start.</p>
+                        </div>
+                    </div>
+                    <div class="slideshow-controls">
+                        <div class="slideshow-nav">
+                            <button id="prev-slide-btn" class="slideshow-nav-btn" disabled>
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <div class="slideshow-counter" id="slideshow-counter">0 / 0</div>
+                            <button id="next-slide-btn" class="slideshow-nav-btn" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="slideshow-info" id="slideshow-info" style="margin-bottom: 20px;">
+                        <h3>Receipt Information</h3>
+                        <p>Customer: <span id="receipt-customer">N/A</span></p>
+                        <p>Amount: <span id="receipt-amount">$0.00</span></p>
+                        <p>Tip: <span id="receipt-tip">$0.00</span></p>
+                        <button id="approve-receipt-btn" class="update-tip-btn" style="margin-top: 10px; width: 100%;">
+                            <i class="fas fa-check" style="margin-right: 5px;"></i>
+                            Approve Receipt
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="slideshow-info" id="slideshow-info">
-                <h3>Receipt Information</h3>
-                <p>Customer: <span id="receipt-customer">N/A</span></p>
-                <p>Amount: <span id="receipt-amount">$0.00</span></p>
-                <p>Tip: <span id="receipt-tip">$0.00</span></p>
+            
+            <!-- Right Column: Claude AI Rendered Tip Section -->
+            <div style="flex: 2; display: flex; flex-direction: column;">
+                <div class="claude-tip-section" id="claude-tip-section" style="flex: 1; padding: 20px; background-color: #f0e6ff; border-radius: 8px; border-left: 4px solid #6f42c1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 style="margin-top: 0; color: #6f42c1; display: flex; align-items: center;">
+                            <i class="fas fa-robot" style="margin-right: 10px;"></i>
+                            Claude AI Rendered Tip
+                        </h3>
+                        
+                        <div style="margin: 30px 0; text-align: center;">
+                            <div style="font-weight: bold; margin-bottom: 10px; font-size: 16px;">Suggested Tip:</div>
+                            <div class="tip-input-wrapper" style="display: inline-block; background-color: white; padding: 10px 20px; border-radius: 8px; border: 2px solid #6f42c1; margin: 0 auto;">
+                                <span id="claude-tip-amount" style="font-size: 28px; color: #6f42c1; font-weight: bold;">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background-color: #fff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <h4 style="margin-top: 0; color: #333;">Receipt Analysis</h4>
+                            <p style="margin-bottom: 5px;"><strong>Customer:</strong> <span id="claude-customer">N/A</span></p>
+                            <p style="margin-bottom: 5px;"><strong>Amount:</strong> <span id="claude-amount">$0.00</span></p>
+                            <p style="margin-bottom: 5px;"><strong>Date:</strong> <span id="claude-date">N/A</span></p>
+                            <p style="margin-bottom: 0;"><strong>Confidence:</strong> <span id="claude-confidence">N/A</span></p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <p style="margin-bottom: 15px; font-size: 14px; color: #6c757d; font-style: italic;">
+                            This tip amount was automatically extracted from the receipt by Claude AI.
+                        </p>
+                        <button id="approve-claude-tip-btn" class="update-tip-btn" style="background-color: #6f42c1; width: 100%; padding: 12px; font-size: 16px;">
+                            <i class="fas fa-check" style="margin-right: 5px;"></i>
+                            Approve Claude's Tip
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="log-container" id="log-container">
             <div class="log-entry info">Initializing...</div>
+        </div>
+    </div>
+    
+    <!-- Modal for batch processing -->
+    <div id="batch-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <span class="close" id="close-modal" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 style="margin-top: 0;">Batch Process Receipts</h2>
+            <p>Select receipts to process with Claude AI:</p>
+            
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <button id="select-all-btn" class="select-all-btn">Select All</button>
+                </div>
+                <div>
+                    <span id="selected-count">0</span> of <span id="total-count">0</span> selected
+                </div>
+            </div>
+            
+            <div id="modal-receipts-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                <!-- Receipt checkboxes will be added here dynamically -->
+            </div>
+            
+            <div style="text-align: right;">
+                <button id="cancel-batch-btn" style="background-color: #6c757d; margin-right: 10px;">Cancel</button>
+                <button id="process-batch-btn" class="send-to-ai-btn">Process Selected Receipts</button>
+            </div>
         </div>
     </div>
     
@@ -458,6 +678,12 @@
     
     <!-- Import Receipt Placeholder Utility -->
     <script src="js/receipt-placeholder.js"></script>
+    
+    <!-- Import date utilities -->
+    <script src="js/date-utils.js"></script>
+    
+    <!-- Import AI rendering functionality -->
+    <script src="sendToAiForRendering-updated.js"></script>
     
     <!-- Import test script -->
     <script src="test-supabase-receipts.js"></script>
