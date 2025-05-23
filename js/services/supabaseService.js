@@ -7,9 +7,12 @@
 // Note: This file expects the Supabase client to be loaded via CDN in the HTML file:
 // <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-// Supabase configuration with your actual credentials
-const SUPABASE_URL = 'https://gmysjdndtqwkjvrngnze.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdteXNqZG5kdHF3a2p2cm5nbnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzI0MzEsImV4cCI6MjA1OTI0ODQzMX0.3NGSsqVFha767BLiNkbDuv_i_Tp2n_vpcQxVvDLseGM';
+// Import configuration from config.js
+import { SUPABASE_CONFIG } from '../config.js';
+
+// Supabase configuration from config.js (which uses environment variables if available)
+const SUPABASE_URL = SUPABASE_CONFIG.URL;
+const SUPABASE_ANON_KEY = SUPABASE_CONFIG.ANON_KEY;
 
 // Initialize the Supabase client
 // Check if Supabase is loaded
@@ -347,6 +350,70 @@ class SupabaseService {
     } catch (error) {
       console.error('Get receipts error:', error.message);
       return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * Get receipts by date range
+   * @param {Date|string} startDate - Start date
+   * @param {Date|string} endDate - End date
+   * @param {object} options - Additional options (limit, offset, etc.)
+   * @returns {Promise<object>} - Receipts within date range
+   */
+  async getReceiptsByDateRange(startDate, endDate, options = {}) {
+    try {
+      if (!this.user) {
+        throw new Error('User must be authenticated to get receipts');
+      }
+      
+      // Import formatDateForSupabase from date-utils.js
+      const { formatDateForSupabase } = await import('../date-utils.js');
+      
+      // Format dates for Supabase
+      const formattedStartDate = formatDateForSupabase(startDate);
+      const formattedEndDate = formatDateForSupabase(endDate, true);
+      
+      console.log(`Fetching receipts from ${formattedStartDate} to ${formattedEndDate}`);
+      
+      // Build query
+      let query = this.supabase
+        .from('receipts')
+        .select('*')
+        .eq('user_id', this.user.id);
+      
+      // Add date range filter
+      if (formattedStartDate && formattedEndDate) {
+        query = query
+          .gte('created_at', formattedStartDate)
+          .lte('created_at', formattedEndDate);
+      }
+      
+      // Add order by
+      query = query.order('created_at', { ascending: options.ascending || false });
+      
+      // Add pagination
+      if (options.limit) {
+        const offset = options.offset || 0;
+        query = query.range(offset, offset + options.limit - 1);
+      }
+      
+      // Execute query
+      const { data, error, count } = await query;
+      
+      if (error) throw error;
+      
+      return { 
+        success: true, 
+        receipts: data || [],
+        count
+      };
+    } catch (error) {
+      console.error('Get receipts by date range error:', error.message);
+      return { 
+        success: false, 
+        error: error.message,
+        receipts: []
+      };
     }
   }
   

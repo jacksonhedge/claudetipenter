@@ -3,386 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TipEnter - Automatic Tip Entering Solution</title>
+    <title>TipEnter - Receipt Management Software</title>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
-    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/receipt-landing.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Prevent Firebase initialization -->
-    <script>
-        // Block all Firebase imports
-        // This needs to run before any other scripts
-        (function() {
-            // Override importScripts to block Firebase
-            if (typeof importScripts === 'function') {
-                const originalImportScripts = importScripts;
-                window.importScripts = function(url) {
-                    if (url.includes('firebase')) {
-                        console.log('Blocked Firebase import:', url);
-                        return;
-                    }
-                    return originalImportScripts.apply(this, arguments);
-                };
-            }
-            
-            // Override fetch to block Firebase requests
-            const originalFetch = window.fetch;
-            window.fetch = function(url, options) {
-                if (typeof url === 'string' && url.includes('firestore.googleapis.com')) {
-                    console.log('Blocked Firebase fetch:', url);
-                    return Promise.reject(new Error('Firebase fetch blocked'));
-                }
-                return originalFetch.apply(this, arguments);
-            };
-            
-            // Override XMLHttpRequest to block Firebase requests
-            const originalXHROpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
-                if (typeof url === 'string' && url.includes('firestore.googleapis.com')) {
-                    console.log('Blocked Firebase XHR:', url);
-                    this.abort();
-                    return;
-                }
-                return originalXHROpen.apply(this, arguments);
-            };
-            
-            // Create a more comprehensive mock of Firebase
-            window.firebase = {
-                initializeApp: function() { 
-                    console.log('Mock Firebase initializeApp called');
-                    return {
-                        firestore: function() { return {}; },
-                        auth: function() { return {}; }
-                    }; 
-                },
-                auth: function() { 
-                    console.log('Mock Firebase auth called');
-                    return { 
-                        onAuthStateChanged: function(callback) { callback(null); return function() {}; },
-                        signInWithEmailAndPassword: function() { return Promise.resolve({}); },
-                        createUserWithEmailAndPassword: function() { return Promise.resolve({}); },
-                        signOut: function() { return Promise.resolve(); }
-                    }; 
-                },
-                firestore: function() { 
-                    console.log('Mock Firebase firestore called');
-                    return {
-                        collection: function() { return { doc: function() { return {}; } }; },
-                        doc: function() { return {}; },
-                        getDoc: function() { return Promise.resolve({ exists: function() { return false; } }); },
-                        setDoc: function() { return Promise.resolve(); },
-                        updateDoc: function() { return Promise.resolve(); },
-                        query: function() { return {}; },
-                        where: function() { return {}; },
-                        getDocs: function() { return Promise.resolve({ forEach: function() {} }); },
-                        addDoc: function() { return Promise.resolve(); }
-                    }; 
-                },
-                analytics: function() { 
-                    console.log('Mock Firebase analytics called');
-                    return {}; 
-                }
-            };
-
-            // Also mock the Firebase modules that might be imported
-            window.initializeApp = window.firebase.initializeApp;
-            window.getAuth = window.firebase.auth;
-            window.getFirestore = window.firebase.firestore;
-            window.getAnalytics = window.firebase.analytics;
-            
-            // Prevent any script from loading Firebase
-            const originalCreateElement = document.createElement;
-            document.createElement = function(tagName) {
-                const element = originalCreateElement.call(document, tagName);
-                if (tagName.toLowerCase() === 'script') {
-                    const originalSetAttribute = element.setAttribute;
-                    element.setAttribute = function(name, value) {
-                        if (name === 'src' && value && value.includes('firebase')) {
-                            console.log('Blocked loading Firebase script:', value);
-                            return;
-                        }
-                        return originalSetAttribute.call(this, name, value);
-                    };
-                }
-                return element;
-            };
-            
-            console.log('Firebase blocking initialized');
-        })();
-    </script>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">TipEnter</div>
-                <div class="mobile-menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </div>
-                <nav class="nav-links">
-                    <a href="#features">Features</a>
-                    <a href="#how-it-works">How It Works</a>
-                    <a href="#testimonials">Testimonials</a>
-                    <div class="auth-buttons">
-                        <a href="login.html" class="header-login-btn bartender-login">
-                            <i class="fas fa-glass-martini-alt"></i>
-                            <span>Sign-in as a Bartender</span>
-                        </a>
-                        <a href="login.html" class="header-login-btn manager-login">
-                            <i class="fas fa-user-tie"></i>
-                            <span>Sign-in as a Business</span>
-                        </a>
-                    </div>
-                </nav>
-            </div>
+        <div class="header-content">
+            <a href="/" class="logo">TipEnter</a>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#pricing">Pricing</a>
+                <a href="scanner-landing.html">Scanner</a>
+                <a href="login-refactored.html" class="cta-button">Get Started</a>
+            </nav>
         </div>
     </header>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="container">
-            <div class="hero-content animate">
-                <h1>Automatic Tip Entering</h1>
-                <p>Scan in your tips automatically!</p>
-                <div class="hero-buttons">
-                    <a href="try-it-out.html" class="hero-cta try-it-btn">
-                        <i class="fas fa-star"></i> Try Free (5 images)
-                    </a>
-                    <a href="login.html#signup" class="hero-cta signup-btn">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </a>
-                    <a href="javascript:void(0);" class="hero-cta demo-btn">Book a Demo</a>
+        <div class="hero-content">
+            <h1>Turn your Signed Tip Receipts into a <span class="highlight">Database</span></h1>
+            <div class="transformation-visual">
+                <div class="receipts-image">
+                    <img src="assets/images/receipts-stack.png" alt="Stack of signed tip receipts">
                 </div>
-                <p class="hero-note">Try for free with up to 5 images. Create an account to export and save your data.</p>
-                
-                <div class="pos-logos">
-                    <img src="assets/images/CloverLogo.svg" alt="Clover POS" class="pos-logo">
-                    <img src="assets/images/ToastLogo.png" alt="Toast POS" class="pos-logo">
-                    <img src="assets/images/lightspeedLogo.png" alt="Lightspeed POS" class="pos-logo">
-                    <img src="assets/images/squarelogo.png" alt="Square POS" class="pos-logo">
+                <div class="arrow-icon">
+                    <i class="fas fa-arrow-right"></i>
                 </div>
-                
-                <div class="hero-graphic">
-                    <div class="messy-receipts-container">
-                        <h3 class="graphic-title">Messy Receipts</h3>
-                        <div class="receipt-stack">
-                            <div class="receipt receipt-1">
-                                <div class="receipt-header">RESTAURANT RECEIPT</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-item">Food Total: $45.75</div>
-                                <div class="receipt-item">Tax: $3.66</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-total">Total: $49.41</div>
-                                <div class="receipt-tip-line">Tip: ___________</div>
-                                <div class="receipt-tip-highlight">$9.88</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-grand-total">Grand Total: $59.29</div>
-                            </div>
-                            <div class="receipt receipt-2">
-                                <div class="receipt-header">CAFE RECEIPT</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-item">Coffee: $4.50</div>
-                                <div class="receipt-item">Pastry: $3.25</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-total">Total: $7.75</div>
-                                <div class="receipt-tip-line">Tip: ___________</div>
-                                <div class="receipt-tip-highlight">$1.50</div>
-                            </div>
-                            <div class="receipt receipt-3">
-                                <div class="receipt-header">BAR TAB</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-item">Guinness: $8.50</div>
-                                <div class="receipt-item">Guinness: $8.50</div>
-                                <div class="receipt-item">Guinness: $8.50</div>
-                                <div class="receipt-line"></div>
-                                <div class="receipt-total">Total: $25.50</div>
-                                <div class="receipt-tip-line">Tip: ___________</div>
-                                <div class="receipt-tip-highlight">$5.00</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="arrow-container">
-                        <div class="arrow">→</div>
-                    </div>
-                    
-                    <div class="organized-data-container">
-                        <h3 class="graphic-title">Organized Data</h3>
-                        <div class="data-table">
-                            <div class="table-header">
-                                <div class="table-cell">Check #</div>
-                                <div class="table-cell">Amount</div>
-                                <div class="table-cell">Tip</div>
-                                <div class="table-cell">Total</div>
-                            </div>
-                            <div class="table-row">
-                                <div class="table-cell">1234</div>
-                                <div class="table-cell">$49.41</div>
-                                <div class="table-cell highlight-cell">$9.88</div>
-                                <div class="table-cell">$59.29</div>
-                            </div>
-                            <div class="table-row">
-                                <div class="table-cell">5678</div>
-                                <div class="table-cell">$7.75</div>
-                                <div class="table-cell highlight-cell">$1.50</div>
-                                <div class="table-cell">$9.25</div>
-                            </div>
-                            <div class="table-row">
-                                <div class="table-cell">9012</div>
-                                <div class="table-cell">$50.50</div>
-                                <div class="table-cell highlight-cell">$10.00</div>
-                                <div class="table-cell">$60.50</div>
-                            </div>
-                        </div>
-                        <div class="data-success">✓ All Tips Processed Successfully</div>
-                    </div>
+                <div class="database-image">
+                    <img src="assets/images/excel-database.png" alt="Organized receipt database in spreadsheet">
                 </div>
+            </div>
+            <div class="hero-buttons">
+                <a href="login-refactored.html" class="cta-button">Start Free Trial</a>
+                <a href="#how-it-works" class="secondary-button">See How It Works</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scanner App Section -->
+    <section class="scanner-app" id="scanner-app">
+        <div class="scanner-content">
+            <div class="scanner-text">
+                <h2>Mobile Scanner App</h2>
+                <p>Scan receipts on the go with our powerful iOS app</p>
+                <ul class="app-features">
+                    <li><i class="fas fa-camera"></i> Instant receipt capture with your camera</li>
+                    <li><i class="fas fa-magic"></i> Automatic tip detection and calculation</li>
+                    <li><i class="fas fa-cloud-upload-alt"></i> Real-time sync with your database</li>
+                    <li><i class="fas fa-users"></i> Multi-user support for your team</li>
+                </ul>
+                <a href="#" class="ios-button">
+                    <i class="fab fa-apple"></i>
+                    Download iOS App
+                </a>
+            </div>
+            <div class="scanner-preview">
+                <img src="assets/images/iphone-mockup.png" alt="TipEnter iOS App Preview">
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
     <section class="features" id="features">
-        <div class="container">
-            <div class="section-title">
-                <h2>Key Features</h2>
-                <p>Discover how TipEnter can transform your tip management process</p>
+        <div class="features-content">
+            <div class="section-header">
+                <h2>Complete Receipt Management Solution</h2>
+                <p>Everything you need to digitize, organize, and analyze your receipt data</p>
             </div>
-            
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-camera"></i>
                     </div>
-                    <h3>Fast Processing</h3>
-                    <p>Process hundreds of receipts in minutes, not hours. Our AI-powered system quickly extracts all relevant information.</p>
+                    <h3>Smart Scanning</h3>
+                    <p>Advanced OCR technology accurately captures tip amounts, signatures, and receipt details from photos or scanned documents.</p>
                 </div>
-                
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-database"></i>
                     </div>
-                    <h3>Accurate Recognition</h3>
-                    <p>Advanced image recognition technology ensures precise tip amount extraction, reducing errors and saving time.</p>
+                    <h3>Organized Database</h3>
+                    <p>All your receipts stored in a searchable, sortable database. Filter by date, server, amount, or any custom field.</p>
                 </div>
-                
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Analytics & Reporting</h3>
+                    <p>Generate detailed reports on tips, sales trends, and server performance. Export data for payroll and accounting.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-plug"></i>
                     </div>
                     <h3>POS Integration</h3>
-                    <p>Seamlessly integrate with popular POS systems including Clover, Toast, Lightspeed, and Square.</p>
+                    <p>Seamlessly integrate with popular POS systems like Toast, Square, Lightspeed, and more for automated reconciliation.</p>
                 </div>
-                
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-file-alt"></i>
+                        <i class="fas fa-users"></i>
                     </div>
-                    <h3>Batch Processing</h3>
-                    <p>Upload multiple receipts at once and process them in a single batch for maximum efficiency.</p>
+                    <h3>Team Management</h3>
+                    <p>Manage multiple locations and staff members. Set permissions, track individual performance, and collaborate efficiently.</p>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-table"></i>
-                    </div>
-                    <h3>Organized Results</h3>
-                    <p>View extracted data in a clean, sortable table format or export to CSV for further analysis.</p>
-                </div>
-                
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h3>Secure Processing</h3>
-                    <p>All data is processed securely with enterprise-grade encryption to protect sensitive information.</p>
+                    <h3>Secure & Compliant</h3>
+                    <p>Bank-level encryption, automated backups, and compliance with labor laws. Your data is safe and audit-ready.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- How It Works Section -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="container">
-            <div class="section-title">
+    <!-- Process Section -->
+    <section class="process" id="how-it-works">
+        <div class="process-content">
+            <div class="section-header">
                 <h2>How It Works</h2>
-                <p>TipEnter simplifies the entire tip management process in just a few easy steps</p>
+                <p>Transform your receipt management in four simple steps</p>
             </div>
-            
-            <div class="steps">
-                <div class="step">
+            <div class="process-steps">
+                <div class="process-step">
                     <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Upload Receipts</h3>
-                        <p>Simply drag and drop your receipt images or PDFs into the application, or scan them directly using our Epson scanner integration.</p>
-                    </div>
+                    <h3>Capture Receipts</h3>
+                    <p>Scan or photograph signed receipts using our mobile app or web scanner</p>
                 </div>
-                
-                <div class="step">
+                <div class="process-step">
                     <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Automatic Processing</h3>
-                        <p>Our AI-powered system automatically extracts key information including customer name, check number, amount, tip, and total.</p>
-                    </div>
+                    <h3>Automatic Processing</h3>
+                    <p>Our AI extracts tip amounts, totals, and signatures with 99%+ accuracy</p>
                 </div>
-                
-                <div class="step">
+                <div class="process-step">
                     <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Review Results</h3>
-                        <p>View the extracted data in a clean, organized table format. Sort, filter, and verify the information as needed.</p>
-                    </div>
+                    <h3>Review & Approve</h3>
+                    <p>Quick verification process ensures data accuracy before finalizing</p>
                 </div>
-                
-                <div class="step">
+                <div class="process-step">
                     <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Export to POS</h3>
-                        <p>With a single click, export the processed tip data directly to your POS system, saving hours of manual data entry.</p>
-                    </div>
+                    <h3>Access Your Database</h3>
+                    <p>Search, sort, export, and analyze your complete receipt history anytime</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials" id="testimonials">
-        <div class="container">
-            <div class="section-title">
-                <h2>What Our Users Say</h2>
-                <p>Hear from restaurant managers who have transformed their tip processing workflow</p>
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="pricing-content">
+            <div class="section-header">
+                <h2>Simple, Transparent Pricing</h2>
+                <p>Choose the plan that works best for you</p>
             </div>
-            
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"TipEnter has saved our staff hours of manual data entry every week. The accuracy is impressive, and the POS integration works flawlessly with our Toast system."</p>
-                    <div class="testimonial-author">
-                        <div class="author-info">
-                            <h4>Sarah Johnson</h4>
-                            <p>Restaurant Manager, The Rustic Table</p>
+            <div class="pricing-cards">
+                <div class="pricing-card bartender-card">
+                    <div class="card-header">
+                        <h3>Bartender</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">0</span>
+                            <span class="period">Forever Free</span>
                         </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Perfect for individual bartenders and servers</p>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check"></i> Personal tip tracking</li>
+                            <li><i class="fas fa-check"></i> Earnings dashboard</li>
+                            <li><i class="fas fa-check"></i> Shift management</li>
+                            <li><i class="fas fa-check"></i> Export reports</li>
+                            <li><i class="fas fa-check"></i> Mobile app access</li>
+                        </ul>
+                        <a href="login-refactored.html" class="pricing-btn free-btn">Start Free</a>
                     </div>
                 </div>
                 
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"We used to spend 3-4 hours every night manually entering tips. With TipEnter, we've cut that down to just 15 minutes. It's been a game-changer for our operation."</p>
-                    <div class="testimonial-author">
-                        <div class="author-info">
-                            <h4>Michael Rodriguez</h4>
-                            <p>Owner, Coastal Bites Seafood</p>
+                <div class="pricing-card business-card featured">
+                    <div class="featured-badge">Most Popular</div>
+                    <div class="card-header">
+                        <h3>Business</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">15.99</span>
+                            <span class="period">per bar / 2 weeks</span>
                         </div>
                     </div>
-                </div>
-                
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"The accuracy of the tip recognition is what impressed me most. Even with messy handwriting, TipEnter gets it right almost every time. Highly recommended!"</p>
-                    <div class="testimonial-author">
-                        <div class="author-info">
-                            <h4>Jennifer Lee</h4>
-                            <p>Operations Director, Urban Plate Group</p>
-                        </div>
+                    <div class="card-body">
+                        <p class="card-description">Everything you need to manage your bar's receipts</p>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check"></i> Everything in Bartender</li>
+                            <li><i class="fas fa-check"></i> Unlimited team members</li>
+                            <li><i class="fas fa-check"></i> Receipt scanning & OCR</li>
+                            <li><i class="fas fa-check"></i> POS integration</li>
+                            <li><i class="fas fa-check"></i> Advanced analytics</li>
+                            <li><i class="fas fa-check"></i> Multi-location support</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                            <li><i class="fas fa-check"></i> Automated backups</li>
+                        </ul>
+                        <a href="login-refactored.html" class="pricing-btn business-btn">Start 14-Day Trial</a>
                     </div>
                 </div>
             </div>
@@ -391,170 +217,62 @@
 
     <!-- CTA Section -->
     <section class="cta-section">
-        <div class="container">
-            <div class="cta-content">
-                <h2>Ready to Streamline Your Tip Processing?</h2>
-                <p>Join hundreds of restaurants saving time and reducing errors with TipEnter's automatic tip recognition system.</p>
-                
-                <div class="pricing-tiers">
-                    <div class="pricing-card free-tier">
-                        <div class="pricing-header">
-                            <h3>Free Trial</h3>
-                            <p class="pricing-price">$0</p>
-                        </div>
-                        <ul class="pricing-features">
-                            <li><i class="fas fa-check"></i> Process up to 5 images</li>
-                            <li><i class="fas fa-check"></i> Basic recognition</li>
-                            <li><i class="fas fa-check"></i> View results online</li>
-                            <li><i class="fas fa-times"></i> No data export</li>
-                            <li><i class="fas fa-times"></i> No POS integration</li>
-                        </ul>
-                        <a href="try-it-out.html" class="pricing-btn">Try Now</a>
-                    </div>
-                    
-                    <div class="pricing-card bartender-tier">
-                        <div class="pricing-header">
-                            <h3>Bartender</h3>
-                            <p class="pricing-price">$4.99<span>/month</span></p>
-                        </div>
-                        <ul class="pricing-features">
-                            <li><i class="fas fa-check"></i> Unlimited images</li>
-                            <li><i class="fas fa-check"></i> Advanced AI recognition</li>
-                            <li><i class="fas fa-check"></i> Export to CSV/Excel</li>
-                            <li><i class="fas fa-check"></i> POS integration</li>
-                            <li><i class="fas fa-check"></i> Personal cloud storage</li>
-                        </ul>
-                        <a href="login.html#signup" class="pricing-btn">Sign Up</a>
-                    </div>
-                    
-                    <div class="pricing-card restaurant-tier">
-                        <div class="pricing-badge">BEST VALUE</div>
-                        <div class="pricing-header">
-                            <h3>Restaurant</h3>
-                            <p class="pricing-price">$89.99<span>/month</span></p>
-                        </div>
-                        <ul class="pricing-features">
-                            <li><i class="fas fa-check"></i> Everything in Bartender plan</li>
-                            <li><i class="fas fa-check"></i> Scanner included</li>
-                            <li><i class="fas fa-check"></i> Team access (up to 5 users)</li>
-                            <li><i class="fas fa-check"></i> Priority support</li>
-                        </ul>
-                        <a href="login.html#signup" class="pricing-btn">Sign Up</a>
-                    </div>
-                </div>
-                
-                <div class="cta-buttons">
-                    <a href="javascript:void(0);" class="cta-primary">Book a Demo</a>
-                    <a href="#features" class="cta-secondary">Learn More</a>
-                    <div class="login-buttons">
-                        <a href="login.html" class="login-btn bartender-btn">
-                            <i class="fas fa-glass-martini-alt"></i>
-                            <span>Sign-in as a Bartender</span>
-                        </a>
-                        <a href="login.html" class="login-btn manager-btn">
-                            <i class="fas fa-user-tie"></i>
-                            <span>Sign-in as a Business</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <div class="cta-content">
+            <h2>Ready to Modernize Your Receipt Management?</h2>
+            <p>Join thousands of restaurants saving hours every week</p>
+            <a href="login-refactored.html" class="cta-button">Start Your Free Trial</a>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>TipEnter</h3>
-                    <ul class="footer-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#how-it-works">How It Works</a></li>
-                        <li><a href="#testimonials">Testimonials</a></li>
-                        <li><a href="javascript:void(0);">Book a Demo</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Resources</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">Documentation</a></li>
-                        <li><a href="#">API Reference</a></li>
-                        <li><a href="#">Support Center</a></li>
-                        <li><a href="#">FAQs</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Company</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="/privacy/">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                    </ul>
-                </div>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Product</h3>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="scanner-landing.html">Scanner Tool</a>
+                <a href="#">API Documentation</a>
             </div>
-            
-            <div class="footer-bottom">
-                <p>© 2025 TipEnter. All rights reserved. Made with ❤️ in Pittsburgh</p>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <a href="#">About Us</a>
+                <a href="#">Contact</a>
+                <a href="#">Careers</a>
+                <a href="#">Blog</a>
             </div>
+            <div class="footer-section">
+                <h3>Support</h3>
+                <a href="#">Help Center</a>
+                <a href="#">Video Tutorials</a>
+                <a href="#">System Status</a>
+                <a href="#">Contact Support</a>
+            </div>
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <a href="docs/privacy-policy.html">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Security</a>
+                <a href="#">Compliance</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 TipEnter. All rights reserved.</p>
         </div>
     </footer>
 
     <script>
-        // Simple animation for elements when they come into view
-        document.addEventListener('DOMContentLoaded', function() {
-            // Mobile menu toggle
-            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-            const headerContent = document.querySelector('.header-content');
-            
-            mobileMenuToggle.addEventListener('click', function() {
-                headerContent.classList.toggle('mobile-menu-active');
-            });
-            
-            // Close mobile menu when clicking on a link
-            const navLinks = document.querySelectorAll('.nav-links a');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    headerContent.classList.remove('mobile-menu-active');
-                });
-            });
-            
-            const animateElements = document.querySelectorAll('.animate');
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = 1;
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            });
-            
-            animateElements.forEach(element => {
-                element.style.opacity = 0;
-                element.style.transform = 'translateY(20px)';
-                element.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
-                observer.observe(element);
-            });
-            
-            // Handle login button clicks to set role
-            const bartenderLoginBtns = document.querySelectorAll('.bartender-btn, .bartender-login');
-            const managerLoginBtns = document.querySelectorAll('.manager-btn, .manager-login');
-            
-            bartenderLoginBtns.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    // Store the selected role in localStorage
-                    localStorage.setItem('selected_role', 'bartender');
-                });
-            });
-            
-            managerLoginBtns.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    // Store the selected role in localStorage
-                    localStorage.setItem('selected_role', 'manager');
-                });
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
     </script>

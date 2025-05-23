@@ -1,51 +1,36 @@
 /**
- * Configuration settings for the Bar Receipt Tip Extractor application
+ * Configuration file for TipEnter application
+ * 
+ * This file centralizes configuration values and makes it easier to use
+ * environment variables in browser-based JavaScript.
+ * 
+ * In a production environment, these values should be loaded from environment variables
+ * or a secure configuration service, not hardcoded.
  */
-const config = {
-    // Application settings
-    app: {
-        name: 'TipEnter',
-        version: '1.0.0',
-        location: 'Pittsburgh'
-    },
-    
-    // API settings
-    api: {
-        useRealApi: true, // Set to true to use the actual API instead of simulated data
-        endpoint: '/api/process-images',
-        maxImagesPerRequest: 5
-    },
-    
-    // Server settings
-    serverUrl: 'http://localhost:4000', // URL of the server for API requests
-    
-    // File processing settings
-    fileProcessing: {
-        maxFiles: 100,
-        minFiles: 1,
-        supportedFormats: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
-        maxImageDimension: 1200,
-        imageQuality: 0.8 // 80% quality for compression
-    },
-    
-    // Tip Analyzer settings
-    tipAnalyzer: {
-        minFiles: 3 // Minimum files required for tip analysis
-    },
-    
-    // UI settings
-    ui: {
-        defaultTab: 'scanner-tab',
-        defaultSortField: 'amount',
-        defaultSortOrder: 'asc',
-        defaultFilterField: 'amount'
-    },
-    
-    // Test mode settings
-    testing: {
-        enabled: false, // Disable test mode to prevent generating sample images
-        sampleCount: 0 // Number of sample images to generate in test mode
-    }
+
+// Supabase configuration
+export const SUPABASE_CONFIG = {
+  // Use environment variables if available (for MCP server usage)
+  // Fall back to hardcoded values for browser usage
+  URL: window.ENV?.SUPABASE_URL || 'https://gmysjdndtqwkjvrngnze.supabase.co',
+  ANON_KEY: window.ENV?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdteXNqZG5kdHF3a2p2cm5nbnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzI0MzEsImV4cCI6MjA1OTI0ODQzMX0.3NGSsqVFha767BLiNkbDuv_i_Tp2n_vpcQxVvDLseGM'
 };
 
-export default config;
+// Anthropic/Claude API configuration
+export const ANTHROPIC_CONFIG = {
+  API_KEY: window.ENV?.ANTHROPIC_API_KEY || window.ENV?.CLAUDE_API_KEY || ''
+};
+
+// Application configuration
+export const APP_CONFIG = {
+  SERVER_PORT: window.ENV?.PORT || 3000,
+  CACHE_TTL: window.ENV?.CACHE_TTL || 3600,
+  LOG_LEVEL: window.ENV?.LOG_LEVEL || 'info'
+};
+
+// Export a default configuration object
+export default {
+  supabase: SUPABASE_CONFIG,
+  anthropic: ANTHROPIC_CONFIG,
+  app: APP_CONFIG
+};

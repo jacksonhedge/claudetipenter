@@ -6,6 +6,9 @@
 // Import Supabase service
 import supabaseService from './services/supabaseService.js';
 
+// Import date utilities
+import { formatDateForSupabase, getDateRange, getReceiptsByDateRange } from '../date-utils.js';
+
 // Import Firebase modules
 import { 
     auth, 
@@ -1004,3 +1007,114 @@ class ReceiptApproval {
             <div class="receipt-image" id="receipt-detail-image-container">
                 ${this.createReceiptImageOrPlaceholder(receipt)}
             </div>
+        `;
+        
+        // Add event listeners to detail buttons
+        document.getElementById('detail-approve-btn').addEventListener('click', () => {
+            this.approveReceipt();
+        });
+        
+        document.getElementById('detail-reject-btn').addEventListener('click', () => {
+            this.rejectReceipt();
+        });
+        
+        document.getElementById('detail-view-btn').addEventListener('click', () => {
+            this.showReceiptModal(receiptId);
+        });
+    }
+    
+    /**
+     * Get date range filter based on selected option
+     * @param {string} dateRangeOption - Date range option (today, yesterday, last7days, thisMonth, lastMonth, custom)
+     * @returns {object} - Date range object with startDate and endDate
+     */
+    getDateRangeFilter(dateRangeOption) {
+        // Use our date-utils function
+        return getDateRange(dateRangeOption);
+    }
+    
+    /**
+     * Handle date filter change
+     * @param {Event} e - Change event
+     * @param {string} status - Receipt status (pending, approved, rejected)
+     */
+    handleDateFilterChange(e, status) {
+        const dateRangeOption = e.target.value;
+        this.filters[status].dateRange = dateRangeOption;
+        
+        // Update date range
+        const dateRange = this.getDateRangeFilter(dateRangeOption);
+        this.filters[status].startDate = dateRange.startDate;
+        this.filters[status].endDate = dateRange.endDate;
+        
+        // Reload receipts
+        this.loadReceipts(status);
+    }
+    
+    /**
+     * Apply filters to receipts
+     * @param {string} status - Receipt status (pending, approved, rejected)
+     */
+    applyFilters(status) {
+        // Get filter values
+        const establishmentFilter = document.getElementById(`${status === 'pending' ? '' : status + '-'}establishment-filter`).value;
+        const userFilter = document.getElementById(`${status === 'pending' ? '' : status + '-'}user-filter`).value;
+        
+        // Update filters
+        this.filters[status].establishment = establishmentFilter;
+        this.filters[status].user = userFilter;
+        
+        // Reset pagination
+        this.pagination[status].currentPage = 1;
+        
+        // Reload receipts
+        this.loadReceipts(status);
+    }
+    
+    /**
+     * Reset filters to default values
+     * @param {string} status - Receipt status (pending, approved, rejected)
+     */
+    resetFilters(status) {
+        // Reset filters to default values
+        this.filters[status] = {
+            dateRange: 'last7days',
+            startDate: null,
+            endDate: null,
+            establishment: 'all',
+            user: 'all'
+        };
+        
+        // Reset UI
+        document.getElementById(`${status === 'pending' ? '' : status + '-'}date-filter`).value = 'last7days';
+        document.getElementById(`${status === 'pending' ? '' : status + '-'}establishment-filter`).value = 'all';
+        document.getElementById(`${status === 'pending' ? '' : status + '-'}user-filter`).value = 'all';
+        
+        // Reset pagination
+        this.pagination[status].currentPage = 1;
+        
+        // Reload receipts
+        this.loadReceipts(status);
+    }
+    
+    /**
+     * Update statistics display
+     */
+    updateStats() {
+        // Update counts
+        if (this.pendingCount) this.pendingCount.textContent = this.receipts.pending.length;
+        if (this.approvedCount) this.approvedCount.textContent = this.receipts.approved.length;
+        if (this.rejectedCount) this.rejectedCount.textContent = this.receipts.rejected.length;
+        
+        // Calculate total tips
+        const totalTipsAmount = this.receipts.approved.reduce((sum, receipt) => {
+            // Extract numeric value from tip string
+            const tipStr = receipt.tip || '0';
+            const tipValue = parseFloat(tipStr.replace(/[^0-9.-]+/g, '')) || 0;
+            return sum + tipValue;
+        }, 0);
+        
+        // Update total tips display
+        if (this.totalTips) this.totalTips.textContent = `$${totalTipsAmount.toFixed(2)}`;
+    }
+}

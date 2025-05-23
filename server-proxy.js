@@ -66,13 +66,10 @@ const upload = multer({
 });
 
 // Configure Anthropic API settings
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
-if (!ANTHROPIC_API_KEY) {
-  console.error('ERROR: Anthropic API key not found. Please set ANTHROPIC_API_KEY in environment variables.');
-  process.exit(1);
-}
+console.log('API Key loaded:', ANTHROPIC_API_KEY ? 'Yes' : 'No');
 
 /**
  * Process image with Anthropic API
@@ -85,43 +82,53 @@ async function processWithAnthropic(imagePath) {
     const imageBuffer = fs.readFileSync(imagePath);
     const base64Image = imageBuffer.toString('base64');
     
+    // Optimized prompt for vision processing
+    const prompt = `
+    I need to extract key information from this receipt image. Return ONLY a JSON object with this structure:
+    
+    {
+      "merchant_name": "",      // Name of the business/restaurant
+      "date": "",               // Format: MM/DD/YYYY or empty if unclear
+      "time": "",               // Format: HH:MM AM/PM or empty if unclear
+      "receipt_number": "",     // Any receipt/check/order number
+      "subtotal": 0.00,         // Pre-tip amount (numeric, no $ symbol)
+      "tip": 0.00,              // Tip amount (numeric, no $ symbol)
+      "total": 0.00,            // Final total (numeric, no $ symbol)
+      "payment_method": "",     // VISA/MC/AMEX/CASH/etc.
+      "customer_name": "",      // If present on receipt
+      "server_name": "",        // If present on receipt
+      "confidence": {           // Confidence scores (0-1)
+        "subtotal": 0.0,
+        "tip": 0.0,
+        "total": 0.0
+      },
+      "rendering_cost": {       // Cost information
+        "input_tokens": 0,      // Estimated input tokens
+        "output_tokens": 0,     // Estimated output tokens
+        "total_cost": 0.00      // Estimated total cost in USD
+      }
+    }
+    
+    For each field you're uncertain about, include a confidence score (0-1) in the confidence object. Extract numerical values as numbers without currency symbols. If a field is absent, use an empty string for text or 0 for numbers.
+    
+    Also include your best estimate of the rendering cost in the rendering_cost object, with input tokens, output tokens, and total cost in USD.
+    
+    DO NOT include any text, explanation, or notes outside the JSON object. The response should ONLY contain valid, parseable JSON.
+    `;
+    
     // Create the request
     const response = await axios.post(
       ANTHROPIC_API_URL,
       {
         model: 'claude-3-haiku-20240307',
-        max_tokens: 4000,
+        max_tokens: 1000,
         messages: [
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Extract the following receipt info and return as JSON:
-                - customer_name: Restaurant/merchant name
-                - date: Date (MM/DD/YYYY)
-                - time: Time (HH:MM AM/PM)
-                - check_number: Receipt/order number
-                - amount: Subtotal pre-tip with currency symbol
-                - tip: Tip amount with currency symbol
-                - total: Total amount with currency symbol
-                - payment_type: Card/cash type
-                - signed: "yes" or "no"
-                
-                IMPORTANT: Respond ONLY with a valid JSON object in exactly this format:
-                {
-                  "customer_name": "NAME",
-                  "date": "MM/DD/YYYY",
-                  "time": "HH:MM AM/PM",
-                  "check_number": "####",
-                  "amount": "$XX.XX",
-                  "tip": "$X.XX",
-                  "total": "$XX.XX",
-                  "payment_type": "TYPE",
-                  "signed": "yes/no"
-                }
-                
-                Use null for any missing fields. DO NOT include any explanations, comments, or text outside of the JSON object.`
+                text: prompt
               },
               {
                 type: 'image',
@@ -146,13 +153,22 @@ async function processWithAnthropic(imagePath) {
     
     // Extract JSON from response
     const text = response.data.content[0].text;
-    const jsonMatch = text.match(/{[\s\S]*?}/);
+    let jsonData;
     
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('No JSON found in API response');
+    try {
+      // Try to parse JSON directly first
+      jsonData = JSON.parse(text);
+    } catch (e) {
+      // If direct parsing fails, try to extract JSON from the text
+      const jsonMatch = text.match(/{[\s\S]*?}/);
+      if (jsonMatch) {
+        jsonData = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No valid JSON found in API response');
+      }
     }
+    
+    return jsonData;
     
   } catch (error) {
     console.error('Anthropic API error:', error);
@@ -226,11 +242,11 @@ async function processWithAnthropicWithRetry(imagePath, maxRetries = 3) {
 async function optimizeImage(inputPath, outputPath) {
   try {
     await sharp(inputPath)
-      .resize(1600, 2000, { // Resize to reasonable dimensions
+      .resize(1200, 1600, { // Reduced size for better cost efficiency
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 80 }) // Compress to reasonable quality
+      .jpeg({ quality: 75 }) // Slightly reduced quality for better compression
       .toFile(outputPath);
     
     return outputPath;
@@ -240,125 +256,81 @@ async function optimizeImage(inputPath, outputPath) {
   }
 }
 
-// Endpoint for processing receipts with Claude
-app.post('/api/process-receipt', async (req, res) => {
+// Endpoint for batch processing multiple receipts
+app.post('/api/batch-process', upload.array('images', 20), async (req, res) => {
   try {
-    const { image, filename } = req.body;
-    
-    if (!image) {
-      return res.status(400).json({ error: 'No image provided' });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No image files uploaded' });
     }
     
-    console.log(`Processing receipt: ${filename || 'unnamed'}`);
+    console.log(`Received batch upload: ${req.files.length} images`);
     
-    // Create the prompt for the API
-    const prompt = `
-      Please analyze this receipt image. Extract the following information in JSON format:
-      
-      1. Customer name (if available)
-      2. Date (format: MM/DD/YYYY)  
-      3. Time (format: HH:MM AM/PM)
-      4. Check number (if available)
-      5. Amount (pre-tip total, format: $X.XX)
-      6. Tip amount (format: $X.XX)
-      7. Total amount (format: $X.XX)
-      8. Payment type (Credit Card, Cash, etc.)
-      9. Whether it was signed (Yes/No)
-      
-      Return the data in this exact JSON structure:
-      {
-        "customer_name": "John Doe",
-        "date": "03/25/2025",
-        "time": "7:30 PM",
-        "check_number": "#1234",
-        "amount": "$45.67",
-        "tip": "$9.13",
-        "total": "$54.80",
-        "payment_type": "Credit Card",
-        "signed": "Yes"
-      }
-      
-      If any field is not found in the receipt, use "N/A" for text fields and "$0.00" for monetary values.
-    `;
+    const results = [];
+    const errors = [];
     
-    // Call Claude API
-    const response = await axios.post(
-      CLAUDE_API_URL,
-      {
-        model: 'claude-3-opus-20240229',
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: prompt
-              },
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: image
-                }
-              }
-            ]
+    // Process images in sequence (to avoid rate limits)
+    for (const file of req.files) {
+      try {
+        // Get the uploaded file path
+        const imagePath = file.path;
+        
+        // Optimize the image
+        const optimizedImagePath = imagePath + '-optimized.jpg';
+        await optimizeImage(imagePath, optimizedImagePath);
+        
+        // Process the image
+        const result = await processWithAnthropicWithRetry(optimizedImagePath);
+        
+        // Add result with filename
+        results.push({
+          filename: file.originalname,
+          data: result
+        });
+        
+        // Clean up temporary files
+        fs.unlinkSync(imagePath);
+        fs.unlinkSync(optimizedImagePath);
+      } catch (error) {
+        console.error(`Error processing image ${file.originalname}:`, error);
+        
+        // Add to errors array
+        errors.push({
+          filename: file.originalname,
+          error: error.message
+        });
+        
+        // Clean up files even on error
+        try {
+          fs.unlinkSync(file.path);
+          const optimizedPath = file.path + '-optimized.jpg';
+          if (fs.existsSync(optimizedPath)) {
+            fs.unlinkSync(optimizedPath);
           }
-        ]
-      },
-      {
-        headers: {
-          'x-api-key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'Content-Type': 'application/json'
+        } catch (cleanupError) {
+          console.error('Error cleaning up files:', cleanupError);
         }
       }
-    );
-    
-    // Extract the response from Claude
-    const claudeResponse = response.data.content[0].text;
-    
-    // Try to parse JSON from the response
-    try {
-      // Extract JSON from Claude's response (it might have extra text)
-      const jsonMatch = claudeResponse.match(/```json\n([\s\S]*?)\n```/) || 
-                         claudeResponse.match(/{[\s\S]*}/) ||
-                         claudeResponse;
-                         
-      const jsonText = jsonMatch[1] || jsonMatch[0];
-      const parsedData = JSON.parse(jsonText);
-      
-      // Return the processed data
-      return res.json({
-        success: true,
-        model: 'claude-3-opus',
-        result: parsedData
-      });
-    } catch (parseError) {
-      console.error('Error parsing Claude response:', parseError);
-      // If JSON parsing fails, return the raw text
-      return res.json({
-        success: true,
-        model: 'claude-3-opus',
-        result: claudeResponse,
-        parsing_error: true
-      });
     }
-  } catch (error) {
-    console.error('Error processing receipt with Claude:', error);
     
-    // Return a more detailed error response
+    // Return all results and errors
+    return res.json({
+      success: true,
+      processed: results.length,
+      failed: errors.length,
+      results: results,
+      errors: errors
+    });
+  } catch (error) {
+    console.error('Error in batch processing:', error);
     return res.status(500).json({
       success: false,
-      error: error.message,
-      details: error.response ? error.response.data : null
+      error: error.message
     });
   }
 });
 
-// Endpoint for receiving image uploads from iOS app
-app.post('/api/upload-image', upload.single('image'), async (req, res) => {
+// Endpoint for processing single receipt
+app.post('/api/process-receipt', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file uploaded' });
@@ -375,18 +347,46 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     console.log(`Optimized image: ${optimizedImagePath}`);
     
     try {
+      // Calculate estimated cost before processing
+      // Claude-3-Haiku pricing: $0.25/1M input tokens, $1.25/1M output tokens
+      const imageBuffer = fs.readFileSync(optimizedImagePath);
+      const base64ImageSize = imageBuffer.toString('base64').length;
+      
       // Process the image with Anthropic API (with caching and retries)
       const result = await processWithAnthropicWithRetry(optimizedImagePath);
       
       // Clean up - delete the temporary files
       fs.unlinkSync(imagePath);
       fs.unlinkSync(optimizedImagePath);
+      const inputTokenEstimate = Math.ceil(base64ImageSize / 3); // Very rough estimate
+      const outputTokenEstimate = JSON.stringify(result).length / 4; // Very rough estimate
+      const inputCost = (inputTokenEstimate / 1000000) * 0.25;
+      const outputCost = (outputTokenEstimate / 1000000) * 1.25;
+      const totalCost = inputCost + outputCost;
       
-      // Return the processed data
+      // Add cost information to the result
+      const costInfo = {
+        estimated_input_tokens: inputTokenEstimate,
+        estimated_output_tokens: outputTokenEstimate,
+        estimated_cost_usd: totalCost.toFixed(6),
+        disclaimer: "This is a rough estimate based on token approximation"
+      };
+      
+      // Add rendering cost to the result if not already present
+      if (result && !result.rendering_cost) {
+        result.rendering_cost = {
+          input_tokens: inputTokenEstimate,
+          output_tokens: outputTokenEstimate,
+          total_cost: totalCost
+        };
+      }
+      
+      // Return the processed data with cost information
       return res.json({
         success: true,
         model: 'claude-3-haiku',
-        result: result
+        result: result,
+        cost_info: costInfo
       });
     } catch (parseError) {
       console.error('Error processing receipt:', parseError);
@@ -420,15 +420,110 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
   }
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Direct base64 endpoint (for mobile apps that process images on-device)
+app.post('/api/process-receipt-base64', async (req, res) => {
+  try {
+    const { image, filename } = req.body;
+    
+    if (!image) {
+      return res.status(400).json({ error: 'No image data provided' });
+    }
+    
+    console.log(`Processing receipt from base64: ${filename || 'unnamed'}`);
+    
+    // Save base64 to temporary file for processing
+    const tempImagePath = path.join(__dirname, 'uploads', `temp-${Date.now()}.jpg`);
+    const optimizedImagePath = tempImagePath + '-optimized.jpg';
+    
+    // Ensure uploads directory exists
+    if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
+      fs.mkdirSync(path.join(__dirname, 'uploads'));
+    }
+    
+    // Convert base64 to file
+    const imageData = image.replace(/^data:image\/\w+;base64,/, '');
+    fs.writeFileSync(tempImagePath, Buffer.from(imageData, 'base64'));
+    
+    // Optimize the image
+    await optimizeImage(tempImagePath, optimizedImagePath);
+    
+    try {
+      // Process with Claude API
+      const result = await processWithAnthropicWithRetry(optimizedImagePath);
+      
+      // Clean up temporary files
+      fs.unlinkSync(tempImagePath);
+      fs.unlinkSync(optimizedImagePath);
+      
+      // Return results
+      return res.json({
+        success: true,
+        model: 'claude-3-haiku',
+        result: result
+      });
+    } catch (error) {
+      console.error('Error processing base64 image:', error);
+      
+      // Clean up temporary files
+      try {
+        fs.unlinkSync(tempImagePath);
+        if (fs.existsSync(optimizedImagePath)) {
+          fs.unlinkSync(optimizedImagePath);
+        }
+      } catch (cleanupError) {
+        console.error('Error cleaning up files:', cleanupError);
+      }
+      
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  } catch (error) {
+    console.error('Error in base64 processing:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
-// Get all receipts endpoint (placeholder for future database implementation)
-app.get('/api/receipts', (req, res) => {
-  // TODO: Implement database retrieval
-  res.json({ receipts: [] });
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    cache_stats: {
+      keys: receiptCache.keys().length,
+      hits: receiptCache.getStats().hits,
+      misses: receiptCache.getStats().misses
+    }
+  });
+});
+
+// Get cache stats endpoint
+app.get('/api/cache-stats', (req, res) => {
+  const stats = receiptCache.getStats();
+  const keys = receiptCache.keys();
+  
+  res.json({
+    total_items: keys.length,
+    hits: stats.hits,
+    misses: stats.misses,
+    keys: keys
+  });
+});
+
+// Clear cache endpoint
+app.post('/api/clear-cache', (req, res) => {
+  const keysCount = receiptCache.keys().length;
+  receiptCache.flushAll();
+  
+  res.json({
+    success: true,
+    cleared_items: keysCount,
+    message: `Cleared ${keysCount} items from cache`
+  });
 });
 
 // Error handling middleware
@@ -443,6 +538,7 @@ app.use((err, req, res, next) => {
 // Start the server
 app.listen(port, () => {
   console.log(`Server proxy running at http://localhost:${port}`);
-  console.log(`Upload endpoint available at http://localhost:${port}/api/upload-image`);
+  console.log(`Upload endpoint available at http://localhost:${port}/api/process-receipt`);
+  console.log(`Batch upload endpoint available at http://localhost:${port}/api/batch-process`);
   console.log(`Health check available at http://localhost:${port}/api/health`);
 });

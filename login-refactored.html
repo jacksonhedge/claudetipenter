@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipEnter - Get Started</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+    <link rel="icon" type="image/png" href="assets/favicon/favicon.png">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/auth-refactored.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">TipEnter</a>
+                <nav class="nav-links">
+                    <a href="landing.html">Home</a>
+                    <a href="landing.html#features">Features</a>
+                    <a href="landing.html#how-it-works">How It Works</a>
+                    <a href="landing.html#pricing">Pricing</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div id="authContainer">
+                <!-- Auth component will render here -->
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 TipEnter. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Service</a>
+                    <a href="/support">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import AuthComponentRefactored from './js/components/authComponentRefactored.js';
+        
+        // Initialize auth component
+        new AuthComponentRefactored({
+            containerId: 'authContainer',
+            redirectAfterLogin: '/home.html',
+            onAuthStateChanged: (user) => {
+                if (user) {
+                    // User is logged in
+                    console.log('User logged in:', user);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

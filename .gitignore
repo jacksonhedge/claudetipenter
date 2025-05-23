@@ -6,6 +6,7 @@ yarn-error.log
 
 # Environment variables
 .env
+js/env.js  # Generated from .env, contains environment variables for browser
 
 # Logs
 logs/
